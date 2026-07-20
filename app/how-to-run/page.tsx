@@ -6,7 +6,7 @@ import { brand } from "@/lib/brand";
 export const metadata: Metadata = {
   title: "How to run any app you buy",
   description:
-    "A two-minute guide to running apps from RunLocal on your own machine — with a one command, or by letting an AI assistant set it up for you.",
+    "A two-minute guide to running apps on your own machine, either with one command or by letting an AI assistant set it up for you.",
 };
 
 export default function HowToRunPage() {
@@ -18,7 +18,7 @@ export default function HowToRunPage() {
       </h1>
       <p className="mt-4 text-lg text-[var(--muted)]">
         Every app on {brand.name} is a small folder you download and run on your
-        own computer. There are two ways to do it — pick whichever fits you.
+        own computer. There are two ways to do it. Pick whichever fits you.
       </p>
 
       {/* Path A */}
@@ -58,7 +58,7 @@ export default function HowToRunPage() {
         </p>
         <ol className="mt-4 space-y-3 text-sm">
           <li>
-            1. Install a coding assistant once — we recommend{" "}
+            1. Install a coding assistant once. We recommend{" "}
             <span className="font-medium text-[var(--foreground)]">Claude Code</span> or{" "}
             <span className="font-medium text-[var(--foreground)]">Cursor</span>.
           </li>
@@ -84,7 +84,7 @@ export default function HowToRunPage() {
         <h3 className="font-semibold">Still stuck?</h3>
         <p className="mt-1 text-sm text-[var(--muted)]">
           If an app won&apos;t run within 14 days of buying it, you get a full
-          refund — no questions asked. Email {brand.supportEmail}.
+          refund, no questions asked. Email {brand.supportEmail}.
         </p>
         <ButtonLink href="/browse" className="mt-4" variant="secondary" size="sm">
           Browse apps

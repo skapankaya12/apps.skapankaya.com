@@ -13,15 +13,15 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What exactly am I buying?",
-    a: "A finished, small piece of software that does one specific job. You pay once, download it, and it's yours forever — no subscription, no account, no expiry. It runs on your own computer rather than in the cloud.",
+    a: "A finished, small piece of software that does one specific job. You pay once, download it, and it's yours forever, with no subscription, no account and no expiry. It runs on your own computer rather than in the cloud.",
   },
   {
     q: "Do I need to be technical?",
-    a: "No. Every tool ships with a setup guide, and tools marked “Guided setup” are designed so a free AI assistant (like Claude or Cursor) can install and start them for you — you open the folder and say “set this up and run it.”",
+    a: "No. Every tool ships with a setup guide, and tools marked “Guided setup” are designed so a free AI assistant (like Claude or Cursor) can install and start them for you. You open the folder and say “set this up and run it.”",
   },
   {
     q: "What if it doesn't run on my computer?",
-    a: "You get a full refund within 14 days, no questions asked. Because these tools run on your machine rather than ours, we can't guarantee compatibility with every setup — so the guarantee covers you.",
+    a: "You get a full refund within 14 days, no questions asked. Because these tools run on your machine rather than ours, we can't guarantee compatibility with every setup, so the guarantee covers you.",
   },
   {
     q: "Is it safe to run software from strangers?",
@@ -39,7 +39,7 @@ const FAQS: { q: string; a: string }[] = [
     q: "What does it cost to sell here?",
     a: `Nothing to list. We take a flat ${Math.round(
       brand.commissionRate * 100
-    )}% commission on each sale, and that's all-inclusive — it covers payment processing, so there are no separate card fees, listing fees or monthly costs. You keep ${Math.round(
+    )}% commission on each sale, and that's all-inclusive. It covers payment processing, so there are no separate card fees, listing fees or monthly costs. You keep ${Math.round(
       (1 - brand.commissionRate) * 100
     )}%.`,
   },
@@ -49,11 +49,11 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How long does a listing review take?",
-    a: "Usually 1–2 business days. We check that the tool runs within about five minutes on a clean machine, that the source is readable, that the listing is honest, and that the demo video matches what the tool actually does.",
+    a: "Usually 1 to 2 business days. We check that the tool runs within about five minutes on a clean machine, that the source is readable, that the listing is honest, and that the demo video matches what the tool actually does.",
   },
   {
     q: "I can't find the tool I need. Can you make it?",
-    a: "Often, yes. Describe the problem using the form below and we'll tell you whether we can build it — many small tools can be turned around within a week.",
+    a: "Often, yes. Describe the problem using the form below and we'll tell you whether we can build it. Many small tools can be turned around within a week.",
   },
 ];
 
@@ -82,7 +82,7 @@ export default function AboutPage() {
       <Section className="py-14">
         <div className="grid gap-5 md:grid-cols-3">
           {[
-            ["🧩", "Built from a real need", "Not a startup pitch — a fix someone made because they had the problem too."],
+            ["🧩", "Built from a real need", "Not a startup pitch, just a fix someone made because they had the problem too."],
             ["💸", "Skip the bloated platform", "Pay once for the one feature you need, not monthly for 30 you don't."],
             ["🔒", "Runs on your computer", "Your data stays with you. No cloud, no account, no telemetry."],
           ].map(([icon, title, body]) => (
@@ -104,7 +104,7 @@ export default function AboutPage() {
           <div className="mt-8 grid gap-8 md:grid-cols-3">
             {[
               { n: "1", title: "Find & buy", body: "Search by the problem you have. One-time payment, instant access." },
-              { n: "2", title: "Run it — no expertise needed", body: "Double-click, or let an AI assistant set it up for you from the included guide." },
+              { n: "2", title: "Run it, no expertise needed", body: "Double-click, or let an AI assistant set it up for you from the included guide." },
               { n: "3", title: "Keep it forever", body: "Re-download anytime, free updates when the maker ships them." },
             ].map((s) => (
               <div key={s.n} className="flex gap-4">
@@ -135,7 +135,7 @@ export default function AboutPage() {
           </h2>
           <p className="mx-auto mt-3 max-w-lg opacity-80">
             Someone else has that problem too. List it, keep {keepPct}% of every
-            sale, and let it help people — no listing fees, no subscription.
+            sale, and let it help people. No listing fees, no subscription.
           </p>
           <div className="mt-7">
             <ButtonLink href="/sell" variant="secondary" size="lg">
@@ -175,8 +175,8 @@ export default function AboutPage() {
             </h2>
             <p className="mt-2 text-[var(--muted)]">
               Tell us the problem you&apos;re trying to solve. If there&apos;s no
-              tool here for it, we can often build one for you within a week —
-              and it goes on the marketplace so it helps the next person too.
+              tool here for it, we can often build one for you within a week, and it goes on the
+              marketplace so it helps the next person too.
             </p>
           </div>
           <div className="max-w-2xl">

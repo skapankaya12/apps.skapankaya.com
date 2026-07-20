@@ -10,7 +10,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   metadataBase: new URL(`https://${brand.domain}`),
   title: {
-    default: `${brand.name} — ${brand.tagline}`,
+    default: `${brand.name}: ${brand.tagline}`,
     template: `%s · ${brand.name}`,
   },
   description: brand.description,
@@ -24,14 +24,14 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     type: "website",
-    title: `${brand.name} — ${brand.tagline}`,
+    title: `${brand.name}: ${brand.tagline}`,
     description: brand.description,
     url: `https://${brand.domain}`,
     siteName: brand.name,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${brand.name} — ${brand.tagline}`,
+    title: `${brand.name}: ${brand.tagline}`,
     description: brand.description,
   },
 };

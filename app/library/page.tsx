@@ -28,7 +28,7 @@ export default function LibraryPage() {
     <Section className="py-12">
       <h1 className="text-3xl font-semibold tracking-tight">Your library</h1>
       <p className="mt-1 text-[var(--muted)]">
-        Everything you own. Re-download anytime — it&apos;s yours forever.
+        Everything you own. Re-download anytime. It&apos;s yours forever.
       </p>
 
       {purchases.length === 0 ? (

@@ -25,7 +25,7 @@ export function ListingMedia({
   function start() {
     const v = videoRef.current;
     if (!v) return;
-    // play() rejects if the browser blocks it — ignore rather than throw.
+    // play() rejects if the browser blocks it, so ignore rather than throw.
     v.play().then(() => setPlaying(true)).catch(() => {});
   }
 
@@ -67,7 +67,7 @@ export function ListingMedia({
         onError={() => setFailed(true)}
         className="h-full w-full object-cover"
       />
-      {/* Play affordance — hidden while the video is running */}
+      {/* Play affordance, hidden while the video is running */}
       <div
         className={`pointer-events-none absolute inset-0 grid place-items-center transition-opacity duration-200 ${
           playing ? "opacity-0" : "opacity-100"

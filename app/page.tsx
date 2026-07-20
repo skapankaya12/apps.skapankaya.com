@@ -53,7 +53,7 @@ export default function HomePage() {
           <div>
             <h3 className="font-semibold">Didn&apos;t find what you need?</h3>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              Tell us the problem — we can often build it for you within a week.
+              Tell us the problem. We can often build it for you within a week.
             </p>
           </div>
           <ButtonLink href="/about#contact" size="sm">

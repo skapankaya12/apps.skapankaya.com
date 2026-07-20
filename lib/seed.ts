@@ -12,7 +12,7 @@ const day = 86_400_000;
 export const seedUsers: AppUser[] = [
   {
     uid: "u_admin",
-    email: "admin@runlocal.app",
+    email: "admin@appbazaar.dev",
     displayName: "Sevval (Admin)",
     role: "admin",
     createdAt: now - 90 * day,
@@ -43,7 +43,7 @@ export const seedListings: Listing[] = [
     title: "CSV Cleaner",
     tagline: "Dedupe, trim, and fix messy CSV exports in one command.",
     description:
-      "Point it at any messy CSV and it removes duplicate rows, trims whitespace, normalizes headers, and fixes broken encodings. Runs fully offline — your data never leaves your machine. Ideal for cleaning exports from old CRMs and spreadsheets before import.",
+      "Point it at any messy CSV and it removes duplicate rows, trims whitespace, normalizes headers, and fixes broken encodings. Runs fully offline, so your data never leaves your machine. Ideal for cleaning exports from old CRMs and spreadsheets before import.",
     category: "spreadsheets",
     priceCents: 1200,
     runtime: "node",
@@ -64,7 +64,7 @@ export const seedListings: Listing[] = [
     title: "Invoice PDF Maker",
     tagline: "Turn a one-line command into a clean, branded invoice PDF.",
     description:
-      "A tiny local tool that generates professional invoice PDFs from a simple config file. No subscriptions, no accounts, no cloud. Add your logo, set your tax rate, and run it — the PDF lands in your folder. Perfect for freelancers who hate invoicing SaaS.",
+      "A tiny local tool that generates professional invoice PDFs from a simple config file. No subscriptions, no accounts, no cloud. Add your logo, set your tax rate, and run it. The PDF lands in your folder. Perfect for freelancers who hate invoicing SaaS.",
     category: "invoicing",
     priceCents: 1900,
     runtime: "node",
@@ -85,7 +85,7 @@ export const seedListings: Listing[] = [
     title: "Screenshot Framer",
     tagline: "Drop screenshots in, get beautiful device-framed images out.",
     description:
-      "Watches a folder and automatically wraps any screenshot you drop in with a clean device frame and soft shadow — ready for your landing page or app store. Runs locally, processes in bulk, and never uploads your images anywhere.",
+      "Watches a folder and automatically wraps any screenshot you drop in with a clean device frame and soft shadow, ready for your landing page or app store. Runs locally, processes in bulk, and never uploads your images anywhere.",
     category: "images-video",
     priceCents: 1500,
     runtime: "python",
@@ -106,7 +106,7 @@ export const seedListings: Listing[] = [
     title: "Focus Blocker",
     tagline: "A no-nonsense local website blocker you actually control.",
     description:
-      "Blocks distracting sites during focus sessions by editing your local hosts file — no browser extension, no account, no telemetry. Set your block list once, run it before deep work, and it cleans up after itself when the timer ends.",
+      "Blocks distracting sites during focus sessions by editing your local hosts file, with no browser extension, no account and no telemetry. Set your block list once, run it before deep work, and it cleans up after itself when the timer ends.",
     category: "focus-time",
     priceCents: 900,
     runtime: "node",
@@ -127,7 +127,7 @@ export const seedListings: Listing[] = [
     title: "Bulk File Renamer",
     tagline: "Rename hundreds of files with patterns, safely and locally.",
     description:
-      "Preview-first bulk renaming with find/replace, sequential numbering, and date stamping. Shows you exactly what will change before it touches anything. A pending submission awaiting review — included here to demo the admin queue.",
+      "Preview-first bulk renaming with find/replace, sequential numbering, and date stamping. Shows you exactly what will change before it touches anything. A pending submission awaiting review, included here to demo the admin queue.",
     category: "files",
     priceCents: 1100,
     runtime: "python",

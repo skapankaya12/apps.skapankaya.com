@@ -11,7 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  // One SEO entry per approved listing — the long-tail traffic engine.
+  // One SEO entry per approved listing. This is the long-tail traffic engine.
   const listingRoutes = seedListings
     .filter((l) => l.status === "approved")
     .map((l) => ({

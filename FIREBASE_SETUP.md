@@ -29,7 +29,7 @@ Three collections mirror `lib/types.ts` exactly:
 |---|---|---|
 | `users` | `uid` | Auth trigger on signup |
 | `listings` | auto | Sellers (create), admins (status changes) |
-| `purchases` | auto | **Stripe webhook only** — never the client |
+| `purchases` | auto | **Stripe webhook only**, never the client |
 
 ## 3. Security rules (paste into Firestore → Rules)
 ```
@@ -78,10 +78,10 @@ Each function has a direct Firestore equivalent. Replace the localStorage bodies
 | `createListing(input)` | `addDoc(collection(db,'listings'), {...input, status:'pending'})` |
 | `reviewListing(id, decision, note)` | `updateDoc(doc(db,'listings',id), {status, reviewNote})` |
 | `getPurchases(uid)` | `query(collection(db,'purchases'), where('buyerId','==',uid))` |
-| `recordPurchase(...)` | **delete** — this happens server-side in the webhook |
+| `recordPurchase(...)` | **delete**, this happens server-side in the webhook |
 
 For live updates, wrap reads in `onSnapshot` and push results into the existing
-`emit()` mechanism — the `useStoreValue` hook needs no changes.
+`emit()` mechanism. The `useStoreValue` hook needs no changes.
 
 ## 5. Storage (downloads & uploads)
 - Sellers upload their `.zip` to `storage: submissions/{listingId}.zip`.

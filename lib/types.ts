@@ -9,7 +9,7 @@ export type SetupMode = "one-command" | "ai-assisted";
 /**
  * Categories are framed as the JOB the buyer is trying to do, not the kind of
  * software it is. Visitors arrive thinking "I need to fix a spreadsheet", not
- * "I need a data utility" — and these read the same whatever sector they're in.
+ * "I need a data utility", and these read the same whatever sector they're in.
  */
 export type Category =
   | "spreadsheets"
@@ -26,7 +26,7 @@ export interface AppUser {
   email: string;
   displayName: string;
   role: Role;
-  /** Stripe Connect (Express) account id — set once the seller onboards. */
+  /** Stripe Connect (Express) account id, set once the seller onboards. */
   stripeAccountId?: string;
   createdAt: number;
 }
@@ -46,7 +46,7 @@ export interface Listing {
   setupMode: SetupMode;
   /** Up to 5 screenshots. Demo stores filenames/labels; prod stores Storage URLs. */
   screenshots: string[];
-  /** Required demo video URL. Doubles as the card's visual — plays on hover. */
+  /** Required demo video URL. Doubles as the card's visual, playing on hover. */
   demoVideo?: string;
   status: ListingStatus;
   version: string;

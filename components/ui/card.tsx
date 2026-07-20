@@ -43,7 +43,7 @@ export interface CardProps
     VariantProps<typeof cardVariants> {
   title?: string;
   description?: string;
-  /** Override the inner padding — grid cards usually want it tighter than p-6. */
+  /** Override the inner padding. Grid cards usually want it tighter than p-6. */
   contentClassName?: string;
 }
 

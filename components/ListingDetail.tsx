@@ -116,7 +116,7 @@ export function ListingDetail({ slug }: { slug: string }) {
             </p>
           </div>
 
-          {/* How to run — softened for non-devs */}
+          {/* How to run, softened for non-devs */}
           <div className="mt-8">
             <h2 className="text-lg font-semibold">How you&apos;ll run it</h2>
             <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
@@ -174,7 +174,7 @@ export function ListingDetail({ slug }: { slug: string }) {
 
             {owned ? (
               <ButtonLink href="/library" className="mt-5 w-full" variant="success">
-                ✓ In your library — download
+                ✓ Download from your library
               </ButtonLink>
             ) : (
               <div className="mt-5 space-y-2">
@@ -188,7 +188,7 @@ export function ListingDetail({ slug }: { slug: string }) {
                   variant="secondary"
                   className="w-full"
                 >
-                  {inCart ? "✓ In cart — view cart" : "+ Add to cart"}
+                  {inCart ? "✓ In cart" : "+ Add to cart"}
                 </Button>
                 {inCart && (
                   <ButtonLink href="/cart" variant="ghost" size="sm" className="w-full">

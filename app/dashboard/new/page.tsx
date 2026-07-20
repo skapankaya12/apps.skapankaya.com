@@ -48,7 +48,7 @@ export default function NewListingPage() {
           Submitted for review
         </h1>
         <p className="mt-3 text-[var(--muted)]">
-          Our team reviews every app before it goes live — usually within 1–2
+          Our team reviews every app before it goes live, usually within 1 to 2
           business days. You&apos;ll see the status update on your dashboard.
         </p>
         <ButtonLink href="/dashboard" className="mt-8">Back to dashboard</ButtonLink>
@@ -182,7 +182,7 @@ export default function NewListingPage() {
           </div>
         </Field>
 
-        <Field label="Price (USD)" hint="Suggested range: $10–29.">
+        <Field label="Price (USD)" hint="Suggested range: $10 to $29.">
           <div className="relative max-w-[200px]">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]">
               $
@@ -223,7 +223,7 @@ export default function NewListingPage() {
           </label>
         </Field>
 
-        {/* Screenshots — up to 5 */}
+        {/* Screenshots, up to 5 */}
         <Field
           label="Screenshots (up to 5)"
           hint="Show the tool actually working. Buyers who see it are far likelier to buy."
@@ -261,10 +261,10 @@ export default function NewListingPage() {
           </div>
         </Field>
 
-        {/* Demo video — required */}
+        {/* Demo video, required */}
         <Field
           label="Demo video (required)"
-          hint="A short screen recording of the tool in action. This is required — it's the single biggest thing that sells a small tool."
+          hint="A short screen recording of the tool in action. This is required. It's the single biggest thing that sells a small tool."
         >
           <label
             className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${

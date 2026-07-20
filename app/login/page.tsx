@@ -26,13 +26,13 @@ function LoginInner() {
           Sign in to {brand.name}
         </h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Demo auth — enter any email to continue. Try{" "}
+          Demo auth. Enter any email to continue. Try{" "}
           <button
             type="button"
             className="text-[var(--accent)] hover:underline"
-            onClick={() => setEmail("admin@runlocal.app")}
+            onClick={() => setEmail("admin@appbazaar.dev")}
           >
-            admin@runlocal.app
+            admin@appbazaar.dev
           </button>{" "}
           to see the admin view.
         </p>

@@ -4,8 +4,8 @@ import { ListingDetail } from "@/components/ListingDetail";
 
 /**
  * SEO metadata is generated from seed data at build/request time (server-safe).
- * Once Firestore is wired, read the listing here with the Admin SDK instead —
- * this is where per-app <title>/description come from for search engines.
+ * Once Firestore is wired, read the listing here with the Admin SDK instead.
+ * This is where per-app <title>/description come from for search engines.
  */
 export async function generateMetadata({
   params,
@@ -16,7 +16,7 @@ export async function generateMetadata({
   const listing = seedListings.find((l) => l.slug === slug);
   if (!listing) return { title: "App not found" };
   return {
-    title: `${listing.title} — ${listing.tagline}`,
+    title: `${listing.title}: ${listing.tagline}`,
     description: listing.description.slice(0, 155),
     openGraph: {
       title: listing.title,

@@ -103,7 +103,7 @@ export default function CartPage() {
                 {processing ? "Processing…" : `Checkout · ${formatPrice(total)}`}
               </Button>
               <p className="mt-3 text-center text-xs text-[var(--muted)]">
-                🔒 Secured by Stripe (demo — no real charge)
+                🔒 Secured by Stripe (demo, no real charge)
               </p>
             </div>
           </aside>

@@ -2,20 +2,12 @@
 
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
-import {
-  formatPrice,
-  isInCart,
-  addToCart,
-  removeFromCart,
-  isBookmarked,
-  toggleBookmark,
-} from "@/lib/store";
+import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
 import { Card } from "./ui/card";
 import { ListingMedia } from "./ListingMedia";
 
 export function ListingCard({ listing }: { listing: Listing }) {
-  const inCart = useStoreValue(() => isInCart(listing.id));
   const saved = useStoreValue(() => isBookmarked(listing.id));
 
   return (
@@ -25,7 +17,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
       className="group h-full transition-transform duration-200 hover:-translate-y-0.5"
     >
       <div className="flex h-full flex-col">
-        {/* Demo video doubles as the cover — plays on hover */}
+        {/* Demo video doubles as the cover, playing on hover */}
         <div className="relative">
           <Link href={`/app/${listing.slug}`} className="block">
             <ListingMedia src={listing.demoVideo} title={listing.title} />
@@ -49,27 +41,14 @@ export function ListingCard({ listing }: { listing: Listing }) {
         </Link>
 
         {/* mt-auto pins the footer so rows line up across the grid */}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+        <div className="mt-auto flex items-baseline justify-between gap-2 pt-4">
           <span className="text-sm font-semibold tabular-nums">
             {formatPrice(listing.priceCents)}
           </span>
-          <button
-            onClick={() =>
-              inCart ? removeFromCart(listing.id) : addToCart(listing.id)
-            }
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              inCart
-                ? "bg-[var(--success-soft)] text-[var(--success)]"
-                : "bg-[var(--surface-muted)] text-[var(--foreground)] hover:bg-[var(--accent)] hover:text-[var(--accent-fg)]"
-            }`}
-          >
-            {inCart ? "✓ In cart" : "+ Add to cart"}
-          </button>
+          <span className="text-xs text-[var(--muted)]">
+            by {listing.sellerName}
+          </span>
         </div>
-        <span className="mt-2 text-xs text-[var(--muted)]">
-          by {listing.sellerName}
-          {listing.salesCount > 0 && ` · ${listing.salesCount} sold`}
-        </span>
       </div>
     </Card>
   );

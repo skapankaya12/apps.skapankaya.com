@@ -1,5 +1,5 @@
 /**
- * Firebase client init — inert until you add config to .env.local.
+ * Firebase client init. Inert until you add config to .env.local.
  *
  * The app currently runs entirely on the localStorage store (lib/store.ts) so
  * every flow is demoable with no backend. When you're ready to go live:

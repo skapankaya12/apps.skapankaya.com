@@ -10,7 +10,7 @@ const TOPICS: { value: Topic; label: string; hint: string }[] = [
   {
     value: "request",
     label: "Request a tool",
-    hint: "Describe the problem — we can often build it for you within a week.",
+    hint: "Describe the problem. We can often build it for you within a week.",
   },
   {
     value: "support",
@@ -42,7 +42,7 @@ export function ContactForm() {
         </div>
         <h3 className="mt-4 text-lg font-semibold">Message sent</h3>
         <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
-          Thanks — we read every message and usually reply within one business
+          Thanks! We read every message and usually reply within one business
           day. If you requested a tool, we&apos;ll tell you whether we can build
           it and what it would cost.
         </p>

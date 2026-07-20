@@ -120,7 +120,7 @@ export function VerifiedBadge() {
           clipRule="evenodd"
         />
       </svg>
-      Verified — runs in 5 min
+      Verified, runs in 5 min
     </Badge>
   );
 }

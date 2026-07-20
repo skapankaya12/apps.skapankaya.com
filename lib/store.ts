@@ -18,7 +18,8 @@ const KEYS = {
   user: "rl_user",
   cart: "rl_cart",
   bookmarks: "rl_bookmarks",
-  seeded: "rl_seeded_v4",
+  // Bump this whenever seed.ts content changes, so existing browsers reseed.
+  seeded: "ab_seeded_v5",
 };
 
 type Listener = () => void;
@@ -35,7 +36,7 @@ export function subscribe(l: Listener): () => void {
 
 /**
  * Hydration gate. Until the client mounts and flips this on, every read returns
- * its fallback — so the server HTML and the first client render agree (no
+ * its fallback, so the server HTML and the first client render agree (no
  * hydration mismatch), even when localStorage already holds data. After mount,
  * markClientReady() bumps the version and the tree re-renders with live data.
  */
@@ -188,7 +189,7 @@ export function hasPurchased(buyerId: string, listingId: string): boolean {
 
 /**
  * Records a purchase. In production this is written by a Stripe webhook after
- * checkout.session.completed — never trusted from the client. Here it stands in
+ * checkout.session.completed, never trusted from the client. Here it stands in
  * for that server step so the buy flow is demoable end to end.
  */
 export function recordPurchase(buyer: AppUser, listing: Listing): Purchase {

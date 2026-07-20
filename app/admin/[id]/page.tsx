@@ -8,7 +8,7 @@ import { CATEGORY_LABELS, RUNTIME_LABELS } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
-/** The reviewer's checklist — mirrors BUSINESS_MODEL.md §3. */
+/** The reviewer's checklist, mirroring BUSINESS_MODEL.md §3. */
 const CHECKLIST = [
   "Runs in ≤5 minutes on a clean machine following its SETUP.md",
   "Source is human/AI-readable (not obfuscated or minified-only)",

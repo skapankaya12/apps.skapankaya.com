@@ -38,7 +38,7 @@ export default function CheckoutPage() {
     );
   }
 
-  // Estimated VAT line (illustrative) — real VAT is computed by Stripe Tax.
+  // Estimated VAT line (illustrative). Real VAT is computed by Stripe Tax.
   const vat = Math.round(listing.priceCents * 0.2);
   const total = listing.priceCents + vat;
 
@@ -110,7 +110,7 @@ export default function CheckoutPage() {
               {processing ? "Processing…" : `Pay ${formatPrice(total)}`}
             </Button>
             <p className="mt-3 text-center text-xs text-[var(--muted)]">
-              🔒 Secured by Stripe (demo — no real charge)
+              🔒 Secured by Stripe (demo, no real charge)
             </p>
           </div>
         </aside>

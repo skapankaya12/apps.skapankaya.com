@@ -49,7 +49,7 @@ export function BrowseExperience() {
 
   return (
     <div>
-      {/* Search — framed as "what problem do you have?" */}
+      {/* Search, framed as "what problem do you have?" */}
       <div className="relative">
         <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]">
           <SearchIcon />
@@ -93,7 +93,7 @@ export function BrowseExperience() {
       ) : (
         <div className="mt-8 rounded-2xl border border-dashed border-[var(--border-strong)] py-16 text-center">
           <p className="text-[var(--muted)]">
-            Nothing matches “{query}” yet. Try different words — or{" "}
+            Nothing matches “{query}” yet. Try different words, or{" "}
             <a href="/sell" className="text-[var(--accent)] hover:underline">
               build it and sell it
             </a>

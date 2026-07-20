@@ -10,8 +10,8 @@ import type { AppUser } from "./types";
  * On the server and the first client render, reads return their fallbacks (the
  * store's hydration gate is still closed), so SSR and hydration agree. After
  * mount we recompute and then re-run on every store change. selector() is free
- * to return fresh arrays — we hold the result in state, so there's no snapshot-
- * stability requirement to worry about.
+ * to return fresh arrays. We hold the result in state, so there is no
+ * snapshot stability requirement to worry about.
  */
 export function useStoreValue<T>(selector: () => T): T {
   const selectorRef = useRef(selector);

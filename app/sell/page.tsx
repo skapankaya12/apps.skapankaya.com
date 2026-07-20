@@ -85,7 +85,7 @@ export default function SellPage() {
           </p>
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
             {[
-              ["Runs in 5 minutes", "A buyer can go from download to running by following your SETUP file — one command, or AI-assisted."],
+              ["Runs in 5 minutes", "A buyer can go from download to running by following your SETUP file, either with one command or AI assisted."],
               ["Readable source", "No obfuscated or minified-only code. Buyers (and their AI) can read what they run."],
               ["Honest disclosure", "All network calls and dependencies declared in your manifest.json."],
               ["Real screenshots", "Show the app actually working. No mockups or stock images."],
