@@ -18,6 +18,7 @@ export function Navbar() {
   const navItems = [
     { href: "/browse", label: "Browse" },
     { href: "/sell", label: "Sell your tool" },
+    { href: "/about", label: "About marketplace" },
   ];
 
   return (

@@ -28,7 +28,9 @@ export function Footer() {
         <FooterCol
           title="How it works"
           links={[
+            { href: "/about", label: "About marketplace" },
             { href: "/how-to-run", label: "How to run a tool" },
+            { href: "/about#contact", label: "Contact & support" },
             { href: "/sell", label: "Seller guide" },
           ]}
         />

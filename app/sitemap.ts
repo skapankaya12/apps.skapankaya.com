@@ -4,7 +4,7 @@ import { seedListings } from "@/lib/seed";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = `https://${brand.domain}`;
-  const staticRoutes = ["", "/browse", "/sell", "/how-to-run"].map((path) => ({
+  const staticRoutes = ["", "/browse", "/sell", "/about", "/how-to-run"].map((path) => ({
     url: `${base}${path}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
