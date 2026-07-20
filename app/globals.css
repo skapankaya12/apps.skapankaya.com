@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   RunLocal design system
+   Clean, spacious, developer-friendly. Light + dark. Inspired by 21st.dev:
+   generous whitespace, hairline borders, soft radii, one confident accent.
+--------------------------------------------------------------------------- */
+
+:root {
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f7f7f8;
+  --foreground: #101014;
+  --muted: #6b6b76;
+  --border: #ececef;
+  --border-strong: #dcdce1;
+  --accent: #4f46e5;
+  --accent-fg: #ffffff;
+  --accent-soft: #eef0ff;
+  --success: #157347;
+  --success-soft: #e7f4ec;
+  --warning: #9a6a00;
+  --warning-soft: #fdf3dd;
+  --danger: #c0362c;
+  --danger-soft: #fbeae8;
+  --ring: rgba(79, 70, 229, 0.35);
+  --shadow-sm: 0 1px 2px rgba(16, 16, 20, 0.04), 0 1px 3px rgba(16, 16, 20, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 16, 20, 0.06), 0 2px 4px rgba(16, 16, 20, 0.04);
+  --shadow-lg: 0 12px 40px rgba(16, 16, 20, 0.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0c;
+    --surface: #131317;
+    --surface-muted: #1a1a1f;
+    --foreground: #f2f2f4;
+    --muted: #9a9aa5;
+    --border: #26262d;
+    --border-strong: #34343d;
+    --accent: #7c74ff;
+    --accent-fg: #0a0a0c;
+    --accent-soft: #1c1b33;
+    --success: #4ade80;
+    --success-soft: #12241a;
+    --warning: #f5c451;
+    --warning-soft: #2a2210;
+    --danger: #f87171;
+    --danger-soft: #2a1514;
+    --ring: rgba(124, 116, 255, 0.4);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--foreground);
+}
+
+/* Focus ring for keyboard users */
+:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 3px var(--ring);
+  border-radius: 8px;
+}
+
+/* Subtle grid backdrop used on hero sections */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
