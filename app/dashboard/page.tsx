@@ -5,6 +5,7 @@ import { useStoreValue, useUser } from "@/lib/hooks";
 import { getListings, formatPrice } from "@/lib/store";
 import { brand } from "@/lib/brand";
 import { Section, ButtonLink, StatusBadge } from "@/components/ui";
+import { Monogram } from "@/components/Monogram";
 
 export default function DashboardPage() {
   const user = useUser();
@@ -78,9 +79,7 @@ export default function DashboardPage() {
                       href={l.status === "approved" ? `/app/${l.slug}` : "#"}
                       className="flex items-center gap-3"
                     >
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--surface-muted)] text-lg">
-                        {l.glyph}
-                      </span>
+                      <Monogram title={l.title} className="h-9 w-9 rounded-lg text-sm" />
                       <span>
                         <span className="font-medium">{l.title}</span>
                         <span className="block text-xs text-[var(--muted)]">

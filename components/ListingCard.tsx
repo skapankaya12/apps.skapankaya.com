@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
-import { CATEGORY_LABELS, RUNTIME_LABELS } from "@/lib/types";
+import { CATEGORY_LABELS } from "@/lib/types";
 import {
   formatPrice,
   isInCart,
@@ -13,67 +13,76 @@ import {
 } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
 import { Badge } from "./ui";
+import { Card } from "./ui/card";
+import { ListingMedia } from "./ListingMedia";
 
 export function ListingCard({ listing }: { listing: Listing }) {
   const inCart = useStoreValue(() => isInCart(listing.id));
   const saved = useStoreValue(() => isBookmarked(listing.id));
 
   return (
-    <div className="group relative flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]">
-      {/* Bookmark */}
-      <button
-        aria-label={saved ? "Remove bookmark" : "Save for later"}
-        onClick={() => toggleBookmark(listing.id)}
-        className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)]"
-      >
-        <HeartIcon filled={saved} />
-      </button>
-
-      <Link href={`/app/${listing.slug}`} className="flex flex-1 flex-col">
-        <div className="grid h-12 w-12 place-items-center rounded-xl bg-[var(--surface-muted)] text-2xl">
-          {listing.glyph}
+    <Card
+      variant="gradient"
+      contentClassName="px-5 py-0"
+      className="group h-full transition-transform duration-200 hover:-translate-y-0.5"
+    >
+      <div className="flex h-full flex-col">
+        {/* Demo video doubles as the cover — plays on hover */}
+        <div className="relative">
+          <Link href={`/app/${listing.slug}`} className="block">
+            <ListingMedia src={listing.demoVideo} title={listing.title} />
+          </Link>
+          <button
+            aria-label={saved ? "Remove bookmark" : "Save for later"}
+            onClick={() => toggleBookmark(listing.id)}
+            className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-lg bg-[var(--surface)]/85 text-[var(--muted)] backdrop-blur-sm transition-colors hover:text-[var(--foreground)]"
+          >
+            <HeartIcon filled={saved} />
+          </button>
         </div>
 
-        <h3 className="mt-4 pr-8 font-semibold tracking-tight group-hover:text-[var(--accent)]">
-          {listing.title}
-        </h3>
-        <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
-          {listing.tagline}
-        </p>
+        <Link href={`/app/${listing.slug}`} className="flex flex-1 flex-col">
+          <h3 className="mt-4 font-semibold tracking-tight group-hover:text-[var(--accent)]">
+            {listing.title}
+          </h3>
+          <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
+            {listing.tagline}
+          </p>
 
-        <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <Badge tone="neutral">{CATEGORY_LABELS[listing.category]}</Badge>
-          {listing.setupMode === "one-command" ? (
-            <Badge tone="accent">No setup</Badge>
-          ) : (
-            <Badge tone="accent">Guided setup</Badge>
-          )}
-          {listing.demoVideo && <Badge tone="neutral">▶ Demo</Badge>}
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <Badge tone="neutral">{CATEGORY_LABELS[listing.category]}</Badge>
+            {listing.setupMode === "one-command" ? (
+              <Badge tone="accent">No setup</Badge>
+            ) : (
+              <Badge tone="accent">Guided setup</Badge>
+            )}
+          </div>
+        </Link>
+
+        {/* mt-auto pins the footer so rows line up across the grid */}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+          <span className="text-sm font-semibold tabular-nums">
+            {formatPrice(listing.priceCents)}
+          </span>
+          <button
+            onClick={() =>
+              inCart ? removeFromCart(listing.id) : addToCart(listing.id)
+            }
+            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              inCart
+                ? "bg-[var(--success-soft)] text-[var(--success)]"
+                : "bg-[var(--surface-muted)] text-[var(--foreground)] hover:bg-[var(--accent)] hover:text-[var(--accent-fg)]"
+            }`}
+          >
+            {inCart ? "✓ In cart" : "+ Add to cart"}
+          </button>
         </div>
-      </Link>
-
-      <div className="mt-4 flex items-center justify-between gap-2 border-t border-[var(--border)] pt-3">
-        <span className="text-sm font-semibold tabular-nums">
-          {formatPrice(listing.priceCents)}
+        <span className="mt-2 text-xs text-[var(--muted)]">
+          by {listing.sellerName}
+          {listing.salesCount > 0 && ` · ${listing.salesCount} sold`}
         </span>
-        <button
-          onClick={() =>
-            inCart ? removeFromCart(listing.id) : addToCart(listing.id)
-          }
-          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-            inCart
-              ? "bg-[var(--success-soft)] text-[var(--success)]"
-              : "bg-[var(--surface-muted)] text-[var(--foreground)] hover:bg-[var(--accent)] hover:text-[var(--accent-fg)]"
-          }`}
-        >
-          {inCart ? "✓ In cart" : "+ Add to cart"}
-        </button>
       </div>
-      <span className="mt-2 text-xs text-[var(--muted)]">
-        by {listing.sellerName}
-        {listing.salesCount > 0 && ` · ${listing.salesCount} sold`}
-      </span>
-    </div>
+    </Card>
   );
 }
 

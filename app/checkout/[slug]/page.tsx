@@ -7,6 +7,7 @@ import { getListingBySlug, recordPurchase, formatPrice } from "@/lib/store";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { brand } from "@/lib/brand";
+import { Monogram } from "@/components/Monogram";
 
 export default function CheckoutPage() {
   const params = useParams<{ slug: string }>();
@@ -60,9 +61,7 @@ export default function CheckoutPage() {
         {/* Order */}
         <div>
           <div className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-            <div className="grid h-14 w-14 place-items-center rounded-xl bg-[var(--surface-muted)] text-3xl">
-              {listing.glyph}
-            </div>
+            <Monogram title={listing.title} className="h-14 w-14 text-xl" />
             <div className="flex-1">
               <h2 className="font-semibold">{listing.title}</h2>
               <p className="text-sm text-[var(--muted)]">

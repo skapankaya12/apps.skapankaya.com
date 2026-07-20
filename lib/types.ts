@@ -44,11 +44,9 @@ export interface Listing {
   priceCents: number;
   runtime: Runtime;
   setupMode: SetupMode;
-  /** Emoji or short glyph used as a lightweight cover (keeps the demo asset-free). */
-  glyph: string;
   /** Up to 5 screenshots. Demo stores filenames/labels; prod stores Storage URLs. */
   screenshots: string[];
-  /** Required demo video (filename in demo, Storage URL in prod). */
+  /** Required demo video URL. Doubles as the card's visual — plays on hover. */
   demoVideo?: string;
   status: ListingStatus;
   version: string;

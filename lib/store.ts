@@ -18,7 +18,7 @@ const KEYS = {
   user: "rl_user",
   cart: "rl_cart",
   bookmarks: "rl_bookmarks",
-  seeded: "rl_seeded_v3",
+  seeded: "rl_seeded_v4",
 };
 
 type Listener = () => void;

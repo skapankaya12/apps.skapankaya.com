@@ -5,6 +5,7 @@ import { useStoreValue, useUser } from "@/lib/hooks";
 import { getListings, formatPrice } from "@/lib/store";
 import { CATEGORY_LABELS } from "@/lib/types";
 import { Section, ButtonLink, Badge, StatusBadge } from "@/components/ui";
+import { Monogram } from "@/components/Monogram";
 
 export default function AdminPage() {
   const user = useUser();
@@ -61,9 +62,7 @@ export default function AdminPage() {
               href={`/admin/${l.id}`}
               className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 transition-colors hover:border-[var(--border-strong)]"
             >
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-[var(--surface-muted)] text-2xl">
-                {l.glyph}
-              </span>
+              <Monogram title={l.title} />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{l.title}</span>
@@ -98,7 +97,6 @@ export default function AdminPage() {
                   <tr key={l.id} className="border-t border-[var(--border)]">
                     <td className="px-5 py-3">
                       <Link href={`/admin/${l.id}`} className="flex items-center gap-2 font-medium hover:text-[var(--accent)]">
-                        <span>{l.glyph}</span>
                         {l.title}
                       </Link>
                     </td>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useStoreValue, useUser } from "@/lib/hooks";
 import { getPurchases, getListingById, formatPrice } from "@/lib/store";
 import { Section, ButtonLink, Button, Badge } from "@/components/ui";
+import { Monogram } from "@/components/Monogram";
 
 export default function LibraryPage() {
   const user = useUser();
@@ -48,9 +49,7 @@ export default function LibraryPage() {
                 key={p.id}
                 className="flex flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:flex-row sm:items-center"
               >
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[var(--surface-muted)] text-3xl">
-                  {listing?.glyph ?? "📦"}
-                </div>
+                <Monogram title={p.listingTitle} className="h-14 w-14 text-xl" />
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link

@@ -15,9 +15,14 @@ import type { AppUser } from "./types";
  */
 export function useStoreValue<T>(selector: () => T): T {
   const selectorRef = useRef(selector);
-  selectorRef.current = selector;
-
   const [value, setValue] = useState<T>(() => selector());
+
+  // Keep the latest selector without touching the ref during render. This
+  // effect is declared first, so it has already run by the time the
+  // subscription below fires.
+  useEffect(() => {
+    selectorRef.current = selector;
+  });
 
   useEffect(() => {
     const update = () => setValue(selectorRef.current());

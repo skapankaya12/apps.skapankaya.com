@@ -13,6 +13,7 @@ import {
 } from "@/lib/store";
 import { Section, Button, ButtonLink } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
+import { Monogram } from "@/components/Monogram";
 
 export default function CartPage() {
   const router = useRouter();
@@ -59,9 +60,7 @@ export default function CartPage() {
                 key={l.id}
                 className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4"
               >
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[var(--surface-muted)] text-2xl">
-                  {l.glyph}
-                </div>
+                <Monogram title={l.title} />
                 <div className="flex-1">
                   <Link href={`/app/${l.slug}`} className="font-semibold hover:text-[var(--accent)]">
                     {l.title}

@@ -58,14 +58,9 @@ export function ListingDetail({ slug }: { slug: string }) {
       <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_340px]">
         {/* Main */}
         <div>
-          <div className="flex items-start gap-4">
-            <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[var(--surface-muted)] text-4xl">
-              {listing.glyph}
-            </div>
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight">{listing.title}</h1>
-              <p className="mt-1 text-lg text-[var(--muted)]">{listing.tagline}</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">{listing.title}</h1>
+            <p className="mt-1 text-lg text-[var(--muted)]">{listing.tagline}</p>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -75,22 +70,26 @@ export function ListingDetail({ slug }: { slug: string }) {
             <Badge tone="neutral">v{listing.version}</Badge>
           </div>
 
-          {/* Media: demo video + screenshots */}
+          {/* Media: demo video (full controls here) + screenshots */}
           <div className="mt-8">
             {listing.demoVideo ? (
-              <div className="relative grid aspect-video place-items-center overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--foreground)]">
-                <div className="text-center text-[var(--background)]">
-                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--background)]/15 backdrop-blur">
-                    <PlayIcon />
-                  </div>
-                  <p className="mt-3 text-sm opacity-80">Demo video</p>
-                  <p className="text-xs opacity-50">{listing.demoVideo}</p>
-                </div>
-                <Badge tone="accent" className="absolute left-4 top-4">▶ See it work</Badge>
+              <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-black">
+                <video
+                  src={listing.demoVideo}
+                  controls
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full"
+                />
+                <Badge tone="accent" className="absolute left-4 top-4">
+                  ▶ See it work
+                </Badge>
               </div>
             ) : (
-              <div className="grid aspect-video place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] text-6xl">
-                {listing.glyph}
+              <div className="grid aspect-video place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] text-sm text-[var(--muted)]">
+                No demo video yet
               </div>
             )}
 
@@ -99,10 +98,11 @@ export function ListingDetail({ slug }: { slug: string }) {
                 {listing.screenshots.slice(0, 5).map((shot, i) => (
                   <div
                     key={i}
-                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center"
+                    className="flex aspect-square items-end rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center"
                   >
-                    <span className="text-xl">{listing.glyph}</span>
-                    <span className="text-[10px] leading-tight text-[var(--muted)]">{shot}</span>
+                    <span className="w-full text-[10px] leading-tight text-[var(--muted)]">
+                      {shot}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -220,14 +220,6 @@ export function ListingDetail({ slug }: { slug: string }) {
         </aside>
       </div>
     </Section>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M8 5v14l11-7z" />
-    </svg>
   );
 }
 

@@ -6,6 +6,7 @@ import { useStoreValue, useUser } from "@/lib/hooks";
 import { getListingById, reviewListing, formatPrice } from "@/lib/store";
 import { CATEGORY_LABELS, RUNTIME_LABELS } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
+import { Monogram } from "@/components/Monogram";
 
 /** The reviewer's checklist — mirrors BUSINESS_MODEL.md §3. */
 const CHECKLIST = [
@@ -61,9 +62,7 @@ export default function AdminReviewPage() {
         {/* Submission details */}
         <div>
           <div className="flex items-start gap-4">
-            <span className="grid h-16 w-16 place-items-center rounded-2xl bg-[var(--surface-muted)] text-4xl">
-              {listing.glyph}
-            </span>
+            <Monogram title={listing.title} className="h-16 w-16 rounded-2xl text-2xl" />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-semibold tracking-tight">{listing.title}</h1>

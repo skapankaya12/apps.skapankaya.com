@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useUser } from "@/lib/hooks";
 import { createListing } from "@/lib/store";
 import {
@@ -15,7 +14,6 @@ import {
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 
 export default function NewListingPage() {
-  const router = useRouter();
   const user = useUser();
 
   const [title, setTitle] = useState("");
@@ -25,7 +23,6 @@ export default function NewListingPage() {
   const [runtime, setRuntime] = useState<Runtime>("node");
   const [setupMode, setSetupMode] = useState<SetupMode>("one-command");
   const [price, setPrice] = useState("15");
-  const [glyph, setGlyph] = useState("📦");
   const [fileName, setFileName] = useState("");
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [demoVideo, setDemoVideo] = useState("");
@@ -72,7 +69,6 @@ export default function NewListingPage() {
       runtime,
       setupMode,
       priceCents,
-      glyph: glyph || "📦",
       screenshots,
       demoVideo,
       version: "1.0.0",
@@ -186,32 +182,21 @@ export default function NewListingPage() {
           </div>
         </Field>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field label="Price (USD)" hint="Suggested range: $10–29.">
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]">
-                $
-              </span>
-              <input
-                type="number"
-                min="5"
-                step="1"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className={`${inputClass} pl-7`}
-              />
-            </div>
-          </Field>
-
-          <Field label="Icon (emoji)">
+        <Field label="Price (USD)" hint="Suggested range: $10–29.">
+          <div className="relative max-w-[200px]">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]">
+              $
+            </span>
             <input
-              value={glyph}
-              onChange={(e) => setGlyph(e.target.value.slice(0, 2))}
-              placeholder="📦"
-              className={inputClass}
+              type="number"
+              min="5"
+              step="1"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className={`${inputClass} pl-7`}
             />
-          </Field>
-        </div>
+          </div>
+        </Field>
 
         {/* App package upload */}
         <Field
