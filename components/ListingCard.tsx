@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
-import { CATEGORY_LABELS } from "@/lib/types";
 import {
   formatPrice,
   isInCart,
@@ -12,7 +11,6 @@ import {
   toggleBookmark,
 } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
-import { Badge } from "./ui";
 import { Card } from "./ui/card";
 import { ListingMedia } from "./ListingMedia";
 
@@ -23,7 +21,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Card
       variant="gradient"
-      contentClassName="px-5 py-0"
+      contentClassName="px-6 py-4"
       className="group h-full transition-transform duration-200 hover:-translate-y-0.5"
     >
       <div className="flex h-full flex-col">
@@ -48,15 +46,6 @@ export function ListingCard({ listing }: { listing: Listing }) {
           <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
             {listing.tagline}
           </p>
-
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <Badge tone="neutral">{CATEGORY_LABELS[listing.category]}</Badge>
-            {listing.setupMode === "one-command" ? (
-              <Badge tone="accent">No setup</Badge>
-            ) : (
-              <Badge tone="accent">Guided setup</Badge>
-            )}
-          </div>
         </Link>
 
         {/* mt-auto pins the footer so rows line up across the grid */}
