@@ -1,35 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { brand } from "@/lib/brand";
-import {
-  articlesSorted,
-  readingMinutes,
-  formatDate,
-  ARTICLE_TAGS,
-  type ArticleTag,
-} from "@/lib/articles";
+import { articlesSorted, readingMinutes, formatDate } from "@/lib/articles";
 import { Section, Badge } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Insights: for indie makers and independent professionals",
   description:
-    "Articles on building and selling small software, buying tools instead of bloated SaaS, local-first work, and getting found by Google and AI. Written for indie makers and solo professionals.",
+    "Articles on building and selling small software, buying tools instead of bloated SaaS, subscription fatigue, and local-first work. Written for indie makers and solo professionals.",
   alternates: { canonical: "/blog" },
 };
 
-export default async function BlogPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tag?: string }>;
-}) {
-  const { tag } = await searchParams;
-  const activeTag = ARTICLE_TAGS.includes(tag as ArticleTag)
-    ? (tag as ArticleTag)
-    : null;
-
+export default function BlogPage() {
   const all = articlesSorted();
-  const list = activeTag ? all.filter((a) => a.tag === activeTag) : all;
-  const [lead, ...rest] = list;
+  const [lead, ...rest] = all;
 
   return (
     <>
@@ -42,41 +26,23 @@ export default async function BlogPage({
           <p className="mt-3 max-w-xl text-[var(--muted)]">
             Practical writing for indie makers and independent professionals:
             building tools with AI, selling them, escaping bloated SaaS, and
-            getting found by search and AI answers.
+            owning your software again.
           </p>
-
-          {/* Tag filter, as links so it stays crawlable */}
-          <div className="mt-6 flex flex-wrap gap-2">
-            <TagLink label="All" href="/blog" active={!activeTag} />
-            {ARTICLE_TAGS.map((t) => (
-              <TagLink
-                key={t}
-                label={t}
-                href={`/blog?tag=${encodeURIComponent(t)}`}
-                active={activeTag === t}
-              />
-            ))}
-          </div>
         </Section>
       </div>
 
       <Section className="py-12">
-        {list.length === 0 ? (
-          <p className="text-[var(--muted)]">No articles in this topic yet.</p>
-        ) : (
-          <div className="space-y-10">
-            {/* Lead article */}
-            {lead && <LeadCard article={lead} />}
+        <div className="space-y-10">
+          {lead && <LeadCard article={lead} />}
 
-            {rest.length > 0 && (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {rest.map((a) => (
-                  <ArticleCard key={a.slug} article={a} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          {rest.length > 0 && (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {rest.map((a) => (
+                <ArticleCard key={a.slug} article={a} />
+              ))}
+            </div>
+          )}
+        </div>
       </Section>
 
       {/* Nudge back to the product */}
@@ -97,29 +63,6 @@ export default async function BlogPage({
   );
 }
 
-function TagLink({
-  label,
-  href,
-  active,
-}: {
-  label: string;
-  href: string;
-  active: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
-        active
-          ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
-          : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--foreground)]"
-      }`}
-    >
-      {label}
-    </Link>
-  );
-}
-
 function LeadCard({ article }: { article: ReturnType<typeof articlesSorted>[number] }) {
   return (
     <Link
@@ -127,7 +70,6 @@ function LeadCard({ article }: { article: ReturnType<typeof articlesSorted>[numb
       className="group block rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 transition-all hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] sm:p-8"
     >
       <div className="flex items-center gap-3 text-xs text-[var(--muted)]">
-        <Badge tone="accent">{article.tag}</Badge>
         <span>{formatDate(article.date)}</span>
         <span>·</span>
         <span>{readingMinutes(article)} min read</span>
@@ -149,9 +91,8 @@ function ArticleCard({ article }: { article: ReturnType<typeof articlesSorted>[n
       href={`/blog/${article.slug}`}
       className="group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 transition-all hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]"
     >
-      <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
-        <Badge tone="neutral">{article.tag}</Badge>
-        <span>{readingMinutes(article)} min</span>
+      <div className="text-xs text-[var(--muted)]">
+        {formatDate(article.date)} · {readingMinutes(article)} min
       </div>
       <h3 className="mt-3 font-semibold tracking-tight group-hover:text-[var(--accent)]">
         {article.title}
@@ -159,8 +100,8 @@ function ArticleCard({ article }: { article: ReturnType<typeof articlesSorted>[n
       <p className="mt-1.5 line-clamp-3 flex-1 text-sm text-[var(--muted)]">
         {article.excerpt}
       </p>
-      <span className="mt-4 text-xs text-[var(--muted)]">
-        {formatDate(article.date)}
+      <span className="mt-4 text-xs font-medium text-[var(--accent)]">
+        Read article →
       </span>
     </Link>
   );

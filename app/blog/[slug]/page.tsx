@@ -10,7 +10,7 @@ import {
   articlesSorted,
   type Block,
 } from "@/lib/articles";
-import { Section, Badge } from "@/components/ui";
+import { Section } from "@/components/ui";
 
 export function generateStaticParams() {
   return articles.map((a) => ({ slug: a.slug }));
@@ -81,7 +81,6 @@ export default async function ArticlePage({
       </Link>
 
       <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
-        <Badge tone="accent">{article.tag}</Badge>
         <span>{formatDate(article.date)}</span>
         <span>·</span>
         <span>{readingMinutes(article)} min read</span>

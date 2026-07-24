@@ -18,8 +18,7 @@ export type ArticleTag =
   | "Indie makers"
   | "For professionals"
   | "Trends"
-  | "Playbooks"
-  | "AI & SEO";
+  | "Playbooks";
 
 export interface Article {
   slug: string;
@@ -37,7 +36,6 @@ export const ARTICLE_TAGS: ArticleTag[] = [
   "For professionals",
   "Trends",
   "Playbooks",
-  "AI & SEO",
 ];
 
 export const articles: Article[] = [
@@ -119,27 +117,30 @@ export const articles: Article[] = [
     ],
   },
   {
-    slug: "get-found-by-ai-answers",
-    title: "Getting found by AI: writing product pages that show up in AI answers",
+    slug: "everything-is-a-subscription",
+    title: "Everything is a subscription now, and you own none of it",
     excerpt:
-      "Search is no longer just ten blue links. If you sell a tool, here's how to write pages that both Google and AI assistants can quote and recommend.",
-    tag: "AI & SEO",
+      "Your software, your music, even features already built into your car: it's all rented. Here's the quiet cost of a world with no 'buy' button, and why owning your tools is quietly coming back.",
+    tag: "Trends",
     author: "Apps Marketplace",
-    date: "2026-05-28",
+    date: "2026-07-15",
     body: [
-      { type: "p", text: "More and more people start with a question typed into an AI assistant, not a search box. The assistant reads pages and answers in prose, often recommending a specific tool. If you make software, being the tool it names is the new front page of Google. The good news: the way to get there overlaps heavily with plain, honest writing." },
-      { type: "h2", text: "Lead with the problem, in the buyer's words" },
-      { type: "p", text: "Both search engines and AI models match on the language people actually use. Someone doesn't search 'data normalization utility,' they search 'clean up a messy CSV.' Put the real problem in your title and first sentence. Describe the job to be done before the clever name." },
-      { type: "h2", text: "Be specific and answerable" },
+      { type: "p", text: "Count the subscriptions leaving your account this month. The software, the storage, the streaming, the thing you signed up for once and forgot. Somewhere along the way the 'buy' button quietly disappeared, and everything became a monthly rental you never stop paying for and never actually own." },
+      { type: "h2", text: "Renting things that used to be yours" },
+      { type: "p", text: "It's not just apps. It's music you can't keep, e-books that can vanish from your device, and cars shipping with heated seats you have to unlock with a monthly fee for hardware you already paid for. The pattern is the same everywhere: the product you hold is now a doorway to a payment you can never finish making." },
+      { type: "quote", text: "You are not buying the thing. You are renting permission to keep using it." },
+      { type: "h2", text: "The quiet costs" },
+      { type: "p", text: "Rental-everything has real downsides that don't show up until later:" },
       { type: "ul", items: [
-        "State exactly what the tool does and doesn't do. Vague pages get skipped; precise ones get quoted.",
-        "Answer the obvious questions on the page: what it costs, what it needs to run, whether data stays local.",
-        "Use clear headings that mirror real questions. AI systems lift answers from well-structured sections.",
-        "Include a short demo. Rich media keeps humans on the page, which search still rewards.",
+        "The price only goes up. A subscription is a standing invitation to raise your rent.",
+        "It stops working the moment you stop paying, even if your need hasn't changed.",
+        "You don't control it. Features get removed, terms change, and the whole thing can be discontinued out from under you.",
+        "It never ends. Ten small subscriptions is a second rent you pay for software.",
       ]},
-      { type: "quote", text: "The pages that win AI answers are the ones that already answer the question a human would ask." },
-      { type: "h2", text: "Structure the machine can trust" },
-      { type: "p", text: "Behind the scenes, structured data helps. Marking up a product with its price, description, and reviews, and marking up an article as an article with an author and date, gives machines unambiguous facts to repeat. You don't need to game anything. You need to be clear, specific, and honest, then make that clarity legible to software. That is the whole playbook, and it happens to be good writing too." },
+      { type: "h2", text: "There is no end product anymore" },
+      { type: "p", text: "The deeper loss is the idea of a finished thing you own. A tool used to be something you bought, kept, and relied on for years. Now most software is a service that assumes it should be part of your life, and your budget, forever. Convenient for the company. Exhausting for you." },
+      { type: "h2", text: "Owning your tools is making a comeback" },
+      { type: "p", text: "The pushback is simple: buy the tool once, and it's yours. It runs on your machine, it keeps working whether or not the maker is still around, and it never sends another invoice. Not everything should work this way, but far more things could. For the small, specific jobs, a tool you own beats a service you rent, every single month it doesn't bill you." },
     ],
   },
   {
