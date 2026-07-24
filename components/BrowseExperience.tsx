@@ -29,21 +29,23 @@ export function BrowseExperience() {
   }, [listings, query, category]);
 
   /**
-   * Only surface categories that actually have tools, with live counts. With a
-   * small catalogue this avoids dead-end filters, and it self-maintains as
-   * listings grow. Sellers still choose from the full taxonomy when submitting.
+   * Show every department filter, always, so professionals see the full range
+   * the marketplace covers even before it's filled out. Counts appear only when
+   * a department has tools, so empty ones read as "coming soon" rather than "0".
    */
   const categories = useMemo(() => {
     const counts = new Map<Category, number>();
     listings.forEach((l) =>
       counts.set(l.category, (counts.get(l.category) ?? 0) + 1)
     );
-    const populated = (Object.keys(CATEGORY_LABELS) as Category[])
-      .filter((c) => counts.has(c))
-      .map((c) => ({ value: c as Category | "all", label: CATEGORY_LABELS[c], count: counts.get(c)! }));
+    const all = (Object.keys(CATEGORY_LABELS) as Category[]).map((c) => ({
+      value: c as Category | "all",
+      label: CATEGORY_LABELS[c],
+      count: counts.get(c) ?? 0,
+    }));
     return [
       { value: "all" as Category | "all", label: "All tools", count: listings.length },
-      ...populated,
+      ...all,
     ];
   }, [listings]);
 
@@ -78,7 +80,7 @@ export function BrowseExperience() {
               }`}
             >
               {c.label}
-              <span className="ml-1.5 opacity-60">{c.count}</span>
+              {c.count > 0 && <span className="ml-1.5 opacity-60">{c.count}</span>}
             </button>
           ))}
         </div>

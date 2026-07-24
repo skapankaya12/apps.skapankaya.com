@@ -19,7 +19,7 @@ export default function NewListingPage() {
   const [title, setTitle] = useState("");
   const [tagline, setTagline] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<Category>("spreadsheets");
+  const [category, setCategory] = useState<Category>("productivity");
   const [runtime, setRuntime] = useState<Runtime>("node");
   const [setupMode, setSetupMode] = useState<SetupMode>("one-command");
   const [price, setPrice] = useState("15");

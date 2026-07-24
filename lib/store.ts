@@ -19,7 +19,7 @@ const KEYS = {
   cart: "rl_cart",
   bookmarks: "rl_bookmarks",
   // Bump this whenever seed.ts content changes, so existing browsers reseed.
-  seeded: "am_seeded_v6",
+  seeded: "am_seeded_v7",
 };
 
 type Listener = () => void;

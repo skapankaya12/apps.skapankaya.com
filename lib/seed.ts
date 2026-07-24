@@ -44,7 +44,7 @@ export const seedListings: Listing[] = [
     tagline: "Dedupe, trim, and fix messy CSV exports in one command.",
     description:
       "Point it at any messy CSV and it removes duplicate rows, trims whitespace, normalizes headers, and fixes broken encodings. Runs fully offline, so your data never leaves your machine. Ideal for cleaning exports from old CRMs and spreadsheets before import.",
-    category: "spreadsheets",
+    category: "data",
     priceCents: 1200,
     runtime: "node",
     setupMode: "one-command",
@@ -65,7 +65,7 @@ export const seedListings: Listing[] = [
     tagline: "Turn a one-line command into a clean, branded invoice PDF.",
     description:
       "A tiny local tool that generates professional invoice PDFs from a simple config file. No subscriptions, no accounts, no cloud. Add your logo, set your tax rate, and run it. The PDF lands in your folder. Perfect for freelancers who hate invoicing SaaS.",
-    category: "invoicing",
+    category: "finance",
     priceCents: 1900,
     runtime: "node",
     setupMode: "ai-assisted",
@@ -86,7 +86,7 @@ export const seedListings: Listing[] = [
     tagline: "Drop screenshots in, get beautiful device-framed images out.",
     description:
       "Watches a folder and automatically wraps any screenshot you drop in with a clean device frame and soft shadow, ready for your landing page or app store. Runs locally, processes in bulk, and never uploads your images anywhere.",
-    category: "images-video",
+    category: "design",
     priceCents: 1500,
     runtime: "python",
     setupMode: "ai-assisted",
@@ -107,7 +107,7 @@ export const seedListings: Listing[] = [
     tagline: "A no-nonsense local website blocker you actually control.",
     description:
       "Blocks distracting sites during focus sessions by editing your local hosts file, with no browser extension, no account and no telemetry. Set your block list once, run it before deep work, and it cleans up after itself when the timer ends.",
-    category: "focus-time",
+    category: "productivity",
     priceCents: 900,
     runtime: "node",
     setupMode: "one-command",
@@ -128,7 +128,7 @@ export const seedListings: Listing[] = [
     tagline: "Rename hundreds of files with patterns, safely and locally.",
     description:
       "Preview-first bulk renaming with find/replace, sequential numbering, and date stamping. Shows you exactly what will change before it touches anything. A pending submission awaiting review, included here to demo the admin queue.",
-    category: "files",
+    category: "operations",
     priceCents: 1100,
     runtime: "python",
     setupMode: "one-command",
@@ -149,7 +149,7 @@ export const seedListings: Listing[] = [
     tagline: "A local, file-based habit tracker that lives in your terminal.",
     description:
       "Track habits from the command line with a printable year grid. Data stays in a plain text file you own. Second pending submission to show a review queue with more than one item.",
-    category: "focus-time",
+    category: "personal",
     priceCents: 700,
     runtime: "python",
     setupMode: "ai-assisted",

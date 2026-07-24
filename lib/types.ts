@@ -7,19 +7,22 @@ export type Runtime = "node" | "python" | "browser" | "binary" | "other";
 export type SetupMode = "one-command" | "ai-assisted";
 
 /**
- * Categories are framed as the JOB the buyer is trying to do, not the kind of
- * software it is. Visitors arrive thinking "I need to fix a spreadsheet", not
- * "I need a data utility", and these read the same whatever sector they're in.
+ * Categories are framed around the professional context / department a tool
+ * serves ("Sales", "Marketing", "Finance"), not the kind of file it touches.
+ * A buyer browses the way they think about their own work, and the same tool
+ * makes sense whatever their industry.
  */
 export type Category =
-  | "spreadsheets"
-  | "documents"
-  | "images-video"
-  | "files"
-  | "writing"
-  | "invoicing"
-  | "repetitive-tasks"
-  | "focus-time";
+  | "sales"
+  | "marketing"
+  | "finance"
+  | "operations"
+  | "people"
+  | "design"
+  | "developers"
+  | "productivity"
+  | "data"
+  | "personal";
 
 export interface AppUser {
   uid: string;
@@ -74,26 +77,30 @@ export interface Purchase {
 }
 
 export const CATEGORY_LABELS: Record<Category, string> = {
-  spreadsheets: "Spreadsheets & data",
-  documents: "Documents & PDFs",
-  "images-video": "Images & video",
-  files: "Files & folders",
-  writing: "Writing & notes",
-  invoicing: "Invoicing & money",
-  "repetitive-tasks": "Repetitive tasks",
-  "focus-time": "Focus & time",
+  sales: "Sales",
+  marketing: "Marketing",
+  finance: "Finance & accounting",
+  operations: "Operations",
+  people: "HR & people",
+  design: "Design & creative",
+  developers: "Developers",
+  productivity: "Productivity",
+  data: "Data & analytics",
+  personal: "Personal & fun",
 };
 
 /** Shown under each category in the seller form so makers pick the right one. */
 export const CATEGORY_HINTS: Record<Category, string> = {
-  spreadsheets: "Clean, merge, convert or dedupe spreadsheets and exports",
-  documents: "Create, split, merge or convert documents and PDFs",
-  "images-video": "Resize, convert, compress, frame or batch-edit media",
-  files: "Rename, sort, organise or back up files and folders",
-  writing: "Drafting, transcripts, formatting and note-taking",
-  invoicing: "Invoices, quotes, expenses and simple bookkeeping",
-  "repetitive-tasks": "Automate or batch something you do over and over",
-  "focus-time": "Time tracking, timers, blockers and habits",
+  sales: "Outreach, CRM helpers, lead lists, quotes and pipelines",
+  marketing: "Content, social, SEO, email and campaign tools",
+  finance: "Invoices, expenses, bookkeeping and reporting",
+  operations: "Files, workflows, scheduling and back-office admin",
+  people: "Hiring, onboarding, time-off and team admin",
+  design: "Images, video, mockups and brand assets",
+  developers: "Code, automation and developer utilities",
+  productivity: "Focus, notes, time tracking and getting things done",
+  data: "Cleaning, converting, analysing and visualising data",
+  personal: "Habits, hobbies, home and just-for-fun tools",
 };
 
 export const RUNTIME_LABELS: Record<Runtime, string> = {
