@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { brand } from "@/lib/brand";
+import { Logo } from "./Logo";
 
 export function Footer() {
   return (
@@ -7,9 +8,7 @@ export function Footer() {
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 sm:px-8 md:grid-cols-4">
         <div className="sm:col-span-2 md:col-span-1">
           <div className="flex items-center gap-2 font-semibold">
-            <span className="grid h-6 w-6 place-items-center rounded-md bg-[var(--accent)] text-[var(--accent-fg)] text-xs">
-              ▸_
-            </span>
+            <Logo size={24} id="ftr" />
             {brand.name}
           </div>
           <p className="mt-3 max-w-xs text-sm text-[var(--muted)]">
@@ -26,12 +25,12 @@ export function Footer() {
           ]}
         />
         <FooterCol
-          title="How it works"
+          title="Learn"
           links={[
+            { href: "/blog", label: "Insights" },
             { href: "/about", label: "About marketplace" },
             { href: "/how-to-run", label: "How to run a tool" },
             { href: "/about#contact", label: "Contact & support" },
-            { href: "/sell", label: "Seller guide" },
           ]}
         />
         <FooterCol

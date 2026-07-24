@@ -3,14 +3,14 @@
  * Change the name or domain here and it updates across the whole site.
  */
 export const brand = {
-  name: "AppBazaar",
-  domain: "appbazaar.dev",
+  name: "Apps Marketplace",
+  domain: "apps-marketplace.com",
   tagline: "Small tools, born from real problems.",
   description:
     "A marketplace for small software that solves one specific problem, built by the people who needed it. Buy it once, own it forever, and run it on your own computer. Skip the bloated platform you use one feature of, and find the one tool that fixes your thing.",
   // Commission the platform keeps per sale (all-inclusive; see BUSINESS_MODEL.md)
   commissionRate: 0.15,
-  supportEmail: "hello@appbazaar.dev",
+  supportEmail: "hello@apps-marketplace.com",
   currency: "USD",
   currencySymbol: "$",
 } as const;

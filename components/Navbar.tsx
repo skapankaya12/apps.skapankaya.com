@@ -7,6 +7,7 @@ import { useUser, useStoreValue } from "@/lib/hooks";
 import { logout, getCart, getBookmarks } from "@/lib/store";
 import { ButtonLink } from "./ui";
 import { RoleSwitcher } from "./RoleSwitcher";
+import { Logo } from "./Logo";
 
 export function Navbar() {
   const user = useUser();
@@ -18,7 +19,8 @@ export function Navbar() {
   const navItems = [
     { href: "/browse", label: "Browse" },
     { href: "/sell", label: "Sell your tool" },
-    { href: "/about", label: "About marketplace" },
+    { href: "/blog", label: "Insights" },
+    { href: "/about", label: "About" },
   ];
 
   return (
@@ -26,10 +28,8 @@ export function Navbar() {
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
         <div className="flex items-center gap-7">
           <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-[var(--accent)] text-[var(--accent-fg)] text-sm">
-              ▸_
-            </span>
-            <span className="text-[15px]">{brand.name}</span>
+            <Logo size={28} id="nav" className="shrink-0" />
+            <span className="whitespace-nowrap text-[15px]">{brand.name}</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => {

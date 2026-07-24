@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   AppBazaar design system
+   Apps Marketplace design system
    Clean, spacious, developer-friendly. Light + dark. Inspired by 21st.dev:
    generous whitespace, hairline borders, soft radii, one confident accent.
 --------------------------------------------------------------------------- */
@@ -102,13 +102,16 @@ body {
   border-radius: 8px;
 }
 
-/* Subtle grid backdrop used on hero sections */
+/* Hero backdrop. Uses the same hairline family as the listing card frames:
+   thin --border-strong lines, faded out toward the edges so they read as the
+   card's gradient frame rather than graph paper. */
 .bg-grid {
   background-image:
-    linear-gradient(to right, var(--border) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+    repeating-linear-gradient(to right, var(--border-strong) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(to bottom, var(--border-strong) 0 1px, transparent 1px 96px);
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 62% 78% at 50% 32%, #000 12%, transparent 82%);
+  mask-image: radial-gradient(ellipse 62% 78% at 50% 32%, #000 12%, transparent 82%);
 }
 
 @keyframes fade-up {

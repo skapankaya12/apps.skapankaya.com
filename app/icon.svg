@@ -1,0 +1,19 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bagFront" x1="8" y1="8" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2f8bff"/>
+      <stop offset="1" stop-color="#6a4bf0"/>
+    </linearGradient>
+    <linearGradient id="bagBack" x1="30" y1="12" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f9a825"/>
+      <stop offset="1" stop-color="#f43f8e"/>
+    </linearGradient>
+  </defs>
+  <path d="M20 15 L34 15 Q36 15 36.4 17 L39.4 40 Q39.8 43.2 36.4 43.2 L24 43.2 Q20.6 43.2 21 40 L23 17 Q23.2 15 20 15 Z" fill="url(#bagBack)"/>
+  <path d="M16 16 C16 9.4 32 9.4 32 16" stroke="url(#bagFront)" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+  <path d="M12 15 L32 15 Q34 15 34.4 17 L37 40 Q37.3 43.2 34 43.2 L10 43.2 Q6.7 43.2 7 40 L9.6 17 Q10 15 12 15 Z" fill="url(#bagFront)"/>
+  <rect x="13.5" y="22" width="7.5" height="7.5" rx="2.1" fill="#ef5138"/>
+  <rect x="23" y="22" width="7.5" height="7.5" rx="2.1" fill="#22c39a"/>
+  <rect x="13.5" y="31" width="7.5" height="7.5" rx="2.1" fill="#f7b70a"/>
+  <rect x="23" y="31" width="7.5" height="7.5" rx="2.1" fill="#b06cf0"/>
+</svg>

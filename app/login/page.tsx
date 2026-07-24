@@ -30,9 +30,9 @@ function LoginInner() {
           <button
             type="button"
             className="text-[var(--accent)] hover:underline"
-            onClick={() => setEmail("admin@appbazaar.dev")}
+            onClick={() => setEmail("admin@apps-marketplace.com")}
           >
-            admin@appbazaar.dev
+            admin@apps-marketplace.com
           </button>{" "}
           to see the admin view.
         </p>

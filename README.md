@@ -1,10 +1,10 @@
-# AppBazaar
+# Apps Marketplace
 
 A curated marketplace for finished mini apps. **Buy once, download, run on your
 own computer**, with AI assisted setup so it takes minutes rather than
 expertise. The platform takes a 15% all-inclusive commission per sale.
 
-Domain: **appbazaar.dev**
+Domain: **apps-marketplace.com**
 
 ## Status
 Fully working front-end demo. Every buyer, seller and admin flow runs on an
@@ -18,7 +18,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-Sign in with **any email**. Use `admin@appbazaar.dev` for the admin view, or the
+Sign in with **any email**. Use `admin@apps-marketplace.com` for the admin view, or the
 **"view as" switch** in the header to flip between buyer, seller and admin.
 
 ## The flows

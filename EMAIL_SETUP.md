@@ -9,7 +9,7 @@ plays well with Next.js route handlers.
 
 ### Steps
 1. Sign up at [resend.com](https://resend.com).
-2. **Verify your domain** (`appbazaar.dev` or your final domain): add the DKIM +
+2. **Verify your domain** (`apps-marketplace.com` or your final domain): add the DKIM +
    SPF DNS records Resend gives you. This is what keeps you out of spam, so do it
    before sending anything real.
 3. Create an API key → put it in `.env.local` as `RESEND_API_KEY`.
@@ -25,9 +25,9 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 await resend.emails.send({
-  from: process.env.EMAIL_FROM!,          // "AppBazaar <hello@appbazaar.dev>"
+  from: process.env.EMAIL_FROM!,          // "Apps Marketplace <hello@apps-marketplace.com>"
   to: buyerEmail,
-  subject: "Your AppBazaar purchase is ready",
+  subject: "Your Apps Marketplace purchase is ready",
   html: `<p>Thanks! Download <b>${appName}</b> and setup steps in your library.</p>`,
 });
 ```

@@ -12,7 +12,7 @@ const day = 86_400_000;
 export const seedUsers: AppUser[] = [
   {
     uid: "u_admin",
-    email: "admin@appbazaar.dev",
+    email: "admin@apps-marketplace.com",
     displayName: "Sevval (Admin)",
     role: "admin",
     createdAt: now - 90 * day,
