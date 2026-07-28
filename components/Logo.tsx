@@ -21,7 +21,7 @@ export function Logo({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       role="img"
-      aria-label="Apps Marketplace logo"
+      aria-label="The Solo Market logo"
     >
       <defs>
         <linearGradient id={`bagFront-${id}`} x1="8" y1="8" x2="40" y2="44" gradientUnits="userSpaceOnUse">

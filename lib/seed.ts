@@ -12,7 +12,7 @@ const day = 86_400_000;
 export const seedUsers: AppUser[] = [
   {
     uid: "u_admin",
-    email: "admin@apps-marketplace.com",
+    email: "admin@thesolomarket.com",
     displayName: "Sevval (Admin)",
     role: "admin",
     createdAt: now - 90 * day,
@@ -42,7 +42,7 @@ export const seedListings: Listing[] = [
     sellerName: "Sevval",
     sellerBio:
       "Builder of small, offline-first data tools. I make the utilities I wished existed while wrangling messy spreadsheets.",
-    sellerEmail: "sevval@apps-marketplace.com",
+    sellerEmail: "sevval@thesolomarket.com",
     sellerWebsite: "https://apps.skapankaya.com",
     title: "CSV Cleaner",
     tagline: "Dedupe, trim, and fix messy CSV exports in one command.",

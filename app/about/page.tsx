@@ -28,10 +28,6 @@ const FAQS: { q: string; a: string }[] = [
     a: "Every submission is human-reviewed and scanned for malware and undisclosed network activity before it's listed, and makers must declare all dependencies and network calls. That said, we can't guarantee safety or compatibility on your specific device, and you run downloaded software at your own risk.",
   },
   {
-    q: "Do I get updates?",
-    a: "Yes. When a maker ships a new version, it appears in your library and you can re-download it free. You can also re-download anything you own at any time.",
-  },
-  {
     q: "Why is the software so cheap compared to a SaaS platform?",
     a: "Because you're buying one tool that does one job, not a platform with thirty features you'll never open. There's no server for us to run and no recurring cost, so it's a one-time price.",
   },
@@ -54,6 +50,24 @@ const FAQS: { q: string; a: string }[] = [
   {
     q: "I can't find the tool I need. Can you make it?",
     a: "Often, yes. Describe the problem using the form below and we'll tell you whether we can build it. Many small tools can be turned around within a week.",
+  },
+];
+
+const DIFFERENTIATORS = [
+  {
+    Icon: LightbulbIcon,
+    title: "Built from a real need",
+    body: "Not a startup pitch, just a fix someone made because they had the problem too.",
+  },
+  {
+    Icon: WalletIcon,
+    title: "Skip the bloated platform",
+    body: "Pay once for the one feature you need, not monthly for 30 you don't.",
+  },
+  {
+    Icon: ShieldIcon,
+    title: "Runs on your computer",
+    body: "Your data stays with you. No cloud, no account, no telemetry.",
   },
 ];
 
@@ -81,14 +95,10 @@ export default function AboutPage() {
       {/* What makes it different */}
       <Section className="py-14">
         <div className="grid gap-5 md:grid-cols-3">
-          {[
-            ["🧩", "Built from a real need", "Not a startup pitch, just a fix someone made because they had the problem too."],
-            ["💸", "Skip the bloated platform", "Pay once for the one feature you need, not monthly for 30 you don't."],
-            ["🔒", "Runs on your computer", "Your data stays with you. No cloud, no account, no telemetry."],
-          ].map(([icon, title, body]) => (
+          {DIFFERENTIATORS.map(({ Icon, title, body }) => (
             <div key={title} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--surface-muted)] text-xl">
-                {icon}
+              <div className="grid h-11 w-11 place-items-center rounded-xl bg-[var(--surface-muted)] text-[var(--accent)]">
+                <Icon />
               </div>
               <h3 className="mt-4 font-semibold">{title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">{body}</p>
@@ -105,7 +115,7 @@ export default function AboutPage() {
             {[
               { n: "1", title: "Find & buy", body: "Search by the problem you have. One-time payment, instant access." },
               { n: "2", title: "Run it, no expertise needed", body: "Double-click, or let an AI assistant set it up for you from the included guide." },
-              { n: "3", title: "Keep it forever", body: "Re-download anytime, free updates when the maker ships them." },
+              { n: "3", title: "Keep it forever", body: "Re-download anytime. It's yours for good, with no subscription and no expiry." },
             ].map((s) => (
               <div key={s.n} className="flex gap-4">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-sm font-semibold text-[var(--accent-fg)]">
@@ -185,5 +195,36 @@ export default function AboutPage() {
         </div>
       </Section>
     </>
+  );
+}
+
+/* --------------------------------- icons --------------------------------- */
+
+function LightbulbIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 14c.2-1 .7-1.7 1.5-2.5C17.7 10.2 18 9 18 8a6 6 0 0 0-12 0c0 1 .3 2.2 1.5 3.5.8.8 1.3 1.5 1.5 2.5" />
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+    </svg>
+  );
+}
+
+function WalletIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+      <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
   );
 }

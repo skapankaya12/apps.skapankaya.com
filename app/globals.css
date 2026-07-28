@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Apps Marketplace design system
-   Clean, spacious, developer-friendly. Light + dark. Inspired by 21st.dev:
+   The Solo Market design system
+   Clean, spacious, developer-friendly. Light only. Inspired by 21st.dev:
    generous whitespace, hairline borders, soft radii, one confident accent.
 --------------------------------------------------------------------------- */
 
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --surface: #ffffff;
   --surface-muted: #f7f7f8;
@@ -27,31 +28,6 @@
   --shadow-sm: 0 1px 2px rgba(16, 16, 20, 0.04), 0 1px 3px rgba(16, 16, 20, 0.06);
   --shadow-md: 0 4px 12px rgba(16, 16, 20, 0.06), 0 2px 4px rgba(16, 16, 20, 0.04);
   --shadow-lg: 0 12px 40px rgba(16, 16, 20, 0.10);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0c;
-    --surface: #131317;
-    --surface-muted: #1a1a1f;
-    --foreground: #f2f2f4;
-    --muted: #9a9aa5;
-    --border: #26262d;
-    --border-strong: #34343d;
-    --accent: #7c74ff;
-    --accent-fg: #0a0a0c;
-    --accent-soft: #1c1b33;
-    --success: #4ade80;
-    --success-soft: #12241a;
-    --warning: #f5c451;
-    --warning-soft: #2a2210;
-    --danger: #f87171;
-    --danger-soft: #2a1514;
-    --ring: rgba(124, 116, 255, 0.4);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
-  }
 }
 
 @theme inline {

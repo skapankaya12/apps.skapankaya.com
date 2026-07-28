@@ -3,24 +3,24 @@
  * Change the name or domain here and it updates across the whole site.
  */
 export const brand = {
-  name: "Apps Marketplace",
-  domain: "apps-marketplace.com",
-  tagline: "Small tools, born from real problems.",
+  name: "The Solo Market",
+  domain: "thesolomarket.com",
+  tagline: "Buy it once. Own it forever.",
   description:
-    "A marketplace for small software that solves one specific problem, built by the people who needed it. Buy it once, own it forever, and run it on your own computer. Skip the bloated platform you use one feature of, and find the one tool that fixes your thing.",
+    "The Solo Market is a marketplace for small software that solves one specific problem, built by the people who needed it. Buy it once, own it forever, and run it on your own computer. Skip the bloated platform you use one feature of, and find the one tool that fixes your thing.",
   // Commission the platform keeps per sale (all-inclusive; see BUSINESS_MODEL.md)
   commissionRate: 0.15,
-  supportEmail: "hello@apps-marketplace.com",
+  supportEmail: "hello@thesolomarket.com",
   currency: "USD",
   currencySymbol: "$",
 } as const;
 
 /** Longer marketing copy, kept here so it's easy to iterate on the message. */
 export const copy = {
-  heroHeadline: "Someone had a problem. They built the fix.",
+  heroHeadline: "Someone had an idea. They built it.",
   heroHeadlineAccent: "Now it's yours.",
   heroSub:
-    "Every tool here was built by someone who had the problem. Buy once, own it forever, run it on your own computer.",
+    "Every tool here was built by someone who had an idea. Buy once, own it forever, run it on your own computer.",
   missionTitle: "Why this exists",
   missionBody:
     "Most small software never gets sold. It's too niche to market, so it sits on someone's laptop. But that niche tool might be exactly what solves your problem. Instead of paying $40 a month for a huge platform you use one feature of, find the one tool that does just that thing. Surf around and find your solution.",

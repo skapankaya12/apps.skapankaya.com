@@ -256,7 +256,7 @@ export function ListingDetail({ slug }: { slug: string }) {
                 "Runs on your own computer",
                 "14-day money-back guarantee",
                 "Re-download anytime",
-                "Free updates",
+                "No account needed",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2">
                   <CheckIcon />

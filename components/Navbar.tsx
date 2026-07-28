@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
 import { useUser, useStoreValue } from "@/lib/hooks";
 import { logout, getCart, getBookmarks } from "@/lib/store";
+import Image from "next/image";
 import { ButtonLink } from "./ui";
-import { Logo } from "./Logo";
 
 export function Navbar() {
   const user = useUser();
@@ -26,9 +26,15 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
         <div className="flex items-center gap-7">
-          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <Logo size={28} id="nav" className="shrink-0" />
-            <span className="whitespace-nowrap text-[15px]">{brand.name}</span>
+          <Link href="/" className="flex items-center" aria-label={brand.name}>
+            <Image
+              src="/logo.png"
+              alt={brand.name}
+              width={1160}
+              height={620}
+              priority
+              className="h-10 w-auto rounded-md"
+            />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => {

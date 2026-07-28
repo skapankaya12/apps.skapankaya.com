@@ -45,7 +45,7 @@ export const articles: Article[] = [
     excerpt:
       "With tools like Lovable, Bolt and Claude, the hard part of building an app is no longer the code. It's the idea. Here's why creativity is now the most valuable skill a non-developer has.",
     tag: "Trends",
-    author: "Apps Marketplace",
+    author: "The Solo Market",
     date: "2026-07-28",
     body: [
       { type: "p", text: "For most of the internet's life, building an app meant learning to code, or paying someone who could. That wall is gone. In 2026, someone with no programming background can describe an idea to a tool like Lovable, Bolt, v0 or Claude and watch a working app appear in minutes. The barrier that stopped millions of people from building the thing in their head has quietly collapsed." },
@@ -74,7 +74,7 @@ export const articles: Article[] = [
     excerpt:
       "Most professionals overpay for software they barely use. Here's a simple way to decide when a tiny one-time tool wins over a monthly platform.",
     tag: "For professionals",
-    author: "Apps Marketplace",
+    author: "The Solo Market",
     date: "2026-07-02",
     body: [
       { type: "p", text: "Look at your last three software subscriptions and ask an uncomfortable question: how many of their features do you actually touch? For most individual professionals the honest answer is one or two. You pay for a suite and use a corner of it." },
@@ -101,7 +101,7 @@ export const articles: Article[] = [
     excerpt:
       "The little script you wrote to fix your own problem might be worth money. Here's how solo makers are packaging and selling them without building a company.",
     tag: "Indie makers",
-    author: "Apps Marketplace",
+    author: "The Solo Market",
     date: "2026-06-24",
     body: [
       { type: "p", text: "Every maker has a folder of scripts they wrote for themselves: the one that renames a batch of files, the one that generates a report, the one that scrapes a page they check every morning. For years those sat on a hard drive because turning a script into a product felt like too much work. In 2026, it isn't." },
@@ -127,7 +127,7 @@ export const articles: Article[] = [
     excerpt:
       "Professionals who handle sensitive data are moving jobs off the cloud and back onto their own machines. Here's why local-first is becoming a selling point.",
     tag: "Trends",
-    author: "Apps Marketplace",
+    author: "The Solo Market",
     date: "2026-06-11",
     body: [
       { type: "p", text: "For a decade the answer to 'where does the software run?' was always 'the cloud.' That's shifting. A growing set of professionals, especially anyone handling client data, financials, or anything under a confidentiality agreement, are deliberately choosing tools that run on their own machine." },
@@ -151,7 +151,7 @@ export const articles: Article[] = [
     excerpt:
       "Your software, your music, even features already built into your car: it's all rented. Here's the quiet cost of a world with no 'buy' button, and why owning your tools is quietly coming back.",
     tag: "Trends",
-    author: "Apps Marketplace",
+    author: "The Solo Market",
     date: "2026-07-15",
     body: [
       { type: "p", text: "Count the subscriptions leaving your account this month. The software, the storage, the streaming, the thing you signed up for once and forgot. Somewhere along the way the 'buy' button quietly disappeared, and everything became a monthly rental you never stop paying for and never actually own." },
@@ -178,7 +178,7 @@ export const articles: Article[] = [
     excerpt:
       "AI assistants have collapsed the distance between 'I have an annoying problem' and 'I have a tool that fixes it.' Here's the realistic path for a non-developer.",
     tag: "Playbooks",
-    author: "Apps Marketplace",
+    author: "The Solo Market",
     date: "2026-05-14",
     body: [
       { type: "p", text: "A year ago, 'build your own tool' was advice for programmers. Now a motivated non-developer can go from a nagging problem to a working tool over a weekend, using an AI assistant as the engineer. The skill that matters isn't coding. It's describing what you want clearly." },

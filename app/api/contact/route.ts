@@ -8,7 +8,7 @@ import { brand } from "@/lib/brand";
  *
  * Requires (see .env.example / EMAIL_SETUP.md):
  *   RESEND_API_KEY   — Resend API key
- *   EMAIL_FROM       — verified sender, e.g. "Apps Marketplace <hello@your-domain>"
+ *   EMAIL_FROM       — verified sender, e.g. "The Solo Market <hello@your-domain>"
  */
 
 const TOPIC_LABELS: Record<string, string> = {

@@ -28,10 +28,11 @@ export default function SellPage() {
         <Section className="relative py-20 text-center">
           <Badge tone="accent" className="mb-5">For makers</Badge>
           <h1 className="mx-auto max-w-2xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
-            You built something small and useful. Sell it.
+            You had an idea and built it. Now sell it.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-[var(--muted)]">
-            Too small to market on its own? Perfect. List it here, keep{" "}
+            That idea you shipped to fix your own problem? Someone else has it
+            too. Too small to market on its own? Perfect. List it here, keep{" "}
             <span className="font-semibold text-[var(--foreground)]">{keepPct}%</span> of
             every sale, and let buyers run it locally in minutes.
           </p>
