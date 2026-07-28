@@ -17,6 +17,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile,
 } from "firebase/auth";
 import { auth, db } from "./firebase";
 import type { Listing, ListingStatus, Purchase, AppUser, Role } from "./types";
@@ -48,6 +51,10 @@ export function subscribe(l: Listener): () => void {
 
 let clientReady = false;
 let currentUser: AppUser | null = null;
+/** Whether the signed-in user's email is verified (from Firebase Auth, not the doc). */
+let currentEmailVerified = false;
+/** True once the public approved-listings listener has responded at least once. */
+let listingsLoaded = false;
 let approvedListings: Listing[] = []; // public: every approved listing
 let contextListings: Listing[] = []; // seller's own, or all listings for an admin
 let purchases: Purchase[] = [];
@@ -110,9 +117,16 @@ export function markClientReady() {
       approvedListings = snap.docs
         .map(toListing)
         .sort((a, b) => b.updatedAt - a.updatedAt);
+      listingsLoaded = true;
       emit();
     },
-    (err) => console.error("[store] approved listings listener:", err.message)
+    (err) => {
+      // Even on error we've "heard back": stop showing the loading state so the
+      // UI can fall through to its empty/not-found view instead of hanging.
+      listingsLoaded = true;
+      console.error("[store] approved listings listener:", err.message);
+      emit();
+    }
   );
 
   onAuthStateChanged(auth, async (fbUser) => {
@@ -124,19 +138,23 @@ export function markClientReady() {
 
     if (!fbUser) {
       currentUser = null;
+      currentEmailVerified = false;
       contextListings = [];
       purchases = [];
       emit();
       return;
     }
 
-    // Ensure a user doc exists (first sign-in creates it as a buyer).
+    currentEmailVerified = fbUser.emailVerified;
+
+    // Ensure a user doc exists (first sign-in creates it as a buyer). Prefer the
+    // Auth displayName (set at signup); fall back to the email's local part.
     const uref = doc(db, "users", fbUser.uid);
     const existing = await getDoc(uref);
     if (!existing.exists()) {
       await setDoc(uref, {
         email: fbUser.email ?? "",
-        displayName: (fbUser.email ?? "user").split("@")[0],
+        displayName: fbUser.displayName || (fbUser.email ?? "user").split("@")[0],
         role: "buyer" as Role,
         createdAt: Date.now(),
       });
@@ -172,8 +190,29 @@ export function getUser(): AppUser | null {
   return clientReady ? currentUser : null;
 }
 
-export async function signUp(email: string, password: string) {
-  await createUserWithEmailAndPassword(auth, email, password);
+/** Whether the signed-in user has verified their email. False when signed out. */
+export function isEmailVerified(): boolean {
+  return clientReady ? currentEmailVerified : true;
+}
+
+export async function signUp(email: string, password: string, displayName?: string) {
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  const name = displayName?.trim();
+  if (name) await updateProfile(cred.user, { displayName: name });
+  // Write the user doc now with the chosen name, so it doesn't get created with
+  // the email-derived fallback by the auth listener that fires in parallel.
+  await setDoc(
+    doc(db, "users", cred.user.uid),
+    {
+      email: email.trim(),
+      displayName: name || email.trim().split("@")[0],
+      role: "buyer" as Role,
+      createdAt: Date.now(),
+    },
+    { merge: true }
+  );
+  // Fire off the verification email (link-based; Firebase hosts the handler).
+  await sendEmailVerification(cred.user);
 }
 
 export async function signIn(email: string, password: string) {
@@ -184,14 +223,41 @@ export async function logout() {
   await signOut(auth);
 }
 
+/** Re-send the verification email to the current, still-unverified user. */
+export async function resendVerification(): Promise<void> {
+  if (auth.currentUser && !auth.currentUser.emailVerified) {
+    await sendEmailVerification(auth.currentUser);
+  }
+}
+
 /**
- * Change the signed-in user's role. Used by the "become a seller" flow and the
- * demo role switcher. NOTE: the current rules let a user write their own role,
- * which is fine for setup but must be locked down before launch so nobody can
- * self-assign "admin" (see FIREBASE_SETUP.md / LAUNCH_CHECKLIST).
+ * Re-check verification after the user clicks the link in their email. Firebase
+ * caches emailVerified on the client, so we reload the user to pick up the change.
+ */
+export async function refreshEmailVerified(): Promise<boolean> {
+  if (!auth.currentUser) return false;
+  await auth.currentUser.reload();
+  currentEmailVerified = auth.currentUser.emailVerified;
+  emit();
+  return currentEmailVerified;
+}
+
+/** Send a password-reset email. Firebase hosts the reset page. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email.trim());
+}
+
+/**
+ * Change the signed-in user's role. The only legitimate self-service transition
+ * is buyer → seller (the "become a seller" flow). "admin" is never self-assignable
+ * here; admins are set manually via the console / Admin SDK. The Firestore rules
+ * (firestore.rules) enforce this server-side — this guard is just defence in depth.
  */
 export async function setRole(role: Role) {
   if (!currentUser) return;
+  if (role === "admin") {
+    throw new Error("Admin access can't be self-assigned.");
+  }
   await updateDoc(doc(db, "users", currentUser.uid), { role });
 }
 
@@ -199,6 +265,11 @@ export async function setRole(role: Role) {
 
 export function getApprovedListings(): Listing[] {
   return approvedListings;
+}
+
+/** False until the listings listener has responded once; drives loading UI. */
+export function getListingsLoaded(): boolean {
+  return clientReady ? listingsLoaded : false;
 }
 
 export function getListings(opts?: {

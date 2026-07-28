@@ -22,3 +22,22 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+/**
+ * Optional: Firebase App Check (reCAPTCHA v3) to deter bots and abuse of Auth,
+ * Firestore and Storage. Runs only in the browser and only when a site key is
+ * present, so local/dev without a key is unaffected. To enable: register the
+ * site in Firebase console → App Check, then set NEXT_PUBLIC_RECAPTCHA_SITE_KEY.
+ */
+if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+  import("firebase/app-check")
+    .then(({ initializeAppCheck, ReCaptchaV3Provider }) => {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(
+          process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string
+        ),
+        isTokenAutoRefreshEnabled: true,
+      });
+    })
+    .catch((e) => console.error("[firebase] App Check init failed:", e));
+}

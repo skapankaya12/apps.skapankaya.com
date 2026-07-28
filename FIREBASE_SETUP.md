@@ -1,24 +1,32 @@
 # Going live with Firebase
 
-The app runs today on an in-browser store (`lib/store.ts`) seeded with demo data,
-so every flow is clickable with zero backend. This guide swaps that for real
-Firebase (Auth + Firestore + Storage) and Stripe. Do it in this order.
+**Status:** the data layer is already migrated — `lib/store.ts` reads and writes
+Firestore live (via `onSnapshot`), auth is real email/password with email
+verification + password reset, and `lib/firebase.ts` is initialised from
+`NEXT_PUBLIC_*` env vars. What's left is project setup, deploying the rules,
+Storage-backed file delivery, and Stripe. Do it in this order.
 
 ---
 
 ## 1. Create the Firebase project
 1. [console.firebase.google.com](https://console.firebase.google.com) → **Add project**.
-2. Enable **Authentication** → Sign-in methods: **Email link (passwordless)** and **Google**.
+2. Enable **Authentication** → **Sign-in method** → turn on **Email/Password**
+   (this is what the app uses today; Google is optional and not yet wired).
+   - **Templates → Email address verification**: set the sender name / wording.
+     The app calls `sendEmailVerification` on signup and shows a "verify your
+     email" banner until the user confirms (see `components/VerifyEmailBanner.tsx`).
+   - **Templates → Password reset**: the "Forgot password?" flow uses this.
+   - **Settings → Authorized domains**: add your production domain at deploy time
+     (`localhost` is already allowed for dev).
 3. Enable **Firestore Database** (production mode, region close to your buyers).
 4. Enable **Storage** (this holds the app packages buyers download).
 5. Project settings → **Your apps** → Web app → copy the config into `.env.local`
-   (use `.env.example` as the template).
+   (use `.env.example` as the template). `firebase` is already installed; add
+   `firebase-admin` and `stripe` when you build the webhook:
 
 ```bash
-npm install firebase firebase-admin stripe
+npm install firebase-admin stripe
 ```
-
-Then uncomment the init block at the bottom of `lib/firebase.ts`.
 
 ---
 
@@ -31,57 +39,30 @@ Three collections mirror `lib/types.ts` exactly:
 | `listings` | auto | Sellers (create), admins (status changes) |
 | `purchases` | auto | **Stripe webhook only**, never the client |
 
-## 3. Security rules (paste into Firestore → Rules)
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{db}/documents {
-    function isAdmin() {
-      return request.auth != null &&
-        get(/databases/$(db)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    match /listings/{id} {
-      // Buyers see only approved apps; sellers see their own; admins see all.
-      allow read: if resource.data.status == 'approved'
-                  || (request.auth != null && resource.data.sellerId == request.auth.uid)
-                  || isAdmin();
-      allow create: if request.auth != null
-                    && request.resource.data.sellerId == request.auth.uid
-                    && request.resource.data.status == 'pending';
-      // Only admins change status; sellers can edit their own draft/pending fields.
-      allow update: if isAdmin()
-                    || (request.auth.uid == resource.data.sellerId
-                        && resource.data.status in ['pending','rejected']);
-    }
-    match /purchases/{id} {
-      allow read: if request.auth.uid == resource.data.buyerId || isAdmin();
-      allow write: if false; // webhook uses the Admin SDK, which bypasses rules
-    }
-    match /users/{uid} {
-      allow read: if request.auth.uid == uid || isAdmin();
-      allow write: if request.auth.uid == uid; // role changes: admin via console/Admin SDK
-    }
-  }
-}
+## 3. Security rules — now version-controlled
+The rules live in the repo as **`firestore.rules`** and **`storage.rules`**, wired
+up by **`firebase.json`**. They already close the important hole (a user could
+previously self-assign `role: "admin"` — now `users` updates only allow
+`buyer`/`seller`, and admins are set out-of-band). Deploy them:
+
+```bash
+npm i -g firebase-tools   # once
+firebase login
+firebase deploy --only firestore:rules,storage
 ```
 
-Set the first admin (you) manually: create your `users/{uid}` doc and set
-`role: "admin"` in the console.
+Or paste the contents of `firestore.rules` into Firestore → Rules and
+`storage.rules` into Storage → Rules in the console.
 
-## 4. Swap the store (`lib/store.ts`)
-Each function has a direct Firestore equivalent. Replace the localStorage bodies:
+Set the first admin (you) manually: open your `users/{uid}` doc in the console
+and set `role: "admin"`.
 
-| Store function | Firestore call |
-|---|---|
-| `getApprovedListings()` | `query(collection(db,'listings'), where('status','==','approved'))` |
-| `getListingBySlug(slug)` | `query(... where('slug','==',slug))` → first doc |
-| `createListing(input)` | `addDoc(collection(db,'listings'), {...input, status:'pending'})` |
-| `reviewListing(id, decision, note)` | `updateDoc(doc(db,'listings',id), {status, reviewNote})` |
-| `getPurchases(uid)` | `query(collection(db,'purchases'), where('buyerId','==',uid))` |
-| `recordPurchase(...)` | **delete**, this happens server-side in the webhook |
-
-For live updates, wrap reads in `onSnapshot` and push results into the existing
-`emit()` mechanism. The `useStoreValue` hook needs no changes.
+## 4. The store (`lib/store.ts`) — done ✅
+Already migrated to Firestore. Reads use `onSnapshot` and push through the
+existing `emit()` mechanism; writes (`createListing`, `reviewListing`, `setRole`)
+call Firestore directly. `recordPurchase` remains client-side **only for the demo**
+and must be replaced by the Stripe webhook (below) before taking money — the
+`purchases` collection is not client-writable under the rules.
 
 ## 5. Storage (downloads & uploads)
 - Sellers upload their `.zip` to `storage: submissions/{listingId}.zip`.

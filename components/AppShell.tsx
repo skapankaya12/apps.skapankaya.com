@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { markClientReady } from "@/lib/store";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
+import { VerifyEmailBanner } from "./VerifyEmailBanner";
 
 export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -15,6 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <Navbar />
+      <VerifyEmailBanner />
       <main className="flex-1">{children}</main>
       <Footer />
     </>

@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Cloud Storage security rules for Apps Marketplace.
+// Deploy with:  firebase deploy --only storage
+//
+// Buyers never read app packages directly — downloads are served through
+// short-lived signed URLs minted server-side (Admin SDK) only after a purchase
+// is confirmed. These rules therefore deny public reads on the paid artifacts.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Seller-submitted packages awaiting review: submissions/{listingId}.zip
+    // Any signed-in user can upload their submission; nobody reads them from the
+    // client (admins review via the console / server).
+    match /submissions/{allPaths=**} {
+      allow read: if false;
+      allow write: if request.auth != null
+        && request.resource.size < 200 * 1024 * 1024; // 200MB cap
+    }
+
+    // Approved, purchasable packages: apps/{listingId}/{version}.zip
+    // Written only by the server on approval; read only via signed URLs.
+    match /apps/{allPaths=**} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Public marketing assets (screenshots, demo videos) safe to serve openly.
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.resource.size < 50 * 1024 * 1024; // 50MB cap
+    }
+  }
+}

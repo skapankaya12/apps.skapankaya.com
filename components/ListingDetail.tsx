@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
 import {
   getListingBySlug,
+  getListingsLoaded,
   hasPurchased,
   formatPrice,
   isInCart,
@@ -21,6 +22,7 @@ export function ListingDetail({ slug }: { slug: string }) {
   const router = useRouter();
   const user = useUser();
   const listing = useStoreValue(() => getListingBySlug(slug));
+  const loaded = useStoreValue(getListingsLoaded);
   const owned = useStoreValue(() =>
     user && listing ? hasPurchased(user.uid, listing.id) : false
   );
@@ -28,6 +30,15 @@ export function ListingDetail({ slug }: { slug: string }) {
   const saved = useStoreValue(() => (listing ? isBookmarked(listing.id) : false));
 
   if (!listing) {
+    // Still waiting on Firestore's first response: show a loader, not "not found".
+    if (!loaded) {
+      return (
+        <Section className="py-24 text-center">
+          <Spinner />
+          <p className="mt-4 text-sm text-[var(--muted)]">Loading tool…</p>
+        </Section>
+      );
+    }
     return (
       <Section className="py-24 text-center">
         <h1 className="text-2xl font-semibold">Tool not found</h1>
@@ -269,6 +280,20 @@ function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"} stroke={filled ? "var(--accent)" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" />
+    </svg>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg
+      className="mx-auto h-8 w-8 animate-spin text-[var(--muted)]"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-label="Loading"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
     </svg>
   );
 }

@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// Firestore security rules for Apps Marketplace.
+// Deploy with:  firebase deploy --only firestore:rules
+// The data model mirrors lib/types.ts (users, listings, purchases).
+
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(db)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{uid} {
+      // A user reads their own doc; admins read anyone's.
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+
+      // New accounts always start as a buyer — nobody self-provisions as admin.
+      allow create: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == 'buyer';
+
+      // Users may update their own doc, but can only ever hold role buyer/seller.
+      // Admins are assigned out-of-band (console / Admin SDK) and can set any role.
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && request.auth.uid == uid
+            && request.resource.data.role in ['buyer', 'seller']);
+
+      allow delete: if isAdmin();
+    }
+
+    match /listings/{id} {
+      // Anyone may read approved listings; sellers read their own; admins read all.
+      allow read: if resource.data.status == 'approved'
+        || (isSignedIn() && resource.data.sellerId == request.auth.uid)
+        || isAdmin();
+
+      // Sellers create their own listings, which must enter the review queue.
+      allow create: if isSignedIn()
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.status == 'pending';
+
+      // Admins change status/notes; a seller may edit their own draft/rejected
+      // listing but cannot flip it to 'approved' themselves.
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.sellerId == request.auth.uid
+            && resource.data.status in ['pending', 'rejected']
+            && request.resource.data.status in ['pending', 'rejected']);
+
+      allow delete: if isAdmin();
+    }
+
+    match /purchases/{id} {
+      // A buyer reads their own purchases; admins read all.
+      allow read: if isSignedIn()
+        && (request.auth.uid == resource.data.buyerId || isAdmin());
+
+      // Purchases are written ONLY by the Stripe webhook via the Admin SDK,
+      // which bypasses these rules. Never writable from the client.
+      allow write: if false;
+    }
+  }
+}

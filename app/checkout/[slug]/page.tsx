@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListingBySlug, formatPrice } from "@/lib/store";
+import { getListingBySlug, getListingsLoaded, formatPrice } from "@/lib/store";
 import { Section, ButtonLink, Badge } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { brand } from "@/lib/brand";
@@ -12,8 +12,16 @@ export default function CheckoutPage() {
   const params = useParams<{ slug: string }>();
   const user = useUser();
   const listing = useStoreValue(() => getListingBySlug(params.slug));
+  const loaded = useStoreValue(getListingsLoaded);
 
   if (!listing) {
+    if (!loaded) {
+      return (
+        <Section className="py-24 text-center">
+          <p className="text-sm text-[var(--muted)]">Loading…</p>
+        </Section>
+      );
+    }
     return (
       <Section className="py-24 text-center">
         <h1 className="text-2xl font-semibold">App not found</h1>

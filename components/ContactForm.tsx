@@ -30,9 +30,15 @@ export function ContactForm() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   const active = TOPICS.find((t) => t.value === topic)!;
   const valid = email.includes("@") && message.trim().length > 10;
+
+  const mailtoHref = `mailto:${brand.supportEmail}?subject=${encodeURIComponent(
+    `[${active.label}] ${brand.name}`
+  )}&body=${encodeURIComponent(message)}`;
 
   if (sent) {
     return (
@@ -53,11 +59,31 @@ export function ContactForm() {
     );
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    // Demo: no backend yet. Wire this to a route handler that sends via Resend
-    // (see EMAIL_SETUP.md) before launch.
-    setSent(true);
+    setError("");
+    setBusy(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, email: email.trim(), message: message.trim() }),
+      });
+      if (res.ok) {
+        setSent(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(
+          data?.error === "not-configured"
+            ? "Our contact inbox isn't wired up yet. Please email us directly using the button below."
+            : "Something went wrong sending that. Please try the direct email below."
+        );
+      }
+    } catch {
+      setError("Network error. Please try the direct email below.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -117,11 +143,23 @@ export function ContactForm() {
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button type="submit" size="lg" disabled={!valid}>
-          Send message
+        <Button type="submit" size="lg" disabled={!valid || busy}>
+          {busy ? "Sending…" : "Send message"}
         </Button>
         {!valid && <Badge tone="neutral">Add your email and a short message</Badge>}
       </div>
+
+      {error && (
+        <div className="mt-4 rounded-xl border border-[var(--danger)]/30 bg-[var(--danger-soft,transparent)] p-3 text-sm">
+          <p className="text-[var(--danger)]">{error}</p>
+          <a
+            href={mailtoHref}
+            className="mt-1 inline-block font-medium text-[var(--accent)] hover:underline"
+          >
+            Email {brand.supportEmail} →
+          </a>
+        </div>
+      )}
 
       <p className="mt-4 text-xs text-[var(--muted)]">
         Prefer email? Write to{" "}
