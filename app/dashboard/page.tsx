@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListings, formatPrice } from "@/lib/store";
+import { getListings, formatPrice, getIdToken } from "@/lib/store";
 import { brand } from "@/lib/brand";
-import { Section, ButtonLink, StatusBadge } from "@/components/ui";
+import type { AppUser } from "@/lib/types";
+import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
 export default function DashboardPage() {
@@ -50,6 +52,9 @@ export default function DashboardPage() {
           hint={`after ${Math.round(brand.commissionRate * 100)}% fee`}
         />
       </div>
+
+      {/* Payouts */}
+      <PayoutsCard user={user} />
 
       {/* Listings */}
       <h2 className="mt-12 text-lg font-semibold">Your apps</h2>
@@ -103,6 +108,67 @@ export default function DashboardPage() {
         </div>
       )}
     </Section>
+  );
+}
+
+function PayoutsCard({ user }: { user: AppUser }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const active = user.stripeChargesEnabled === true;
+  const started = Boolean(user.stripeAccountId);
+
+  async function go() {
+    setBusy(true);
+    setError("");
+    try {
+      const token = await getIdToken();
+      const res = await fetch("/api/stripe/connect", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token ?? ""}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setError(
+        data.error === "not-configured"
+          ? "Payouts aren't switched on yet — check back soon."
+          : "Couldn't start payout setup. Please try again."
+      );
+    } catch {
+      setError("Something went wrong. Please try again.");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold">Payouts</h2>
+            {active ? (
+              <Badge tone="success">Active</Badge>
+            ) : started ? (
+              <Badge tone="warning">Finish setup</Badge>
+            ) : (
+              <Badge tone="neutral">Not set up</Badge>
+            )}
+          </div>
+          <p className="mt-1 max-w-md text-sm text-[var(--muted)]">
+            {active
+              ? "You're all set. Your share of each sale is paid out to your bank monthly, via Stripe."
+              : "Connect your bank through Stripe to get paid. Buyers can't purchase your tools until this is done."}
+          </p>
+          {error && <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>}
+        </div>
+        <Button onClick={go} disabled={busy} variant={active ? "secondary" : "primary"}>
+          {busy ? "…" : active ? "Manage payouts" : started ? "Finish setup" : "Set up payouts"}
+        </Button>
+      </div>
+    </div>
   );
 }
 

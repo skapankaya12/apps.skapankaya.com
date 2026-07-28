@@ -223,6 +223,11 @@ export async function logout() {
   await signOut(auth);
 }
 
+/** Current user's Firebase ID token, for authenticating calls to our API routes. */
+export async function getIdToken(): Promise<string | null> {
+  return auth.currentUser ? auth.currentUser.getIdToken() : null;
+}
+
 /** Re-send the verification email to the current, still-unverified user. */
 export async function resendVerification(): Promise<void> {
   if (auth.currentUser && !auth.currentUser.emailVerified) {

@@ -31,6 +31,9 @@ export interface AppUser {
   role: Role;
   /** Stripe Connect (Express) account id, set once the seller onboards. */
   stripeAccountId?: string;
+  /** Synced from Stripe via webhook: whether payouts are set up and live. */
+  stripeChargesEnabled?: boolean;
+  stripePayoutsEnabled?: boolean;
   createdAt: number;
 }
 

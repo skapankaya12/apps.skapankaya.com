@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListingBySlug, getListingsLoaded, formatPrice } from "@/lib/store";
-import { Section, ButtonLink, Badge } from "@/components/ui";
+import { getListingBySlug, getListingsLoaded, formatPrice, getIdToken } from "@/lib/store";
+import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { brand } from "@/lib/brand";
 import { Monogram } from "@/components/Monogram";
@@ -13,6 +14,8 @@ export default function CheckoutPage() {
   const user = useUser();
   const listing = useStoreValue(() => getListingBySlug(params.slug));
   const loaded = useStoreValue(getListingsLoaded);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   if (!listing) {
     if (!loaded) {
@@ -43,9 +46,33 @@ export default function CheckoutPage() {
     );
   }
 
-  // Estimated VAT line (illustrative). Real VAT is computed by Stripe Tax.
-  const vat = Math.round(listing.priceCents * 0.2);
-  const total = listing.priceCents + vat;
+  const total = listing.priceCents;
+
+  async function pay() {
+    if (!listing) return;
+    setBusy(true);
+    setError("");
+    try {
+      const token = await getIdToken();
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token ?? ""}`,
+        },
+        body: JSON.stringify({ listingId: listing.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setError(checkoutError(data.error));
+    } catch {
+      setError("Something went wrong. Please try again.");
+    }
+    setBusy(false);
+  }
 
   return (
     <Section className="max-w-3xl py-12">
@@ -82,12 +109,8 @@ export default function CheckoutPage() {
             <h3 className="text-sm font-semibold">Order summary</h3>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-[var(--muted)]">App price</dt>
+                <dt className="text-[var(--muted)]">Price</dt>
                 <dd className="tabular-nums">{formatPrice(listing.priceCents)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-[var(--muted)]">VAT (est.)</dt>
-                <dd className="tabular-nums">{formatPrice(vat)}</dd>
               </div>
               <div className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
                 <dt>Total</dt>
@@ -95,11 +118,13 @@ export default function CheckoutPage() {
               </div>
             </dl>
 
-            <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-center">
-              <p className="text-sm font-medium">Payments are being set up</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                Secure Stripe checkout is almost ready. This is where you&apos;ll
-                pay {formatPrice(total)} and get instant access.
+            <div className="mt-5">
+              <Button onClick={pay} disabled={busy} size="lg" className="w-full">
+                {busy ? "Taking you to Stripe…" : `Pay ${formatPrice(total)}`}
+              </Button>
+              {error && <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>}
+              <p className="mt-2 text-center text-xs text-[var(--muted)]">
+                Secure payment by Stripe. You&apos;ll get instant access after paying.
               </p>
             </div>
           </div>
@@ -107,4 +132,21 @@ export default function CheckoutPage() {
       </div>
     </Section>
   );
+}
+
+function checkoutError(code?: string): string {
+  switch (code) {
+    case "not-configured":
+      return "Payments aren't live yet. Please check back soon.";
+    case "seller-not-ready":
+      return "This maker hasn't finished setting up payouts yet, so it can't be purchased right now.";
+    case "own-listing":
+      return "This is your own tool — you can't buy it.";
+    case "not-available":
+      return "This tool isn't available for purchase right now.";
+    case "unauthorized":
+      return "Your session expired. Please sign in again.";
+    default:
+      return "Couldn't start checkout. Please try again.";
+  }
 }
