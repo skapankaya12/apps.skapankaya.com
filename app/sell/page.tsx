@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
 import { useUser } from "@/lib/hooks";
-import { setRole, login } from "@/lib/store";
+import { setRole } from "@/lib/store";
 import { Section, Button, Badge } from "@/components/ui";
 
 export default function SellPage() {
@@ -11,13 +11,13 @@ export default function SellPage() {
   const user = useUser();
   const keepPct = Math.round((1 - brand.commissionRate) * 100);
 
-  function startSelling() {
+  async function startSelling() {
     if (!user) {
       router.push("/login?next=/sell");
       return;
     }
-    // Promote demo user to seller so they can access the dashboard.
-    if (user.role === "buyer") setRole("seller");
+    // Anyone can become a seller: promote a buyer's account, then continue.
+    if (user.role === "buyer") await setRole("seller");
     router.push("/dashboard/new");
   }
 
@@ -109,19 +109,6 @@ export default function SellPage() {
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Button onClick={startSelling} size="lg">Start now</Button>
-          {!user && (
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={() => {
-                // Demo convenience: sign in as the sample seller.
-                login("maya@makers.dev");
-                router.push("/dashboard");
-              }}
-            >
-              Preview a seller account
-            </Button>
-          )}
         </div>
       </Section>
     </>

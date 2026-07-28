@@ -1,132 +1,222 @@
 "use client";
 
+import {
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  onSnapshot,
+  query,
+  where,
+  type Unsubscribe,
+} from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { auth, db } from "./firebase";
 import type { Listing, ListingStatus, Purchase, AppUser, Role } from "./types";
-import { seedListings, seedPurchases, seedUsers } from "./seed";
 
 /* ---------------------------------------------------------------------------
-   Client-side data store.
+   Data store, backed by Firestore + Firebase Auth.
 
-   Today: persists to localStorage so every buyer/seller/admin flow works with
-   zero backend keys. Each exported function maps 1:1 to a Firestore call, so
-   swapping to Firebase later is a mechanical change inside this one file
-   (see FIREBASE_SETUP.md for the exact replacements).
+   Components still call synchronous getters (getApprovedListings(), getUser()…).
+   Those read from in-memory caches that onSnapshot listeners keep live; every
+   snapshot calls emit() so subscribed components re-render. Writes go straight
+   to Firestore, and the listeners reflect them (optimistically, thanks to the
+   SDK's local cache).
+
+   Cart and bookmarks stay in localStorage: they're lightweight UI state and
+   work for signed-out visitors without any rules.
 --------------------------------------------------------------------------- */
-
-const KEYS = {
-  listings: "rl_listings",
-  purchases: "rl_purchases",
-  user: "rl_user",
-  cart: "rl_cart",
-  bookmarks: "rl_bookmarks",
-  // Bump this whenever seed.ts content changes, so existing browsers reseed.
-  seeded: "am_seeded_v7",
-};
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
-
 function emit() {
   listeners.forEach((l) => l());
 }
-
 export function subscribe(l: Listener): () => void {
   listeners.add(l);
   return () => listeners.delete(l);
 }
 
-/**
- * Hydration gate. Until the client mounts and flips this on, every read returns
- * its fallback, so the server HTML and the first client render agree (no
- * hydration mismatch), even when localStorage already holds data. After mount,
- * markClientReady() bumps the version and the tree re-renders with live data.
- */
+/* ------------------------------ caches ------------------------------ */
+
 let clientReady = false;
-export function markClientReady() {
-  if (clientReady) return;
-  clientReady = true;
-  emit();
+let currentUser: AppUser | null = null;
+let approvedListings: Listing[] = []; // public: every approved listing
+let contextListings: Listing[] = []; // seller's own, or all listings for an admin
+let purchases: Purchase[] = [];
+
+let unsubContext: Unsubscribe | undefined;
+let unsubPurchases: Unsubscribe | undefined;
+let unsubUserDoc: Unsubscribe | undefined;
+
+function toListing(d: { id: string; data: () => unknown }): Listing {
+  return { id: d.id, ...(d.data() as Omit<Listing, "id">) };
 }
 
-function read<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined" || !clientReady) return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
+/** Approved + context listings, de-duped by id. */
+function mergedListings(): Listing[] {
+  const map = new Map<string, Listing>();
+  for (const l of approvedListings) map.set(l.id, l);
+  for (const l of contextListings) map.set(l.id, l);
+  return [...map.values()];
+}
+
+/**
+ * Set up the listeners that depend on who's signed in and their role.
+ * Re-runs when the user doc changes (e.g. a buyer becomes a seller).
+ */
+function setupContextListeners() {
+  unsubContext?.();
+  unsubContext = undefined;
+  if (!currentUser) {
+    contextListings = [];
+    return;
+  }
+  if (currentUser.role === "admin") {
+    unsubContext = onSnapshot(collection(db, "listings"), (snap) => {
+      contextListings = snap.docs.map(toListing);
+      emit();
+    });
+  } else if (currentUser.role === "seller") {
+    unsubContext = onSnapshot(
+      query(collection(db, "listings"), where("sellerId", "==", currentUser.uid)),
+      (snap) => {
+        contextListings = snap.docs.map(toListing);
+        emit();
+      }
+    );
+  } else {
+    contextListings = [];
   }
 }
 
-function write<T>(key: string, value: T) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
-  emit();
+/** Call once on the client (from AppShell). Wires up Firestore + auth. */
+export function markClientReady() {
+  if (clientReady) return;
+  clientReady = true;
+
+  // Public listener: approved listings, readable by anyone per the rules.
+  // Lives for the whole session, so we don't retain its unsubscribe.
+  onSnapshot(
+    query(collection(db, "listings"), where("status", "==", "approved")),
+    (snap) => {
+      approvedListings = snap.docs
+        .map(toListing)
+        .sort((a, b) => b.updatedAt - a.updatedAt);
+      emit();
+    },
+    (err) => console.error("[store] approved listings listener:", err.message)
+  );
+
+  onAuthStateChanged(auth, async (fbUser) => {
+    // Tear down per-user listeners on any auth change.
+    unsubContext?.();
+    unsubPurchases?.();
+    unsubUserDoc?.();
+    unsubContext = unsubPurchases = unsubUserDoc = undefined;
+
+    if (!fbUser) {
+      currentUser = null;
+      contextListings = [];
+      purchases = [];
+      emit();
+      return;
+    }
+
+    // Ensure a user doc exists (first sign-in creates it as a buyer).
+    const uref = doc(db, "users", fbUser.uid);
+    const existing = await getDoc(uref);
+    if (!existing.exists()) {
+      await setDoc(uref, {
+        email: fbUser.email ?? "",
+        displayName: (fbUser.email ?? "user").split("@")[0],
+        role: "buyer" as Role,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Live user doc so role changes take effect immediately.
+    unsubUserDoc = onSnapshot(uref, (s) => {
+      currentUser = s.exists()
+        ? { uid: s.id, ...(s.data() as Omit<AppUser, "uid">) }
+        : null;
+      setupContextListeners();
+      emit();
+    });
+
+    // This buyer's purchases.
+    unsubPurchases = onSnapshot(
+      query(collection(db, "purchases"), where("buyerId", "==", fbUser.uid)),
+      (snap) => {
+        purchases = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Purchase, "id">),
+        }));
+        emit();
+      },
+      (err) => console.error("[store] purchases listener:", err.message)
+    );
+  });
 }
 
-/** Seed once per browser. Idempotent. */
-export function ensureSeeded() {
-  if (typeof window === "undefined") return;
-  if (window.localStorage.getItem(KEYS.seeded)) return;
-  write(KEYS.listings, seedListings);
-  write(KEYS.purchases, seedPurchases);
-  window.localStorage.setItem(KEYS.seeded, "1");
-}
-
-/* ----------------------------- Auth (demo) ----------------------------- */
+/* ------------------------------ auth ------------------------------ */
 
 export function getUser(): AppUser | null {
-  return read<AppUser | null>(KEYS.user, null);
+  return clientReady ? currentUser : null;
 }
 
-export function login(email: string): AppUser {
-  const existing = seedUsers.find((u) => u.email === email);
-  const user: AppUser =
-    existing ?? {
-      uid: "u_" + Math.random().toString(36).slice(2, 9),
-      email,
-      displayName: email.split("@")[0],
-      role: "buyer",
-      createdAt: Date.now(),
-    };
-  write(KEYS.user, user);
-  return user;
+export async function signUp(email: string, password: string) {
+  await createUserWithEmailAndPassword(auth, email, password);
 }
 
-export function logout() {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(KEYS.user);
-  emit();
+export async function signIn(email: string, password: string) {
+  await signInWithEmailAndPassword(auth, email, password);
 }
 
-/** Demo helper: switch the signed-in user's role to preview each view. */
-export function setRole(role: Role) {
-  const user = getUser();
-  if (!user) return;
-  write(KEYS.user, { ...user, role });
+export async function logout() {
+  await signOut(auth);
 }
 
-/* ----------------------------- Listings ----------------------------- */
+/**
+ * Change the signed-in user's role. Used by the "become a seller" flow and the
+ * demo role switcher. NOTE: the current rules let a user write their own role,
+ * which is fine for setup but must be locked down before launch so nobody can
+ * self-assign "admin" (see FIREBASE_SETUP.md / LAUNCH_CHECKLIST).
+ */
+export async function setRole(role: Role) {
+  if (!currentUser) return;
+  await updateDoc(doc(db, "users", currentUser.uid), { role });
+}
+
+/* ------------------------------ listings ------------------------------ */
+
+export function getApprovedListings(): Listing[] {
+  return approvedListings;
+}
 
 export function getListings(opts?: {
   status?: ListingStatus;
   sellerId?: string;
 }): Listing[] {
-  let items = read<Listing[]>(KEYS.listings, []);
+  let items = mergedListings();
   if (opts?.status) items = items.filter((l) => l.status === opts.status);
   if (opts?.sellerId) items = items.filter((l) => l.sellerId === opts.sellerId);
   return items.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-export function getApprovedListings(): Listing[] {
-  return getListings({ status: "approved" });
-}
-
 export function getListingBySlug(slug: string): Listing | undefined {
-  return read<Listing[]>(KEYS.listings, []).find((l) => l.slug === slug);
+  return mergedListings().find((l) => l.slug === slug);
 }
 
 export function getListingById(id: string): Listing | undefined {
-  return read<Listing[]>(KEYS.listings, []).find((l) => l.id === id);
+  return mergedListings().find((l) => l.id === id);
 }
 
 function slugify(title: string): string {
@@ -136,143 +226,119 @@ function slugify(title: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export function createListing(
+export async function createListing(
   input: Omit<
     Listing,
     "id" | "slug" | "status" | "salesCount" | "createdAt" | "updatedAt"
   >
-): Listing {
-  const items = read<Listing[]>(KEYS.listings, []);
+): Promise<void> {
   const now = Date.now();
-  let slug = slugify(input.title);
-  if (items.some((l) => l.slug === slug)) slug = `${slug}-${now.toString().slice(-4)}`;
-  const listing: Listing = {
+  const slug = `${slugify(input.title)}-${now.toString().slice(-5)}`;
+  await addDoc(collection(db, "listings"), {
     ...input,
-    id: "l_" + Math.random().toString(36).slice(2, 9),
     slug,
-    status: "pending", // every new submission enters the review queue
+    status: "pending" as ListingStatus, // every submission enters the review queue
     salesCount: 0,
     createdAt: now,
     updatedAt: now,
-  };
-  write(KEYS.listings, [listing, ...items]);
-  return listing;
+  });
 }
 
-export function reviewListing(
+export async function reviewListing(
   id: string,
   decision: "approved" | "rejected",
   reviewNote: string
-) {
-  const items = read<Listing[]>(KEYS.listings, []);
-  const next = items.map((l) =>
-    l.id === id
-      ? { ...l, status: decision as ListingStatus, reviewNote, updatedAt: Date.now() }
-      : l
-  );
-  write(KEYS.listings, next);
+): Promise<void> {
+  await updateDoc(doc(db, "listings", id), {
+    status: decision,
+    reviewNote,
+    updatedAt: Date.now(),
+  });
 }
 
-/* ----------------------------- Purchases ----------------------------- */
+/* ------------------------------ purchases ------------------------------ */
 
 export function getPurchases(buyerId: string): Purchase[] {
-  return read<Purchase[]>(KEYS.purchases, [])
+  return purchases
     .filter((p) => p.buyerId === buyerId)
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export function hasPurchased(buyerId: string, listingId: string): boolean {
-  return read<Purchase[]>(KEYS.purchases, []).some(
-    (p) => p.buyerId === buyerId && p.listingId === listingId
-  );
+  return purchases.some((p) => p.buyerId === buyerId && p.listingId === listingId);
 }
 
 /**
- * Records a purchase. In production this is written by a Stripe webhook after
- * checkout.session.completed, never trusted from the client. Here it stands in
- * for that server step so the buy flow is demoable end to end.
+ * Purchases are written server-side by the Stripe webhook (the rules forbid
+ * client writes). Until Stripe is wired, the buy flow shows a "coming soon"
+ * state, so there is intentionally no client-side purchase write here.
  */
-export function recordPurchase(buyer: AppUser, listing: Listing): Purchase {
-  const purchases = read<Purchase[]>(KEYS.purchases, []);
-  const purchase: Purchase = {
-    id: "p_" + Math.random().toString(36).slice(2, 9),
-    buyerId: buyer.uid,
-    listingId: listing.id,
-    listingSlug: listing.slug,
-    listingTitle: listing.title,
-    sellerName: listing.sellerName,
-    amountCents: listing.priceCents,
-    purchasedVersion: listing.version,
-    createdAt: Date.now(),
-  };
-  write(KEYS.purchases, [purchase, ...purchases]);
+export const purchasesEnabled = false;
 
-  // Increment the listing's sales counter (webhook does this server-side too).
-  const listings = read<Listing[]>(KEYS.listings, []);
-  write(
-    KEYS.listings,
-    listings.map((l) =>
-      l.id === listing.id ? { ...l, salesCount: l.salesCount + 1 } : l
-    )
-  );
-  return purchase;
+/* ------------------------------ cart (localStorage) ------------------------------ */
+
+const CART_KEY = "am_cart";
+const BOOKMARKS_KEY = "am_bookmarks";
+
+function readLocal<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined" || !clientReady) return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
 }
-
-/* ----------------------------- Cart ----------------------------- */
-/* Stored as an array of listing ids. Demo-global; in prod, scope per user. */
+function writeLocal<T>(key: string, value: T) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+  emit();
+}
 
 export function getCart(): string[] {
-  return read<string[]>(KEYS.cart, []);
+  return readLocal<string[]>(CART_KEY, []);
 }
-
 export function getCartListings(): Listing[] {
   const ids = new Set(getCart());
-  return read<Listing[]>(KEYS.listings, []).filter((l) => ids.has(l.id));
+  return mergedListings().filter((l) => ids.has(l.id));
 }
-
 export function isInCart(listingId: string): boolean {
   return getCart().includes(listingId);
 }
-
 export function addToCart(listingId: string) {
   const cart = getCart();
-  if (!cart.includes(listingId)) write(KEYS.cart, [...cart, listingId]);
+  if (!cart.includes(listingId)) writeLocal(CART_KEY, [...cart, listingId]);
 }
-
 export function removeFromCart(listingId: string) {
-  write(KEYS.cart, getCart().filter((id) => id !== listingId));
+  writeLocal(CART_KEY, getCart().filter((id) => id !== listingId));
 }
-
 export function clearCart() {
-  write(KEYS.cart, []);
+  writeLocal(CART_KEY, []);
 }
 
-/* ----------------------------- Bookmarks (saved) ----------------------------- */
+/* ------------------------------ bookmarks (localStorage) ------------------------------ */
 
 export function getBookmarks(): string[] {
-  return read<string[]>(KEYS.bookmarks, []);
+  return readLocal<string[]>(BOOKMARKS_KEY, []);
 }
-
 export function getBookmarkedListings(): Listing[] {
   const ids = new Set(getBookmarks());
-  return read<Listing[]>(KEYS.listings, []).filter((l) => ids.has(l.id));
+  return mergedListings().filter((l) => ids.has(l.id));
 }
-
 export function isBookmarked(listingId: string): boolean {
   return getBookmarks().includes(listingId);
 }
-
 export function toggleBookmark(listingId: string) {
   const saved = getBookmarks();
-  write(
-    KEYS.bookmarks,
+  writeLocal(
+    BOOKMARKS_KEY,
     saved.includes(listingId)
       ? saved.filter((id) => id !== listingId)
       : [...saved, listingId]
   );
 }
 
-/* ----------------------------- Money helpers ----------------------------- */
+/* ------------------------------ helpers ------------------------------ */
 
 export function formatPrice(cents: number, symbol = "$"): string {
   return `${symbol}${(cents / 100).toFixed(2).replace(/\.00$/, "")}`;

@@ -6,7 +6,6 @@ import { brand } from "@/lib/brand";
 import { useUser, useStoreValue } from "@/lib/hooks";
 import { logout, getCart, getBookmarks } from "@/lib/store";
 import { ButtonLink } from "./ui";
-import { RoleSwitcher } from "./RoleSwitcher";
 import { Logo } from "./Logo";
 
 export function Navbar() {
@@ -52,8 +51,6 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          {user && <RoleSwitcher />}
-
           {/* Saved */}
           <Link
             href="/saved"
@@ -90,8 +87,8 @@ export function Navbar() {
                 Library
               </Link>
               <button
-                onClick={() => {
-                  logout();
+                onClick={async () => {
+                  await logout();
                   router.push("/");
                 }}
                 className="rounded-lg px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"

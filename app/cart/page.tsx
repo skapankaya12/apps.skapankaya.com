@@ -1,45 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useStoreValue, useUser } from "@/lib/hooks";
-import {
-  getCartListings,
-  removeFromCart,
-  clearCart,
-  recordPurchase,
-  formatPrice,
-} from "@/lib/store";
-import { Section, Button, ButtonLink } from "@/components/ui";
+import { useStoreValue } from "@/lib/hooks";
+import { getCartListings, removeFromCart, formatPrice } from "@/lib/store";
+import { Section, ButtonLink } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { Monogram } from "@/components/Monogram";
 
 export default function CartPage() {
-  const router = useRouter();
-  const user = useUser();
   const items = useStoreValue(getCartListings);
-  const [processing, setProcessing] = useState(false);
 
   const subtotal = items.reduce((s, l) => s + l.priceCents, 0);
   const vat = Math.round(subtotal * 0.2);
   const total = subtotal + vat;
-
-  function checkout() {
-    if (!user) {
-      router.push("/login?next=/cart");
-      return;
-    }
-    setProcessing(true);
-    // Demo stand-in for Stripe. In prod: one Checkout Session for the whole cart;
-    // the webhook records each purchase and clears the cart server-side.
-    setTimeout(() => {
-      const count = items.length;
-      items.forEach((l) => recordPurchase(user!, l));
-      clearCart();
-      router.push(`/checkout/success?count=${count}`);
-    }, 900);
-  }
 
   return (
     <Section className="max-w-4xl py-12">
@@ -99,12 +72,12 @@ export default function CartPage() {
                   <dd className="tabular-nums">{formatPrice(total)}</dd>
                 </div>
               </dl>
-              <Button onClick={checkout} disabled={processing} className="mt-5 w-full" size="lg">
-                {processing ? "Processing…" : `Checkout · ${formatPrice(total)}`}
-              </Button>
-              <p className="mt-3 text-center text-xs text-[var(--muted)]">
-                🔒 Secured by Stripe (demo, no real charge)
-              </p>
+              <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-center">
+                <p className="text-sm font-medium">Payments are being set up</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  Secure Stripe checkout is almost ready.
+                </p>
+              </div>
             </div>
           </aside>
         </div>

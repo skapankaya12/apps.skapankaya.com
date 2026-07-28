@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 import { brand } from "@/lib/brand";
-import { seedListings } from "@/lib/seed";
 import { articles } from "@/lib/articles";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -22,15 +21,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  // One SEO entry per approved listing. This is the long-tail traffic engine.
-  const listingRoutes = seedListings
-    .filter((l) => l.status === "approved")
-    .map((l) => ({
-      url: `${base}/app/${l.slug}`,
-      lastModified: new Date(l.updatedAt),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    }));
+  // TODO: add one entry per approved listing here, read from Firestore via the
+  // Admin SDK at build/request time. Listings are the long-tail traffic engine,
+  // so this matters for SEO once the catalogue is live.
 
-  return [...staticRoutes, ...listingRoutes, ...articleRoutes];
+  return [...staticRoutes, ...articleRoutes];
 }

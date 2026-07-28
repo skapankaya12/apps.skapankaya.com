@@ -1,33 +1,19 @@
 import type { Metadata } from "next";
-import { seedListings } from "@/lib/seed";
+import { brand } from "@/lib/brand";
 import { ListingDetail } from "@/components/ListingDetail";
 
 /**
- * SEO metadata is generated from seed data at build/request time (server-safe).
- * Once Firestore is wired, read the listing here with the Admin SDK instead.
- * This is where per-app <title>/description come from for search engines.
+ * Listings live in Firestore, so the page is rendered on demand and the detail
+ * (title, video, description) is loaded client-side by <ListingDetail>.
+ *
+ * TODO (SEO): read the listing here with the Firebase Admin SDK to emit a
+ * per-app <title>/description and Product JSON-LD. Until then, metadata is
+ * generic. This is the main reason listing pages aren't fully SEO-optimised yet.
  */
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const listing = seedListings.find((l) => l.slug === slug);
-  if (!listing) return { title: "App not found" };
-  return {
-    title: `${listing.title}: ${listing.tagline}`,
-    description: listing.description.slice(0, 155),
-    openGraph: {
-      title: listing.title,
-      description: listing.tagline,
-    },
-  };
-}
-
-export function generateStaticParams() {
-  return seedListings.map((l) => ({ slug: l.slug }));
-}
+export const metadata: Metadata = {
+  title: `App detail · ${brand.name}`,
+  description: brand.description,
+};
 
 export default async function AppPage({
   params,

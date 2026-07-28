@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { ensureSeeded, markClientReady } from "@/lib/store";
+import { markClientReady } from "@/lib/store";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 
 export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
-    // Seed demo data, then flip the hydration gate so live data renders.
-    // Running after mount keeps the first client render matching the server.
-    ensureSeeded();
+    // Wire up Firestore listeners + auth after mount, so the first client
+    // render still matches the server (empty), then live data streams in.
     markClientReady();
   }, []);
 

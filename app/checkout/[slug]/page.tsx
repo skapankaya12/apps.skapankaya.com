@@ -1,20 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListingBySlug, recordPurchase, formatPrice } from "@/lib/store";
-import { Section, Button, ButtonLink, Badge } from "@/components/ui";
+import { getListingBySlug, formatPrice } from "@/lib/store";
+import { Section, ButtonLink, Badge } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { brand } from "@/lib/brand";
 import { Monogram } from "@/components/Monogram";
 
 export default function CheckoutPage() {
   const params = useParams<{ slug: string }>();
-  const router = useRouter();
   const user = useUser();
   const listing = useStoreValue(() => getListingBySlug(params.slug));
-  const [processing, setProcessing] = useState(false);
 
   if (!listing) {
     return (
@@ -41,17 +38,6 @@ export default function CheckoutPage() {
   // Estimated VAT line (illustrative). Real VAT is computed by Stripe Tax.
   const vat = Math.round(listing.priceCents * 0.2);
   const total = listing.priceCents + vat;
-
-  function handlePay() {
-    setProcessing(true);
-    // In production: POST to /api/checkout -> Stripe Checkout Session (Connect
-    // destination charge, 15% application fee) -> redirect to Stripe. The
-    // purchase is recorded by the webhook, not here. This stands in for that.
-    setTimeout(() => {
-      recordPurchase(user!, listing!);
-      router.push(`/checkout/success?app=${listing!.slug}`);
-    }, 900);
-  }
 
   return (
     <Section className="max-w-3xl py-12">
@@ -101,17 +87,13 @@ export default function CheckoutPage() {
               </div>
             </dl>
 
-            <Button
-              onClick={handlePay}
-              disabled={processing}
-              className="mt-5 w-full"
-              size="lg"
-            >
-              {processing ? "Processing…" : `Pay ${formatPrice(total)}`}
-            </Button>
-            <p className="mt-3 text-center text-xs text-[var(--muted)]">
-              🔒 Secured by Stripe (demo, no real charge)
-            </p>
+            <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-center">
+              <p className="text-sm font-medium">Payments are being set up</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Secure Stripe checkout is almost ready. This is where you&apos;ll
+                pay {formatPrice(total)} and get instant access.
+              </p>
+            </div>
           </div>
         </aside>
       </div>
