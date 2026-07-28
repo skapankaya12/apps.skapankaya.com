@@ -40,6 +40,10 @@ export const seedListings: Listing[] = [
     slug: "csv-cleaner",
     sellerId: "u_admin",
     sellerName: "Sevval",
+    sellerBio:
+      "Builder of small, offline-first data tools. I make the utilities I wished existed while wrangling messy spreadsheets.",
+    sellerEmail: "sevval@apps-marketplace.com",
+    sellerWebsite: "https://apps.skapankaya.com",
     title: "CSV Cleaner",
     tagline: "Dedupe, trim, and fix messy CSV exports in one command.",
     description:
@@ -82,6 +86,10 @@ export const seedListings: Listing[] = [
     slug: "screenshot-framer",
     sellerId: "u_seller_maya",
     sellerName: "Maya R.",
+    sellerBio:
+      "Designer-turned-maker. I build tiny automation tools that save creative folks from repetitive busywork.",
+    sellerEmail: "maya@makers.dev",
+    sellerWebsite: "https://makers.dev",
     title: "Screenshot Framer",
     tagline: "Drop screenshots in, get beautiful device-framed images out.",
     description:

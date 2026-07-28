@@ -148,6 +148,48 @@ export function ListingDetail({ slug }: { slug: string }) {
             </div>
           </div>
 
+          {/* About / contact the seller */}
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold">About the seller</h2>
+            <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+              <div className="flex items-start gap-3">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-base font-semibold text-[var(--accent)]">
+                  {listing.sellerName.trim().charAt(0).toUpperCase() || "?"}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-medium">{listing.sellerName}</div>
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    {listing.sellerBio?.trim() ||
+                      "An independent maker selling small, local-first tools on the marketplace."}
+                  </p>
+                </div>
+              </div>
+
+              {(listing.sellerEmail || listing.sellerWebsite) && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
+                  {listing.sellerEmail && (
+                    <a
+                      href={`mailto:${listing.sellerEmail}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"
+                    >
+                      <MailIcon /> Contact
+                    </a>
+                  )}
+                  {listing.sellerWebsite && (
+                    <a
+                      href={listing.sellerWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"
+                    >
+                      <GlobeIcon /> Website
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="mt-8">
             <ScanDisclaimer />
           </div>
@@ -227,6 +269,25 @@ function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"} stroke={filled ? "var(--accent)" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      <path d="M2 12h20" />
     </svg>
   );
 }

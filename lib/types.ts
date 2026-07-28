@@ -39,6 +39,12 @@ export interface Listing {
   slug: string;
   sellerId: string;
   sellerName: string;
+  /** Short "about the seller" blurb shown to buyers on the listing page. */
+  sellerBio?: string;
+  /** Public support/contact email buyers can reach the seller at. */
+  sellerEmail?: string;
+  /** Seller's website or profile link (https URL). */
+  sellerWebsite?: string;
   title: string;
   tagline: string;
   description: string;

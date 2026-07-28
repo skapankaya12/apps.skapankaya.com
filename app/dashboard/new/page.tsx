@@ -26,6 +26,9 @@ export default function NewListingPage() {
   const [fileName, setFileName] = useState("");
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [demoVideo, setDemoVideo] = useState("");
+  const [sellerBio, setSellerBio] = useState("");
+  const [sellerEmail, setSellerEmail] = useState("");
+  const [sellerWebsite, setSellerWebsite] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
@@ -71,6 +74,9 @@ export default function NewListingPage() {
       priceCents,
       screenshots,
       demoVideo,
+      sellerBio: sellerBio.trim() || undefined,
+      sellerEmail: sellerEmail.trim() || undefined,
+      sellerWebsite: sellerWebsite.trim() || undefined,
       version: "1.0.0",
       packagePath: fileName ? `submissions/${fileName}` : undefined,
     });
@@ -287,6 +293,46 @@ export default function NewListingPage() {
             />
           </label>
         </Field>
+
+        {/* Seller / contact info, shown to buyers on the listing page */}
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5">
+          <h2 className="text-sm font-semibold">About you (shown to buyers)</h2>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">
+            Buyers trust a real person behind a tool. This appears in the
+            &ldquo;About the seller&rdquo; section of your listing.
+          </p>
+          <div className="mt-4 space-y-6">
+            <Field label="Short bio" hint="A sentence or two about who you are and what you build.">
+              <textarea
+                value={sellerBio}
+                onChange={(e) => setSellerBio(e.target.value)}
+                rows={3}
+                placeholder="e.g. Indie maker building small, privacy-first tools for freelancers."
+                className={`${inputClass} resize-y`}
+              />
+            </Field>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <Field label="Support email" hint="Where buyers can reach you for help.">
+                <input
+                  type="email"
+                  value={sellerEmail}
+                  onChange={(e) => setSellerEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Website or profile" hint="Optional. A link buyers can check.">
+                <input
+                  type="url"
+                  value={sellerWebsite}
+                  onChange={(e) => setSellerWebsite(e.target.value)}
+                  placeholder="https://your-site.com"
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+          </div>
+        </div>
 
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]">
           By submitting you confirm the tool is yours to sell, contains no

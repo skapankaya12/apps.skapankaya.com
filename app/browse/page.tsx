@@ -7,7 +7,7 @@ export default function BrowsePage() {
       <div className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">Find your solution</h1>
       </div>
-      <BrowseExperience />
+      <BrowseExperience variant="sidebar" />
     </Section>
   );
 }

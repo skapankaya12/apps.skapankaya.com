@@ -40,6 +40,35 @@ export const ARTICLE_TAGS: ArticleTag[] = [
 
 export const articles: Article[] = [
   {
+    slug: "creativity-is-the-new-coding-2026",
+    title: "Creativity is the new coding: how anyone can build an app in 2026",
+    excerpt:
+      "With tools like Lovable, Bolt and Claude, the hard part of building an app is no longer the code. It's the idea. Here's why creativity is now the most valuable skill a non-developer has.",
+    tag: "Trends",
+    author: "Apps Marketplace",
+    date: "2026-07-28",
+    body: [
+      { type: "p", text: "For most of the internet's life, building an app meant learning to code, or paying someone who could. That wall is gone. In 2026, someone with no programming background can describe an idea to a tool like Lovable, Bolt, v0 or Claude and watch a working app appear in minutes. The barrier that stopped millions of people from building the thing in their head has quietly collapsed." },
+      { type: "p", text: "Which raises the real question: if anyone can build, what actually decides whether what you build is any good? The answer is the one skill these tools can't hand you. Creativity." },
+      { type: "h2", text: "The bottleneck moved from building to imagining" },
+      { type: "p", text: "When building was hard, having an idea was cheap and executing it was expensive. Now it's flipped. Execution is nearly free: you type a description and get software back. So the scarce, valuable part is the description itself, knowing what to build, for whom, and why it matters. The person who notices a problem worth solving now beats the person who merely knows how to solve it." },
+      { type: "quote", text: "AI didn't replace the maker. It deleted the busywork between having an idea and holding the thing." },
+      { type: "h2", text: "Why normal people are suddenly the builders" },
+      { type: "p", text: "The people best placed to spot good app ideas were never developers. They were the accountant drowning in a manual reconciliation, the teacher rebuilding the same worksheet every term, the shop owner copying orders between two systems by hand. They understood the problem intimately, but couldn't build the fix. Now they can. That's why the most interesting apps of 2026 aren't coming out of tech companies. They're coming from people describing an annoyance they've lived with for years." },
+      { type: "ul", items: [
+        "You already have the ideas. You've been working around them for years.",
+        "You understand the context an outside developer never would.",
+        "You can describe the outcome you want in plain language, which is now the whole job.",
+        "You can test it against reality immediately, because it's your reality.",
+      ]},
+      { type: "h2", text: "Creativity is a skill, not a gift" },
+      { type: "p", text: "It's tempting to think creativity is something you either have or don't. In practice, for building useful software, it's a set of habits anyone can build: paying attention to the small frictions in your day, asking why a task takes as long as it does, and imagining the shortest version of the thing that would make it disappear. The makers who win aren't the most artistic. They're the ones who notice, out loud, that something could be better." },
+      { type: "h2", text: "From 'I made this' to 'I sell this'" },
+      { type: "p", text: "There's a natural next step once you've built something that fixes a problem you have: someone else has that problem too. The same creativity that let you imagine the tool lets you see who else it's for. That's how a weekend build with Lovable turns into a small stream of income, without a company, a funding round, or a single line of code you wrote by hand." },
+      { type: "p", text: "The tools have made building easy on purpose. What they can't do is decide what's worth making. That part, the noticing, the taste, the creative leap from problem to product, is still entirely yours. And in 2026, it's the most valuable thing you can bring to a keyboard." },
+    ],
+  },
+  {
     slug: "build-vs-buy-small-tools",
     title: "Build vs. buy: when a $12 tool beats a $40-a-month SaaS",
     excerpt:
