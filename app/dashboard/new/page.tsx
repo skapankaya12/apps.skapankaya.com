@@ -116,13 +116,16 @@ export default function NewListingPage() {
     setScreenshotFiles((prev) => [...prev, ...Array.from(files)].slice(0, 5));
   }
 
-  const valid =
-    title.trim() &&
-    tagline.trim() &&
-    description.trim().length > 20 &&
-    packageFile &&
-    demoFile && // demo video is required
-    agreed; // seller must accept their responsibilities
+  // Exactly what's still blocking submission, in field order — so the button's
+  // hint names the culprit instead of a vague "fill all fields".
+  const missing: string[] = [];
+  if (!title.trim()) missing.push("app name");
+  if (!tagline.trim()) missing.push("tagline");
+  if (description.trim().length <= 20) missing.push("a longer description (20+ characters)");
+  if (!packageFile) missing.push("a .zip package");
+  if (!demoFile) missing.push("a demo video");
+  if (!agreed) missing.push("the acknowledgment");
+  const valid = missing.length === 0;
 
   return (
     <Section className="max-w-2xl py-12">
@@ -382,11 +385,7 @@ export default function NewListingPage() {
             {uploading ? "Uploading…" : "Submit for review"}
           </Button>
           {!valid && !uploading && (
-            <Badge tone="neutral">
-              {!agreed
-                ? "Tick the acknowledgment to submit"
-                : "Fill all fields, attach a package & a demo video"}
-            </Badge>
+            <Badge tone="neutral">Still needed: {missing.join(", ")}</Badge>
           )}
         </div>
 

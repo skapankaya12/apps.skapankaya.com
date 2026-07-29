@@ -14,9 +14,10 @@ export default function AdminPage() {
   if (!user || user.role !== "admin") {
     return (
       <Section className="py-24 text-center">
-        <h1 className="text-2xl font-semibold">Admin</h1>
+        <h1 className="text-2xl font-semibold">Admins only</h1>
         <p className="mt-2 text-[var(--muted)]">
-          Admins only. Use the “view as → admin” switch in the header (demo).
+          This area is for marketplace admins. If that should be you, sign in
+          with your admin account.
         </p>
         <ButtonLink href="/" className="mt-6" variant="secondary">Home</ButtonLink>
       </Section>
