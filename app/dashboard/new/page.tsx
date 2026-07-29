@@ -30,6 +30,7 @@ export default function NewListingPage() {
   const [sellerEmail, setSellerEmail] = useState("");
   const [sellerWebsite, setSellerWebsite] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (
@@ -94,7 +95,8 @@ export default function NewListingPage() {
     tagline.trim() &&
     description.trim().length > 20 &&
     fileName &&
-    demoVideo; // demo video is required
+    demoVideo && // demo video is required
+    agreed; // seller must accept their responsibilities
 
   return (
     <Section className="max-w-2xl py-12">
@@ -334,11 +336,20 @@ export default function NewListingPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]">
-          By submitting you confirm the tool is yours to sell, contains no
-          malicious code, and discloses all network activity. We scan and
-          human-review every submission before it goes live.
-        </div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
+          />
+          <span>
+            I confirm this tool is mine to sell, contains no malicious code, and
+            discloses all network activity. I&apos;ll provide support for it and
+            honor the 14-day refund policy. I understand every submission is
+            scanned and human-reviewed before it goes live.
+          </span>
+        </label>
 
         <div className="flex items-center gap-3">
           <Button type="submit" size="lg" disabled={!valid}>
@@ -346,7 +357,9 @@ export default function NewListingPage() {
           </Button>
           {!valid && (
             <Badge tone="neutral">
-              Fill all fields, attach a package &amp; a demo video
+              {!agreed
+                ? "Tick the acknowledgment to submit"
+                : "Fill all fields, attach a package & a demo video"}
             </Badge>
           )}
         </div>

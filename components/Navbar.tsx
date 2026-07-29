@@ -1,17 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
 import { useUser, useStoreValue } from "@/lib/hooks";
 import { logout, getCart, getBookmarks } from "@/lib/store";
+import type { AppUser } from "@/lib/types";
 import Image from "next/image";
 import { ButtonLink } from "./ui";
 
 export function Navbar() {
   const user = useUser();
   const pathname = usePathname();
-  const router = useRouter();
   const cartCount = useStoreValue(() => getCart().length);
   const savedCount = useStoreValue(() => getBookmarks().length);
 
@@ -78,30 +79,7 @@ export function Navbar() {
           </Link>
 
           {user ? (
-            <>
-              {user.role === "admin" && (
-                <Link href="/admin" className="hidden px-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] sm:block">
-                  Admin
-                </Link>
-              )}
-              {(user.role === "seller" || user.role === "admin") && (
-                <Link href="/dashboard" className="hidden px-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] sm:block">
-                  Dashboard
-                </Link>
-              )}
-              <Link href="/library" className="px-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
-                Library
-              </Link>
-              <button
-                onClick={async () => {
-                  await logout();
-                  router.push("/");
-                }}
-                className="rounded-lg px-3 py-1.5 text-sm text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
-              >
-                Sign out
-              </button>
-            </>
+            <ProfileMenu user={user} />
           ) : (
             <ButtonLink href="/login" variant="primary" size="sm" className="ml-1">
               Sign in
@@ -110,6 +88,98 @@ export function Navbar() {
         </div>
       </div>
     </header>
+  );
+}
+
+function ProfileMenu({ user }: { user: AppUser }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const initial = user.displayName?.trim()?.charAt(0)?.toUpperCase() || "?";
+
+  async function signOut() {
+    setOpen(false);
+    await logout();
+    router.push("/");
+  }
+
+  return (
+    <div className="relative ml-1">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Account menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="grid h-9 w-9 place-items-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent)] transition-opacity hover:opacity-80"
+      >
+        {initial}
+      </button>
+
+      {open && (
+        <>
+          {/* Click-away backdrop */}
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          <div
+            role="menu"
+            className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-md)]"
+          >
+            <div className="border-b border-[var(--border)] px-4 py-3">
+              <p className="truncate text-sm font-medium">{user.displayName}</p>
+              {user.email && (
+                <p className="truncate text-xs text-[var(--muted)]">{user.email}</p>
+              )}
+            </div>
+            <div className="py-1 text-sm">
+              <MenuItem href="/library" onNavigate={() => setOpen(false)}>
+                My library
+              </MenuItem>
+              {(user.role === "seller" || user.role === "admin") && (
+                <MenuItem href="/dashboard" onNavigate={() => setOpen(false)}>
+                  Seller dashboard
+                </MenuItem>
+              )}
+              {user.role === "admin" && (
+                <MenuItem href="/admin" onNavigate={() => setOpen(false)}>
+                  Admin
+                </MenuItem>
+              )}
+              <button
+                role="menuitem"
+                onClick={signOut}
+                className="block w-full border-t border-[var(--border)] px-4 py-2.5 text-left font-medium text-[var(--danger)] hover:bg-[var(--surface-muted)]"
+              >
+                Sign out
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MenuItem({
+  href,
+  onNavigate,
+  children,
+}: {
+  href: string;
+  onNavigate: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      role="menuitem"
+      onClick={onNavigate}
+      className="block px-4 py-2 text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
+    >
+      {children}
+    </Link>
   );
 }
 
