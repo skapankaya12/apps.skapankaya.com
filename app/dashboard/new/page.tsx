@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useUser } from "@/lib/hooks";
-import { createListing } from "@/lib/store";
+import { createListing, reserveListingId } from "@/lib/store";
+import {
+  uploadPackage,
+  uploadDemoVideo,
+  uploadScreenshots,
+} from "@/lib/storage";
 import {
   CATEGORY_LABELS,
   CATEGORY_HINTS,
@@ -23,14 +28,16 @@ export default function NewListingPage() {
   const [runtime, setRuntime] = useState<Runtime>("node");
   const [setupMode, setSetupMode] = useState<SetupMode>("one-command");
   const [price, setPrice] = useState("15");
-  const [fileName, setFileName] = useState("");
-  const [screenshots, setScreenshots] = useState<string[]>([]);
-  const [demoVideo, setDemoVideo] = useState("");
+  const [packageFile, setPackageFile] = useState<File | null>(null);
+  const [screenshotFiles, setScreenshotFiles] = useState<File[]>([]);
+  const [demoFile, setDemoFile] = useState<File | null>(null);
   const [sellerBio, setSellerBio] = useState("");
   const [sellerEmail, setSellerEmail] = useState("");
   const [sellerWebsite, setSellerWebsite] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (
@@ -60,42 +67,61 @@ export default function NewListingPage() {
     );
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const priceCents = Math.round(parseFloat(price || "0") * 100);
-    createListing({
-      sellerId: user!.uid,
-      sellerName: user!.displayName,
-      title: title.trim(),
-      tagline: tagline.trim(),
-      description: description.trim(),
-      category,
-      runtime,
-      setupMode,
-      priceCents,
-      screenshots,
-      demoVideo,
-      sellerBio: sellerBio.trim() || undefined,
-      sellerEmail: sellerEmail.trim() || undefined,
-      sellerWebsite: sellerWebsite.trim() || undefined,
-      version: "1.0.0",
-      packagePath: fileName ? `submissions/${fileName}` : undefined,
-    });
-    setSubmitted(true);
+    if (!packageFile || !demoFile || uploading) return;
+    setError("");
+    setUploading(true);
+    try {
+      // Reserve the id first so every uploaded file is keyed by it, then create
+      // the doc already pointing at its Storage paths / URLs.
+      const listingId = reserveListingId();
+      const [packagePath, demoUrl, shotUrls] = await Promise.all([
+        uploadPackage(listingId, packageFile),
+        uploadDemoVideo(listingId, demoFile),
+        uploadScreenshots(listingId, screenshotFiles),
+      ]);
+
+      const priceCents = Math.round(parseFloat(price || "0") * 100);
+      await createListing(listingId, {
+        sellerId: user!.uid,
+        sellerName: user!.displayName,
+        title: title.trim(),
+        tagline: tagline.trim(),
+        description: description.trim(),
+        category,
+        runtime,
+        setupMode,
+        priceCents,
+        screenshots: shotUrls,
+        demoVideo: demoUrl,
+        sellerBio: sellerBio.trim() || undefined,
+        sellerEmail: sellerEmail.trim() || undefined,
+        sellerWebsite: sellerWebsite.trim() || undefined,
+        version: "1.0.0",
+        packagePath,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("[new listing] submit failed:", err);
+      setError(
+        "Something went wrong uploading your files. Please check your connection and try again."
+      );
+      setUploading(false);
+    }
   }
 
   function addScreenshots(files: FileList | null) {
     if (!files) return;
-    const names = Array.from(files).map((f) => f.name);
-    setScreenshots((prev) => [...prev, ...names].slice(0, 5));
+    setScreenshotFiles((prev) => [...prev, ...Array.from(files)].slice(0, 5));
   }
 
   const valid =
     title.trim() &&
     tagline.trim() &&
     description.trim().length > 20 &&
-    fileName &&
-    demoVideo && // demo video is required
+    packageFile &&
+    demoFile && // demo video is required
     agreed; // seller must accept their responsibilities
 
   return (
@@ -213,8 +239,8 @@ export default function NewListingPage() {
         >
           <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-6 text-sm hover:border-[var(--accent)]">
             <span className="text-[var(--muted)]">
-              {fileName ? (
-                <span className="text-[var(--foreground)]">📦 {fileName}</span>
+              {packageFile ? (
+                <span className="text-[var(--foreground)]">📦 {packageFile.name}</span>
               ) : (
                 "Click to choose your .zip package"
               )}
@@ -226,7 +252,7 @@ export default function NewListingPage() {
               type="file"
               accept=".zip"
               className="hidden"
-              onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+              onChange={(e) => setPackageFile(e.target.files?.[0] ?? null)}
             />
           </label>
         </Field>
@@ -237,16 +263,16 @@ export default function NewListingPage() {
           hint="Show the tool actually working. Buyers who see it are far likelier to buy."
         >
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-            {screenshots.map((name, i) => (
+            {screenshotFiles.map((file, i) => (
               <div
                 key={i}
                 className="relative flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center"
               >
                 <span className="text-xl">🖼️</span>
-                <span className="line-clamp-2 text-[9px] leading-tight text-[var(--muted)]">{name}</span>
+                <span className="line-clamp-2 text-[9px] leading-tight text-[var(--muted)]">{file.name}</span>
                 <button
                   type="button"
-                  onClick={() => setScreenshots((p) => p.filter((_, j) => j !== i))}
+                  onClick={() => setScreenshotFiles((p) => p.filter((_, j) => j !== i))}
                   className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
                   aria-label="Remove screenshot"
                 >
@@ -254,7 +280,7 @@ export default function NewListingPage() {
                 </button>
               </div>
             ))}
-            {screenshots.length < 5 && (
+            {screenshotFiles.length < 5 && (
               <label className="grid aspect-square cursor-pointer place-items-center rounded-xl border border-dashed border-[var(--border-strong)] text-2xl text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
                 +
                 <input
@@ -276,13 +302,13 @@ export default function NewListingPage() {
         >
           <label
             className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
-              demoVideo
+              demoFile
                 ? "border-[var(--success)] bg-[var(--success-soft)]"
                 : "border-[var(--border-strong)] bg-[var(--surface-muted)]"
             }`}
           >
-            <span className={demoVideo ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
-              {demoVideo ? `▶ ${demoVideo}` : "Click to upload a demo video (mp4, mov, webm)"}
+            <span className={demoFile ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
+              {demoFile ? `▶ ${demoFile.name}` : "Click to upload a demo video (mp4, mov, webm)"}
             </span>
             <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
               Browse
@@ -291,7 +317,7 @@ export default function NewListingPage() {
               type="file"
               accept="video/*"
               className="hidden"
-              onChange={(e) => setDemoVideo(e.target.files?.[0]?.name ?? "")}
+              onChange={(e) => setDemoFile(e.target.files?.[0] ?? null)}
             />
           </label>
         </Field>
@@ -352,10 +378,10 @@ export default function NewListingPage() {
         </label>
 
         <div className="flex items-center gap-3">
-          <Button type="submit" size="lg" disabled={!valid}>
-            Submit for review
+          <Button type="submit" size="lg" disabled={!valid || uploading}>
+            {uploading ? "Uploading…" : "Submit for review"}
           </Button>
-          {!valid && (
+          {!valid && !uploading && (
             <Badge tone="neutral">
               {!agreed
                 ? "Tick the acknowledgment to submit"
@@ -363,6 +389,12 @@ export default function NewListingPage() {
             </Badge>
           )}
         </div>
+
+        {error && (
+          <p className="rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+            {error}
+          </p>
+        )}
       </form>
     </Section>
   );

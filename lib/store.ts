@@ -5,7 +5,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  addDoc,
   updateDoc,
   onSnapshot,
   query,
@@ -302,7 +301,18 @@ function slugify(title: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/**
+ * Reserve a listing id without writing anything yet. The seller form uploads the
+ * package/screenshots/demo under this id first (Storage paths are keyed by it),
+ * then calls createListing(id, …) so the doc is created already pointing at its
+ * media — no empty-then-patch window.
+ */
+export function reserveListingId(): string {
+  return doc(collection(db, "listings")).id;
+}
+
 export async function createListing(
+  id: string,
   input: Omit<
     Listing,
     "id" | "slug" | "status" | "salesCount" | "createdAt" | "updatedAt"
@@ -310,7 +320,7 @@ export async function createListing(
 ): Promise<void> {
   const now = Date.now();
   const slug = `${slugify(input.title)}-${now.toString().slice(-5)}`;
-  await addDoc(collection(db, "listings"), {
+  await setDoc(doc(db, "listings", id), {
     ...input,
     slug,
     status: "pending" as ListingStatus, // every submission enters the review queue
@@ -318,6 +328,36 @@ export async function createListing(
     createdAt: now,
     updatedAt: now,
   });
+}
+
+/**
+ * Ask the server for a short-lived signed URL to download a listing's package.
+ * The route (app/api/download) verifies the caller owns a purchase (or is the
+ * seller/an admin) before minting the URL. Throws on any failure.
+ */
+export async function requestDownload(listingId: string): Promise<string> {
+  const token = await getIdToken();
+  if (!token) throw new Error("Please sign in to download.");
+  const res = await fetch("/api/download", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ listingId }),
+  });
+  if (!res.ok) {
+    const { error } = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(
+      error === "no-package"
+        ? "This package isn't available for download yet."
+        : error === "forbidden"
+          ? "You don't have access to this download."
+          : "Couldn't start the download. Please try again."
+    );
+  }
+  const { url } = (await res.json()) as { url: string };
+  return url;
 }
 
 export async function reviewListing(

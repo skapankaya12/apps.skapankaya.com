@@ -18,7 +18,7 @@ export const firebaseConfig = {
 
 export const firebaseEnabled = Boolean(firebaseConfig.projectId);
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);

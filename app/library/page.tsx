@@ -1,14 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getPurchases, getListingById, formatPrice } from "@/lib/store";
+import {
+  getPurchases,
+  getListingById,
+  formatPrice,
+  requestDownload,
+} from "@/lib/store";
 import { Section, ButtonLink, Button, Badge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
 export default function LibraryPage() {
   const user = useUser();
   const purchases = useStoreValue(() => (user ? getPurchases(user.uid) : []));
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  async function handleDownload(listingId: string) {
+    setError("");
+    setBusyId(listingId);
+    try {
+      const url = await requestDownload(listingId);
+      window.location.assign(url); // attachment disposition → downloads in place
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Download failed.");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   if (!user) {
     return (
@@ -30,6 +51,12 @@ export default function LibraryPage() {
       <p className="mt-1 text-[var(--muted)]">
         Everything you own. Re-download anytime. It&apos;s yours forever.
       </p>
+
+      {error && (
+        <p className="mt-4 rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+          {error}
+        </p>
+      )}
 
       {purchases.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[var(--border-strong)] py-16 text-center">
@@ -71,16 +98,16 @@ export default function LibraryPage() {
                   <Link href="/how-to-run" className="hidden sm:block">
                     <Button variant="ghost" size="sm">Setup guide</Button>
                   </Link>
-                  {/* In production: a short-lived signed Storage URL. */}
+                  {/* Downloads via a short-lived signed Storage URL, minted
+                      server-side after verifying ownership (app/api/download). */}
                   <Button
                     size="sm"
-                    onClick={() =>
-                      alert(
-                        "In production this downloads the app package via a short-lived signed URL from Firebase Storage."
-                      )
-                    }
+                    disabled={busyId === p.listingId}
+                    onClick={() => handleDownload(p.listingId)}
                   >
-                    ↓ Download{updateAvailable ? " latest" : ""}
+                    {busyId === p.listingId
+                      ? "Preparing…"
+                      : `↓ Download${updateAvailable ? " latest" : ""}`}
                   </Button>
                 </div>
               </div>

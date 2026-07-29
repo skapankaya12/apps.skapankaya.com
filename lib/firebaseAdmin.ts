@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, cert, type App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 
 /**
  * Firebase Admin SDK, for privileged server-side work: verifying the caller's
@@ -33,6 +34,18 @@ export function getAdminAuth() {
 
 export function getAdminDb() {
   return getFirestore(adminApp());
+}
+
+/**
+ * Default Cloud Storage bucket, via the Admin SDK. Used to mint short-lived
+ * signed download URLs for purchased packages (the Storage rules deny direct
+ * client reads on the paid artifacts — see storage.rules). The bucket name
+ * comes from the same public config the client uses.
+ */
+export function getAdminBucket() {
+  return getStorage(adminApp()).bucket(
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+  );
 }
 
 /**

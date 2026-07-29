@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListingById, reviewListing, formatPrice } from "@/lib/store";
+import {
+  getListingById,
+  reviewListing,
+  requestDownload,
+  formatPrice,
+} from "@/lib/store";
 import { CATEGORY_LABELS, RUNTIME_LABELS } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
@@ -24,6 +29,8 @@ export default function AdminReviewPage() {
   const listing = useStoreValue(() => getListingById(params.id));
   const [checks, setChecks] = useState<boolean[]>(CHECKLIST.map(() => false));
   const [note, setNote] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
 
   if (!user || user.role !== "admin") {
     return (
@@ -52,6 +59,21 @@ export default function AdminReviewPage() {
         : note || "Did not pass review.";
     reviewListing(listing!.id, decision, note || defaultNote);
     router.push("/admin");
+  }
+
+  async function inspect() {
+    setDownloadError("");
+    setDownloading(true);
+    try {
+      const url = await requestDownload(listing!.id);
+      window.location.assign(url);
+    } catch (err) {
+      setDownloadError(
+        err instanceof Error ? err.message : "Couldn't fetch the package."
+      );
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return (
@@ -97,16 +119,16 @@ export default function AdminReviewPage() {
               📦 {listing.packagePath?.split("/").pop() ?? "package.zip"}
             </span>
             <button
-              onClick={() =>
-                alert(
-                  "In production this downloads the submitted package (signed URL) so you can run it in a sandbox and inspect the source."
-                )
-              }
-              className="text-sm font-medium text-[var(--accent)] hover:underline"
+              onClick={inspect}
+              disabled={downloading || !listing.packagePath}
+              className="text-sm font-medium text-[var(--accent)] hover:underline disabled:opacity-50"
             >
-              Download to inspect
+              {downloading ? "Preparing…" : "Download to inspect"}
             </button>
           </div>
+          {downloadError && (
+            <p className="mt-2 text-sm text-[var(--danger)]">{downloadError}</p>
+          )}
 
           {listing.status !== "pending" && listing.reviewNote && (
             <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
