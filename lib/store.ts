@@ -265,6 +265,20 @@ export async function setRole(role: Role) {
   await updateDoc(doc(db, "users", currentUser.uid), { role });
 }
 
+/**
+ * Ask the server to re-sync the seller's Stripe payout status onto their user
+ * doc. The live user-doc listener then updates the dashboard badge on its own,
+ * so this returns nothing. Silently no-ops if signed out or Stripe isn't wired.
+ */
+export async function refreshPayoutStatus(): Promise<void> {
+  const token = await getIdToken();
+  if (!token) return;
+  await fetch("/api/stripe/status", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => {});
+}
+
 /* ------------------------------ listings ------------------------------ */
 
 export function getApprovedListings(): Listing[] {

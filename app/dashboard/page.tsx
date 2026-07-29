@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListings, formatPrice, getIdToken } from "@/lib/store";
+import {
+  getListings,
+  formatPrice,
+  getIdToken,
+  refreshPayoutStatus,
+} from "@/lib/store";
 import { brand } from "@/lib/brand";
 import type { AppUser } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
@@ -117,6 +122,14 @@ function PayoutsCard({ user }: { user: AppUser }) {
 
   const active = user.stripeChargesEnabled === true;
   const started = Boolean(user.stripeAccountId);
+
+  // Once onboarding has started but isn't confirmed active, re-sync from Stripe.
+  // Covers the return from Express onboarding: the status route updates the user
+  // doc and the live listener flips the badge to "Active". Runs once per mount
+  // while pending (the `account.updated` webhook is intentionally not wired).
+  useEffect(() => {
+    if (started && !active) refreshPayoutStatus();
+  }, [started, active]);
 
   async function go() {
     setBusy(true);
