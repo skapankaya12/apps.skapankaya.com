@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
@@ -107,14 +108,7 @@ export function ListingDetail({ slug }: { slug: string }) {
             {listing.screenshots.length > 0 && (
               <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {listing.screenshots.slice(0, 5).map((shot, i) => (
-                  <div
-                    key={i}
-                    className="flex aspect-square items-end rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center"
-                  >
-                    <span className="w-full text-[10px] leading-tight text-[var(--muted)]">
-                      {shot}
-                    </span>
-                  </div>
+                  <Screenshot key={i} src={shot} index={i} />
                 ))}
               </div>
             )}
@@ -304,6 +298,37 @@ function MailIcon() {
       <rect x="2" y="4" width="20" height="16" rx="2" />
       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
+  );
+}
+
+/**
+ * One screenshot tile. Real listings store a public Storage URL, which we render
+ * as an image; older/seed listings store a plain text label. If an image URL
+ * fails to load, we fall back to showing the label text so the tile never breaks.
+ */
+function Screenshot({ src, index }: { src: string; index: number }) {
+  const [failed, setFailed] = useState(false);
+  const isUrl = /^https?:\/\//.test(src) || src.startsWith("/");
+
+  if (isUrl && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={`Screenshot ${index + 1}`}
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="aspect-square w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="flex aspect-square items-end rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center">
+      <span className="w-full text-[10px] leading-tight text-[var(--muted)]">
+        {src}
+      </span>
+    </div>
   );
 }
 
