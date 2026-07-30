@@ -17,14 +17,14 @@ export function ScanDisclaimer({ compact = false }: { compact?: boolean }) {
       </span>
       <p className={`text-[var(--muted)] ${compact ? "text-xs" : "text-sm"} leading-relaxed`}>
         <strong className="text-[var(--foreground)] font-medium">
-          Reviewed &amp; scanned, not guaranteed.
+          Every tool is checked before it&apos;s listed.
         </strong>{" "}
-        Every app is human-reviewed and scanned for malware and undisclosed
-        network activity before listing. We can&apos;t guarantee compatibility
-        with your specific device or setup, and you run downloaded software at
-        your own risk. Covered by our 14-day{" "}
-        <span className="text-[var(--foreground)]">&ldquo;it runs or your money back&rdquo;</span>{" "}
-        guarantee.
+        We run an automated security scan of the source code (flagging network
+        calls, obfuscation, and data-exfiltration patterns), then a human
+        reviews the results and the code by hand before approving. We
+        can&apos;t guarantee compatibility with your setup, and you run
+        downloaded software at your own risk &mdash; but nothing reaches the
+        marketplace unreviewed.
       </p>
     </div>
   );

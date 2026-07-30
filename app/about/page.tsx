@@ -25,7 +25,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Is it safe to run software from strangers?",
-    a: "Every submission is human-reviewed and scanned for malware and undisclosed network activity before it's listed, and makers must declare all dependencies and network calls. That said, we can't guarantee safety or compatibility on your specific device, and you run downloaded software at your own risk.",
+    a: "Every submission goes through an automated security scan of its source code — flagging network calls, obfuscation, and data-exfiltration patterns — and then a human reviews the results and the code by hand before it's listed. Makers must also declare all dependencies and network calls. That said, we can't guarantee safety or compatibility on your specific device, and you run downloaded software at your own risk.",
   },
   {
     q: "Why is the software so cheap compared to a SaaS platform?",
