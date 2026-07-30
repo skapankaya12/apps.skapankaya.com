@@ -42,6 +42,7 @@ export default function NewListingPage() {
   const [agreed, setAgreed] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [demoError, setDemoError] = useState("");
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (
@@ -100,7 +101,7 @@ export default function NewListingPage() {
         screenshots: shotUrls,
         demoVideo: demoUrl,
         sellerBio: sellerBio.trim() || undefined,
-        sellerEmail: sellerEmail.trim() || undefined,
+        sellerEmail: sellerEmail.trim(), // required
         sellerWebsite: sellerWebsite.trim() || undefined,
         version: "1.0.0",
         packagePath,
@@ -122,6 +123,48 @@ export default function NewListingPage() {
     setScreenshotFiles((prev) => [...prev, ...Array.from(files)].slice(0, 5));
   }
 
+  function pickPackage(file: File | null) {
+    setError("");
+    if (file && file.size > MAX_PACKAGE_BYTES) {
+      setPackageFile(null);
+      setError("Your package is over the 200MB limit. Please slim it down.");
+      return;
+    }
+    setPackageFile(file);
+  }
+
+  // Validate the demo before accepting it: public Storage caps at 50MB, and we
+  // only want short clips (max 30s). Reject with a clear message rather than
+  // letting the upload fail with a raw 403 later.
+  async function pickDemo(file: File | null) {
+    setDemoError("");
+    if (!file) {
+      setDemoFile(null);
+      return;
+    }
+    if (file.size > MAX_DEMO_BYTES) {
+      setDemoFile(null);
+      setDemoError(
+        "That video is too large — keep it under 50MB (a 30-second clip usually is)."
+      );
+      return;
+    }
+    let duration: number | null = null;
+    try {
+      duration = await readVideoDuration(file);
+    } catch {
+      duration = null; // couldn't read metadata; fall through and allow it
+    }
+    if (duration !== null && duration > MAX_DEMO_SECONDS + 1) {
+      setDemoFile(null);
+      setDemoError(
+        `Demo videos must be 30 seconds or shorter (this one is ${Math.round(duration)}s).`
+      );
+      return;
+    }
+    setDemoFile(file);
+  }
+
   // Exactly what's still blocking submission, in field order — so the button's
   // hint names the culprit instead of a vague "fill all fields".
   const missing: string[] = [];
@@ -130,6 +173,7 @@ export default function NewListingPage() {
   if (description.trim().length <= 20) missing.push("a longer description (20+ characters)");
   if (!packageFile) missing.push("a .zip package");
   if (!demoFile) missing.push("a demo video");
+  if (!sellerEmail.trim() || !sellerEmail.includes("@")) missing.push("a support email");
   if (!agreed) missing.push("the acknowledgment");
   const valid = missing.length === 0;
 
@@ -244,7 +288,7 @@ export default function NewListingPage() {
         {/* App package upload */}
         <Field
           label="App package (.zip)"
-          hint="Must contain manifest.json, README.md, SETUP.md, LICENSE.md and src/."
+          hint="Must contain manifest.json, README.md, SETUP.md, LICENSE.md and src/. Up to 200MB."
         >
           <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-6 text-sm hover:border-[var(--accent)]">
             <span className="text-[var(--muted)]">
@@ -261,7 +305,7 @@ export default function NewListingPage() {
               type="file"
               accept=".zip"
               className="hidden"
-              onChange={(e) => setPackageFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => pickPackage(e.target.files?.[0] ?? null)}
             />
           </label>
         </Field>
@@ -307,7 +351,7 @@ export default function NewListingPage() {
         {/* Demo video, required */}
         <Field
           label="Demo video (required)"
-          hint="A short screen recording of the tool in action. This is required. It's the single biggest thing that sells a small tool."
+          hint="A short screen recording of the tool in action — max 30 seconds and 50MB. It's the single biggest thing that sells a small tool, so keep it tight."
         >
           <label
             className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
@@ -326,9 +370,12 @@ export default function NewListingPage() {
               type="file"
               accept="video/*"
               className="hidden"
-              onChange={(e) => setDemoFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => pickDemo(e.target.files?.[0] ?? null)}
             />
           </label>
+          {demoError && (
+            <p className="mt-1.5 text-xs text-[var(--danger)]">{demoError}</p>
+          )}
         </Field>
 
         {/* Seller / contact info, shown to buyers on the listing page */}
@@ -349,9 +396,10 @@ export default function NewListingPage() {
               />
             </Field>
             <div className="grid gap-6 sm:grid-cols-2">
-              <Field label="Support email" hint="Where buyers can reach you for help.">
+              <Field label="Support email (required)" hint="Where buyers can reach you for help.">
                 <input
                   type="email"
+                  required
                   value={sellerEmail}
                   onChange={(e) => setSellerEmail(e.target.value)}
                   placeholder="you@example.com"
@@ -407,6 +455,30 @@ export default function NewListingPage() {
 
 const inputClass =
   "w-full rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)]";
+
+// Upload limits. Demo video lives in public/ (Storage caps it at 50MB) and is
+// meant to be a short clip; the package .zip goes to submissions/ (200MB cap).
+const MAX_DEMO_BYTES = 50 * 1024 * 1024;
+const MAX_DEMO_SECONDS = 30;
+const MAX_PACKAGE_BYTES = 200 * 1024 * 1024;
+
+/** Read a video file's duration (seconds) from its metadata, without playing it. */
+function readVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.onloadedmetadata = () => {
+      const d = v.duration;
+      URL.revokeObjectURL(v.src);
+      resolve(d);
+    };
+    v.onerror = () => {
+      URL.revokeObjectURL(v.src);
+      reject(new Error("cannot read video metadata"));
+    };
+    v.src = URL.createObjectURL(file);
+  });
+}
 
 function Field({
   label,
