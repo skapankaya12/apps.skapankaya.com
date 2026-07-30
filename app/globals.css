@@ -47,7 +47,7 @@
   --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-manrope);
   --font-mono: var(--font-geist-mono);
   --radius-lg: 14px;
   --radius-xl: 18px;
@@ -62,8 +62,17 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-weight: 400; /* Manrope normal for body copy */
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Titles use Manrope ExtraBold. Unlayered so it wins over Tailwind's
+   font-semibold/font-bold utilities that headings currently carry. */
+h1,
+h2,
+h3 {
+  font-weight: 800;
 }
 
 ::selection {
