@@ -1,5 +1,6 @@
 import { verifyRequestUid, getAdminDb, adminConfigured } from "@/lib/firebaseAdmin";
-import { sendEmail, emailShell, adminNotifyEmail } from "@/lib/email";
+import { sendEmail, adminNotifyEmail } from "@/lib/email";
+import { newListingAdminEmail } from "@/lib/emailTemplates";
 import { siteOrigin } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -28,16 +29,14 @@ export async function POST(req: Request) {
   }
 
   const origin = siteOrigin(req);
-  const price = ((listing.priceCents ?? 0) / 100).toFixed(2);
   const ok = await sendEmail({
     to: adminNotifyEmail,
-    subject: `New listing to review: ${listing.title ?? "Untitled"}`,
-    html: emailShell(
-      `<p>A new tool was submitted for review.</p>
-       <p><strong>${listing.title ?? "Untitled"}</strong> — $${price}<br/>
-       by ${listing.sellerName ?? "a seller"}</p>
-       <p><a href="${origin}/admin/${listingId}">Open it in the review queue →</a></p>`
-    ),
+    ...newListingAdminEmail({
+      title: listing.title ?? "Untitled",
+      priceCents: listing.priceCents ?? 0,
+      sellerName: listing.sellerName ?? "a seller",
+      reviewUrl: `${origin}/admin/${listingId}`,
+    }),
   });
 
   return Response.json({ ok });

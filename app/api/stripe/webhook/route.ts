@@ -1,6 +1,12 @@
 import type Stripe from "stripe";
-import { stripe, stripeConfigured } from "@/lib/stripe";
+import { stripe, stripeConfigured, siteOrigin } from "@/lib/stripe";
 import { getAdminDb, adminConfigured } from "@/lib/firebaseAdmin";
+import { sendEmail, adminNotifyEmail } from "@/lib/email";
+import {
+  purchaseReceiptBuyerEmail,
+  saleSellerEmail,
+  saleAdminEmail,
+} from "@/lib/emailTemplates";
 import { FieldValue } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
@@ -37,13 +43,15 @@ export async function POST(req: Request) {
       const purchaseRef = db.collection("purchases").doc(session.id);
       const existing = await purchaseRef.get();
       if (!existing.exists) {
+        const amountCents = session.amount_total ?? 0;
+        const title = m.listingTitle ?? "your tool";
         await purchaseRef.set({
           buyerId: m.buyerId,
           listingId: m.listingId,
           listingSlug: m.listingSlug ?? "",
           listingTitle: m.listingTitle ?? "",
           sellerName: m.sellerName ?? "",
-          amountCents: session.amount_total ?? 0,
+          amountCents,
           purchasedVersion: m.purchasedVersion ?? "1.0.0",
           stripeSessionId: session.id,
           createdAt: Date.now(),
@@ -52,6 +60,55 @@ export async function POST(req: Request) {
           .collection("listings")
           .doc(m.listingId)
           .update({ salesCount: FieldValue.increment(1) });
+
+        // Notify buyer, seller and admin (best-effort — never fail the webhook).
+        try {
+          const origin = siteOrigin(req);
+          const buyerEmail = session.customer_details?.email ?? "";
+          const sellerSnap = m.sellerId
+            ? await db.collection("users").doc(m.sellerId).get()
+            : null;
+          const sellerEmail = sellerSnap?.data()?.email as string | undefined;
+
+          const sends: Promise<unknown>[] = [];
+          if (buyerEmail) {
+            sends.push(
+              sendEmail({
+                to: buyerEmail,
+                ...purchaseReceiptBuyerEmail({
+                  title,
+                  amountCents,
+                  libraryUrl: `${origin}/library`,
+                }),
+              })
+            );
+          }
+          if (sellerEmail) {
+            sends.push(
+              sendEmail({
+                to: sellerEmail,
+                ...saleSellerEmail({
+                  title,
+                  amountCents,
+                  dashboardUrl: `${origin}/dashboard`,
+                }),
+              })
+            );
+          }
+          sends.push(
+            sendEmail({
+              to: adminNotifyEmail,
+              ...saleAdminEmail({
+                title,
+                buyerEmail: buyerEmail || "unknown",
+                amountCents,
+              }),
+            })
+          );
+          await Promise.allSettled(sends);
+        } catch (e) {
+          console.error("[webhook] sale emails failed:", e);
+        }
       }
     }
   }

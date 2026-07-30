@@ -57,6 +57,15 @@ export async function sendEmail(args: SendArgs): Promise<boolean> {
   }
 }
 
+/** Minimal HTML escaping for user-provided text placed into an email body. */
+export function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 /** Wrap body copy in a minimal, client-safe HTML shell with the brand name. */
 export function emailShell(bodyHtml: string): string {
   return `<div style="font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;color:#101014;line-height:1.5;max-width:520px">

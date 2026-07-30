@@ -1,5 +1,6 @@
 import { verifyRequestUid, getAdminDb, adminConfigured } from "@/lib/firebaseAdmin";
-import { sendEmail, emailShell } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
+import { reviewDecisionSellerEmail } from "@/lib/emailTemplates";
 import { siteOrigin } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -44,37 +45,16 @@ export async function POST(req: Request) {
   if (!sellerEmail) return Response.json({ ok: false }, { status: 200 });
 
   const origin = siteOrigin(req);
-  const title = listing.title ?? "Your tool";
-  const noteHtml = note?.trim()
-    ? `<p style="background:#f7f7f8;border-radius:12px;padding:12px"><strong>Note from review:</strong><br/>${escapeHtml(note.trim())}</p>`
-    : "";
-
-  const body =
-    decision === "approved"
-      ? `<p><strong>${escapeHtml(title)}</strong> passed review and is now live on the marketplace. 🎉</p>
-         ${noteHtml}
-         <p><a href="${origin}/app/${listing.slug ?? ""}">View your listing →</a></p>`
-      : `<p><strong>${escapeHtml(title)}</strong> wasn't approved this time.</p>
-         ${noteHtml}
-         <p>You can edit it and resubmit from your <a href="${origin}/dashboard">dashboard</a>.</p>`;
-
   const ok = await sendEmail({
     to: sellerEmail,
-    subject:
-      decision === "approved"
-        ? `Approved: ${title} is live`
-        : `Update on your listing: ${title}`,
-    html: emailShell(body),
+    ...reviewDecisionSellerEmail({
+      decision,
+      title: listing.title ?? "Your tool",
+      note,
+      listingUrl: `${origin}/app/${listing.slug ?? ""}`,
+      dashboardUrl: `${origin}/dashboard`,
+    }),
   });
 
   return Response.json({ ok });
-}
-
-/** Minimal HTML escaping for user-provided text placed into the email body. */
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
