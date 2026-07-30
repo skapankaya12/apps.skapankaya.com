@@ -7,6 +7,7 @@ import {
   getListingById,
   reviewListing,
   requestDownload,
+  notifyReviewDecision,
   formatPrice,
 } from "@/lib/store";
 import { CATEGORY_LABELS, RUNTIME_LABELS } from "@/lib/types";
@@ -52,12 +53,15 @@ export default function AdminReviewPage() {
 
   const allChecked = checks.every(Boolean);
 
-  function decide(decision: "approved" | "rejected") {
+  async function decide(decision: "approved" | "rejected") {
     const defaultNote =
       decision === "approved"
         ? "Passed all checks."
         : note || "Did not pass review.";
-    reviewListing(listing!.id, decision, note || defaultNote);
+    const finalNote = note || defaultNote;
+    reviewListing(listing!.id, decision, finalNote);
+    // Email the seller (best-effort); await so it fires before we navigate away.
+    await notifyReviewDecision(listing!.id, decision, finalNote);
     router.push("/admin");
   }
 

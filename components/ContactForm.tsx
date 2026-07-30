@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { brand } from "@/lib/brand";
 import { Button, Badge } from "./ui";
 
 type Topic = "request" | "support" | "selling" | "other";
@@ -35,10 +34,6 @@ export function ContactForm() {
 
   const active = TOPICS.find((t) => t.value === topic)!;
   const valid = email.includes("@") && message.trim().length > 10;
-
-  const mailtoHref = `mailto:${brand.supportEmail}?subject=${encodeURIComponent(
-    `[${active.label}] ${brand.name}`
-  )}&body=${encodeURIComponent(message)}`;
 
   if (sent) {
     return (
@@ -75,12 +70,12 @@ export function ContactForm() {
         const data = await res.json().catch(() => ({}));
         setError(
           data?.error === "not-configured"
-            ? "Our contact inbox isn't wired up yet. Please email us directly using the button below."
-            : "Something went wrong sending that. Please try the direct email below."
+            ? "Our contact form isn't quite ready yet. Please try again a little later."
+            : "Something went wrong sending that. Please try again in a moment."
         );
       }
     } catch {
-      setError("Network error. Please try the direct email below.");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -152,18 +147,11 @@ export function ContactForm() {
       {error && (
         <div className="mt-4 rounded-xl border border-[var(--danger)]/30 bg-[var(--danger-soft,transparent)] p-3 text-sm">
           <p className="text-[var(--danger)]">{error}</p>
-          <a
-            href={mailtoHref}
-            className="mt-1 inline-block font-medium text-[var(--accent)] hover:underline"
-          >
-            Email {brand.supportEmail} →
-          </a>
         </div>
       )}
 
       <p className="mt-4 text-xs text-[var(--muted)]">
-        Prefer email? Write to{" "}
-        <span className="text-[var(--foreground)]">{brand.supportEmail}</span>.
+        We read every message and usually reply within one business day.
       </p>
     </form>
   );

@@ -50,7 +50,9 @@ export function Footer() {
           <span>
             © {new Date().getFullYear()} {brand.name}. All apps reviewed before listing.
           </span>
-          <span>{brand.supportEmail}</span>
+          <Link href="/about#contact" className="hover:text-[var(--accent)]">
+            Contact &amp; support
+          </Link>
         </div>
       </div>
     </footer>

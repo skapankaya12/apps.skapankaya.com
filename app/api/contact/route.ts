@@ -1,14 +1,14 @@
-import { brand } from "@/lib/brand";
+export const runtime = "nodejs";
 
 /**
- * Contact-form endpoint. Sends the message to the support inbox via Resend's
- * REST API (no SDK dependency). If email isn't configured yet, it responds with
- * a clear "not configured" signal so the form can fall back to a mailto link
- * instead of silently pretending to have sent something.
+ * Contact-form endpoint. Forwards each submission to a Google Sheet via a Google
+ * Apps Script Web App (server-to-server, so the script URL stays off the client
+ * and there's no CORS/redirect dance). Set the deployed /exec URL as:
  *
- * Requires (see .env.example / EMAIL_SETUP.md):
- *   RESEND_API_KEY   — Resend API key
- *   EMAIL_FROM       — verified sender, e.g. "The Solo Market <hello@your-domain>"
+ *   CONTACT_WEBHOOK_URL   — the Apps Script Web App URL (…/exec)
+ *
+ * If it's not set yet, we respond with a clear "not configured" signal so the
+ * form can show a graceful message instead of pretending to have sent.
  */
 
 const TOPIC_LABELS: Record<string, string> = {
@@ -34,34 +34,32 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, error: "invalid-input" }, { status: 400 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
-  if (!apiKey || !from) {
-    // Email isn't wired up yet — tell the client so it can show a mailto fallback.
+  const webhook = process.env.CONTACT_WEBHOOK_URL;
+  if (!webhook) {
     return Response.json({ ok: false, error: "not-configured" }, { status: 501 });
   }
 
-  const label = TOPIC_LABELS[topic] ?? "Message";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [brand.supportEmail],
-      reply_to: email,
-      subject: `[${label}] ${brand.name} contact form`,
-      text: `Topic: ${label}\nFrom: ${email}\n\n${message}`,
-    }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error("[contact] Resend error:", res.status, detail);
+  try {
+    const res = await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        topic: TOPIC_LABELS[topic] ?? "Other",
+        email,
+        message,
+      }),
+      // Apps Script /exec answers with a 302 to a googleusercontent URL; fetch
+      // follows it by default, so a 2xx here means the row was written.
+      redirect: "follow",
+    });
+    if (!res.ok) {
+      console.error("[contact] sheet webhook error:", res.status, await res.text().catch(() => ""));
+      return Response.json({ ok: false, error: "send-failed" }, { status: 502 });
+    }
+    return Response.json({ ok: true });
+  } catch (e) {
+    console.error("[contact] sheet webhook threw:", e);
     return Response.json({ ok: false, error: "send-failed" }, { status: 502 });
   }
-
-  return Response.json({ ok: true });
 }

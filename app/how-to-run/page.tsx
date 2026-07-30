@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Section, Badge, ButtonLink } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { brand } from "@/lib/brand";
@@ -84,7 +85,11 @@ export default function HowToRunPage() {
         <h3 className="font-semibold">Still stuck?</h3>
         <p className="mt-1 text-sm text-[var(--muted)]">
           If an app won&apos;t run within 14 days of buying it, you get a full
-          refund, no questions asked. Email {brand.supportEmail}.
+          refund, no questions asked. Reach us through the{" "}
+          <Link href="/about#contact" className="text-[var(--accent)] hover:underline">
+            contact form
+          </Link>
+          .
         </p>
         <ButtonLink href="/browse" className="mt-4" variant="secondary" size="sm">
           Browse apps

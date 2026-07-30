@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { useUser } from "@/lib/hooks";
-import { createListing, reserveListingId } from "@/lib/store";
+import {
+  createListing,
+  reserveListingId,
+  notifyListingSubmitted,
+} from "@/lib/store";
 import {
   uploadPackage,
   uploadDemoVideo,
@@ -101,6 +105,8 @@ export default function NewListingPage() {
         version: "1.0.0",
         packagePath,
       });
+      // Best-effort admin notification; don't let it block the confirmation.
+      await notifyListingSubmitted(listingId);
       setSubmitted(true);
     } catch (err) {
       console.error("[new listing] submit failed:", err);

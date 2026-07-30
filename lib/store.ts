@@ -279,6 +279,44 @@ export async function refreshPayoutStatus(): Promise<void> {
   }).catch(() => {});
 }
 
+/**
+ * Best-effort: tell the server a listing was just submitted so it can email the
+ * admin. Never throws — a failed notification must not break the submit flow.
+ */
+export async function notifyListingSubmitted(listingId: string): Promise<void> {
+  const token = await getIdToken();
+  if (!token) return;
+  await fetch("/api/notify/listing", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ listingId }),
+  }).catch(() => {});
+}
+
+/**
+ * Best-effort: tell the server an admin approved/rejected a listing so it can
+ * email the seller (with the review note). Never throws.
+ */
+export async function notifyReviewDecision(
+  listingId: string,
+  decision: "approved" | "rejected",
+  note: string
+): Promise<void> {
+  const token = await getIdToken();
+  if (!token) return;
+  await fetch("/api/notify/review", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ listingId, decision, note }),
+  }).catch(() => {});
+}
+
 /* ------------------------------ listings ------------------------------ */
 
 export function getApprovedListings(): Listing[] {
