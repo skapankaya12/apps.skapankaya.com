@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 
 /**
  * Firebase client init. Config comes from NEXT_PUBLIC_* env vars (see
@@ -21,7 +21,19 @@ export const firebaseEnabled = Boolean(firebaseConfig.projectId);
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// `ignoreUndefinedProperties` lets writes omit undefined fields (e.g. an empty
+// optional website) instead of throwing "Unsupported field value: undefined".
+// initializeFirestore must run before any getFirestore; fall back if it already
+// started (e.g. across HMR reloads).
+function initDb() {
+  try {
+    return initializeFirestore(app, { ignoreUndefinedProperties: true });
+  } catch {
+    return getFirestore(app);
+  }
+}
+export const db = initDb();
 
 /**
  * Optional: Firebase App Check (reCAPTCHA v3) to deter bots and abuse of Auth,
