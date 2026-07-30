@@ -6,6 +6,24 @@ import { useUser } from "@/lib/hooks";
 import { setRole } from "@/lib/store";
 import { Section, Button, Badge } from "@/components/ui";
 
+// The marketplace is software-only: self-contained tools a buyer downloads and
+// runs on their own machine. This spells out the boundary for makers.
+const CAN_SELL = [
+  "Scripts & CLI tools — Node.js, Python, shell, and the like",
+  "Desktop or browser-based apps a buyer runs locally",
+  "Automations, converters, generators, scrapers, dashboards, utilities",
+  "Your own original code (or code you're licensed to resell)",
+  "Self-contained tools with readable source and disclosed network calls",
+];
+const CANT_SELL = [
+  "SaaS, subscriptions, or anything that runs on your servers",
+  "Non-software goods — ebooks, courses, templates, presets, graphics, music",
+  "Physical products or freelance services",
+  "Code that isn't yours, or that breaks someone's license",
+  "Malware, data harvesters, or obfuscated / hidden-behavior tools",
+  "Anything illegal, or that phishes buyers for credentials or keys",
+];
+
 export default function SellPage() {
   const router = useRouter();
   const user = useUser();
@@ -72,6 +90,41 @@ export default function SellPage() {
               <p className="mt-2 text-sm text-[var(--muted)]">{c.body}</p>
             </div>
           ))}
+        </div>
+      </Section>
+
+      {/* What you can (and can't) sell */}
+      <Section className="py-8">
+        <h2 className="text-2xl font-semibold tracking-tight">What you can sell</h2>
+        <p className="mt-2 max-w-2xl text-[var(--muted)]">
+          {brand.name} is for small <span className="font-medium text-[var(--foreground)]">software tools</span> people
+          download and run on their own computer. If it&apos;s a self-contained
+          tool a buyer can own forever, it fits. If it needs your servers or
+          isn&apos;t software, it doesn&apos;t.
+        </p>
+        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[var(--success)]/30 bg-[var(--success-soft)] p-6">
+            <h3 className="font-semibold text-[var(--success)]">✓ Yes, list these</h3>
+            <ul className="mt-4 space-y-3">
+              {CAN_SELL.map((item) => (
+                <li key={item} className="flex gap-2.5 text-sm text-[var(--foreground)]/85">
+                  <span className="mt-0.5 shrink-0 text-[var(--success)]">✓</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-[var(--danger)]/30 bg-[var(--danger-soft)] p-6">
+            <h3 className="font-semibold text-[var(--danger)]">✕ Not a fit</h3>
+            <ul className="mt-4 space-y-3">
+              {CANT_SELL.map((item) => (
+                <li key={item} className="flex gap-2.5 text-sm text-[var(--foreground)]/85">
+                  <span className="mt-0.5 shrink-0 text-[var(--danger)]">✕</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </Section>
 

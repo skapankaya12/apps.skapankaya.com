@@ -83,7 +83,7 @@ export default function AboutPage() {
           <div className="mx-auto max-w-3xl text-center">
             <Badge tone="accent" className="mb-4">{copy.missionTitle}</Badge>
             <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-              The tool that fixes your thing already exists. It&apos;s just small.
+              Someone already built the tool that fixes your thing.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-balance text-lg leading-relaxed text-[var(--muted)]">
               {copy.missionBody}

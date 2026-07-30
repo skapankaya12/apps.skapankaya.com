@@ -171,6 +171,8 @@ export default function NewListingPage() {
   if (!title.trim()) missing.push("app name");
   if (!tagline.trim()) missing.push("tagline");
   if (description.trim().length <= 20) missing.push("a longer description (20+ characters)");
+  const priceNum = parseFloat(price || "0");
+  if (!(priceNum >= 15 && priceNum <= 250)) missing.push("a price between $15 and $250");
   if (!packageFile) missing.push("a .zip package");
   if (!demoFile) missing.push("a demo video");
   if (!sellerEmail.trim() || !sellerEmail.includes("@")) missing.push("a support email");
@@ -230,7 +232,10 @@ export default function NewListingPage() {
             </p>
           </Field>
 
-          <Field label="Runtime">
+          <Field
+            label="Runtime"
+            hint="What a buyer needs to run it: Node.js or Python for scripts, Browser for web tools, Desktop app for a packaged program, Other if unsure."
+          >
             <select
               value={runtime}
               onChange={(e) => setRuntime(e.target.value as Runtime)}
@@ -269,14 +274,18 @@ export default function NewListingPage() {
           </div>
         </Field>
 
-        <Field label="Price (USD)" hint="Suggested range: $10 to $29.">
+        <Field
+          label="Price (USD)"
+          hint="Between $15 and $250. Want to list higher? Contact us about premium listings."
+        >
           <div className="relative max-w-[200px]">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]">
               $
             </span>
             <input
               type="number"
-              min="5"
+              min="15"
+              max="250"
               step="1"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
