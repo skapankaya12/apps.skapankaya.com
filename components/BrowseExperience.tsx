@@ -9,16 +9,10 @@ import { ListingCard } from "./ListingCard";
 type Filter = Category | "all";
 
 /**
- * The core "find a tool" experience: search + category filter + grid.
- * Shared by the landing page (inline chips, below the hero) and /browse
- * (a right-side department menu you navigate between).
+ * The core "find a tool" experience: search + category chip filter + a vertical
+ * list of listing rows. Shared by the landing page (below the hero) and /browse.
  */
-export function BrowseExperience({
-  variant = "inline",
-}: {
-  /** "inline" = chip row (landing). "sidebar" = right-side filter menu (/browse). */
-  variant?: "inline" | "sidebar";
-}) {
+export function BrowseExperience() {
   const listings = useStoreValue(getApprovedListings);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Filter>("all");
@@ -73,7 +67,7 @@ export function BrowseExperience({
 
   const grid =
     filtered.length > 0 ? (
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="flex flex-col gap-4">
         {filtered.map((l) => (
           <ListingCard key={l.id} listing={l} />
         ))}
@@ -90,62 +84,6 @@ export function BrowseExperience({
       </div>
     );
 
-  /* ---------------------------- sidebar variant ---------------------------- */
-  if (variant === "sidebar") {
-    return (
-      <div>
-        {search}
-        {/* Departments on the left, results fill the rest. minmax(0,1fr) +
-            min-w-0 let the results column shrink instead of overflowing. */}
-        <div className="mt-6 grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-          {/* Main column: results (DOM-first so mobile shows tools before the
-              department list; order-2 puts it on the right at lg) */}
-          <div className="min-w-0 lg:order-2">{grid}</div>
-
-          {/* Left-side department menu */}
-          <aside className="lg:order-1">
-            <div className="lg:sticky lg:top-24 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3">
-              <p className="px-2 py-1.5 text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-                Departments
-              </p>
-              <nav className="mt-1 flex flex-col gap-0.5">
-                {categories.map((c) => {
-                  const active = category === c.value;
-                  return (
-                    <button
-                      key={c.value}
-                      onClick={() => setCategory(c.value)}
-                      aria-current={active ? "true" : undefined}
-                      className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
-                        active
-                          ? "bg-[var(--accent-soft)] font-medium text-[var(--accent)]"
-                          : "text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
-                      }`}
-                    >
-                      <span className="truncate">{c.label}</span>
-                      {c.count > 0 && (
-                        <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-xs tabular-nums ${
-                            active
-                              ? "bg-[var(--accent)] text-[var(--background)]"
-                              : "bg-[var(--surface-muted)] text-[var(--muted)]"
-                          }`}
-                        >
-                          {c.count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-          </aside>
-        </div>
-      </div>
-    );
-  }
-
-  /* ----------------------------- inline variant ---------------------------- */
   return (
     <div>
       {search}

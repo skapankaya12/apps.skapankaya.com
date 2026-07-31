@@ -4,53 +4,49 @@ import Link from "next/link";
 import type { Listing } from "@/lib/types";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
-import { Card } from "./ui/card";
 import { ListingMedia } from "./ListingMedia";
 
+/**
+ * A listing as a horizontal list row: the demo video sits on the left (playing
+ * on hover) with the details beside it. Stacks vertically on mobile.
+ */
 export function ListingCard({ listing }: { listing: Listing }) {
   const saved = useStoreValue(() => isBookmarked(listing.id));
 
   return (
-    <Card
-      variant="gradient"
-      contentClassName="px-6 py-4"
-      className="group h-full transition-transform duration-200 hover:-translate-y-0.5"
-    >
-      <div className="flex h-full flex-col">
-        {/* Demo video doubles as the cover, playing on hover */}
-        <div className="relative">
-          <Link href={`/app/${listing.slug}`} className="block">
-            <ListingMedia src={listing.demoVideo} title={listing.title} />
-          </Link>
-          <button
-            aria-label={saved ? "Remove bookmark" : "Save for later"}
-            onClick={() => toggleBookmark(listing.id)}
-            className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-lg bg-[var(--surface)]/85 text-[var(--muted)] backdrop-blur-sm transition-colors hover:text-[var(--foreground)]"
-          >
-            <HeartIcon filled={saved} />
-          </button>
-        </div>
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-strong)] sm:flex-row">
+      {/* Demo video doubles as the cover, playing on hover */}
+      <Link href={`/app/${listing.slug}`} className="block shrink-0 sm:w-72">
+        <ListingMedia src={listing.demoVideo} title={listing.title} rounded="rounded-none" />
+      </Link>
 
-        <Link href={`/app/${listing.slug}`} className="flex flex-1 flex-col">
-          <h3 className="mt-4 line-clamp-2 break-words font-semibold tracking-tight group-hover:text-[var(--accent)]">
-            {listing.title}
-          </h3>
-          <p className="mt-1 line-clamp-2 break-words text-sm text-[var(--muted)]">
-            {listing.tagline}
-          </p>
-        </Link>
+      <button
+        aria-label={saved ? "Remove bookmark" : "Save for later"}
+        onClick={() => toggleBookmark(listing.id)}
+        className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg bg-[var(--surface)]/85 text-[var(--muted)] backdrop-blur-sm transition-colors hover:text-[var(--foreground)]"
+      >
+        <HeartIcon filled={saved} />
+      </button>
 
-        {/* mt-auto pins the footer so rows line up across the grid */}
-        <div className="mt-auto flex items-baseline justify-between gap-2 pt-4">
-          <span className="text-sm font-semibold tabular-nums">
+      <Link href={`/app/${listing.slug}`} className="flex min-w-0 flex-1 flex-col p-5">
+        <h3 className="line-clamp-1 break-words text-lg font-semibold tracking-tight group-hover:text-[var(--accent)]">
+          {listing.title}
+        </h3>
+        <p className="mt-1.5 line-clamp-2 break-words text-sm text-[var(--muted)]">
+          {listing.tagline}
+        </p>
+        <p className="mt-2 hidden line-clamp-2 break-words text-sm leading-relaxed text-[var(--muted)]/75 sm:block">
+          {listing.description}
+        </p>
+
+        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+          <span className="text-base font-semibold tabular-nums">
             {formatPrice(listing.priceCents)}
           </span>
-          <span className="text-xs text-[var(--muted)]">
-            by {listing.sellerName}
-          </span>
+          <span className="text-xs text-[var(--muted)]">by {listing.sellerName}</span>
         </div>
-      </div>
-    </Card>
+      </Link>
+    </div>
   );
 }
 
