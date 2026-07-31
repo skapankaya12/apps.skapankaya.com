@@ -48,7 +48,7 @@ export function Footer() {
       <div className="border-t border-[var(--border)]">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-2 px-5 py-5 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:px-8">
           <span>
-            © {new Date().getFullYear()} {brand.name}. All apps reviewed before listing.
+            © {new Date().getFullYear()} {brand.name}. All rights reserved.
           </span>
           <Link href="/about#contact" className="hover:text-[var(--accent)]">
             Contact &amp; support

@@ -72,6 +72,6 @@ export function emailShell(bodyHtml: string): string {
     <p style="font-weight:800;font-size:18px;margin:0 0 16px">${brand.name}</p>
     ${bodyHtml}
     <hr style="border:none;border-top:1px solid #ececef;margin:24px 0" />
-    <p style="color:#6b6b76;font-size:12px;margin:0">The Solo Market · Buy it once. Own it forever.</p>
+    <p style="color:#6b6b76;font-size:12px;margin:0">The Solo Market · Encouraging anyone to build, everyone to own.</p>
   </div>`;
 }
