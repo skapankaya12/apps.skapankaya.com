@@ -43,15 +43,18 @@ export async function POST(req: Request) {
     packagePath?: string;
     title?: string;
     version?: string;
+    status?: string;
   };
 
-  // Decide whether this caller is allowed the bytes.
-  let allowed = listing.sellerId === uid;
-  if (!allowed) {
+  // Decide whether — and why — this caller is allowed the bytes.
+  const isSeller = listing.sellerId === uid;
+  let isAdmin = false;
+  if (!isSeller) {
     const userSnap = await db.collection("users").doc(uid).get();
-    allowed = userSnap.data()?.role === "admin";
+    isAdmin = userSnap.data()?.role === "admin";
   }
-  if (!allowed) {
+  let isBuyer = false;
+  if (!isSeller && !isAdmin) {
     // A buyer qualifies if they own a purchase of this listing. Query by buyerId
     // only (auto-indexed) and match the listing in code, so no composite index
     // is needed.
@@ -59,9 +62,18 @@ export async function POST(req: Request) {
       .collection("purchases")
       .where("buyerId", "==", uid)
       .get();
-    allowed = owned.docs.some((d) => d.data().listingId === listingId);
+    isBuyer = owned.docs.some((d) => d.data().listingId === listingId);
   }
-  if (!allowed) return Response.json({ error: "forbidden" }, { status: 403 });
+  if (!isSeller && !isAdmin && !isBuyer) {
+    return Response.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  // Buyers can only download a listing that's still approved. If it was pulled or
+  // rejected for cause after purchase, block the download (a refund is the right
+  // remedy — see the refund flow). Admins and the seller can still fetch it.
+  if (isBuyer && listing.status !== "approved") {
+    return Response.json({ error: "unavailable" }, { status: 403 });
+  }
 
   if (!listing.packagePath) {
     return Response.json({ error: "no-package" }, { status: 409 });

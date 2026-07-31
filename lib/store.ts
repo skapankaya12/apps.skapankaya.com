@@ -403,9 +403,11 @@ export async function requestDownload(listingId: string): Promise<string> {
     throw new Error(
       error === "no-package"
         ? "This package isn't available for download yet."
-        : error === "forbidden"
-          ? "You don't have access to this download."
-          : "Couldn't start the download. Please try again."
+        : error === "unavailable"
+          ? "This tool is no longer available for download. If you bought it, contact us about a refund."
+          : error === "forbidden"
+            ? "You don't have access to this download."
+            : "Couldn't start the download. Please try again."
     );
   }
   const { url } = (await res.json()) as { url: string };
