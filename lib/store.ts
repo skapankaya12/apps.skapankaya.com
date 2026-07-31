@@ -19,6 +19,10 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   updateProfile,
+  updatePassword,
+  verifyBeforeUpdateEmail,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from "firebase/auth";
 import { auth, db } from "./firebase";
 import type { Listing, ListingStatus, Purchase, AppUser, Role } from "./types";
@@ -249,6 +253,88 @@ export async function refreshEmailVerified(): Promise<boolean> {
 /** Send a password-reset email. Firebase hosts the reset page. */
 export async function requestPasswordReset(email: string): Promise<void> {
   await sendPasswordResetEmail(auth, email.trim());
+}
+
+/* ------------------------- account management ------------------------- */
+
+/** Update the signed-in user's display name (Auth profile + user doc). */
+export async function updateDisplayName(name: string): Promise<void> {
+  const u = auth.currentUser;
+  if (!u) throw new Error("You're not signed in.");
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("Name can't be empty.");
+  await updateProfile(u, { displayName: trimmed });
+  await updateDoc(doc(db, "users", u.uid), { displayName: trimmed });
+}
+
+/**
+ * Re-authenticate the user with their current password. Firebase requires a
+ * recent login before sensitive changes (password, email, delete); this proves
+ * the person at the keyboard is the account owner. Maps common errors to
+ * friendly messages.
+ */
+async function reauthenticate(currentPassword: string): Promise<void> {
+  const u = auth.currentUser;
+  if (!u || !u.email) throw new Error("You're not signed in.");
+  const cred = EmailAuthProvider.credential(u.email, currentPassword);
+  try {
+    await reauthenticateWithCredential(u, cred);
+  } catch (e) {
+    const code = (e as { code?: string }).code;
+    if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+      throw new Error("That current password isn't right.");
+    }
+    if (code === "auth/too-many-requests") {
+      throw new Error("Too many attempts. Please wait a moment and try again.");
+    }
+    throw new Error("Couldn't verify your password. Please try again.");
+  }
+}
+
+/** Change the password after re-authenticating with the current one. */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  const u = auth.currentUser;
+  if (!u) throw new Error("You're not signed in.");
+  if (newPassword.length < 6) throw new Error("Use at least 6 characters.");
+  await reauthenticate(currentPassword);
+  await updatePassword(u, newPassword);
+}
+
+/**
+ * Start an email change. Firebase sends a verification link to the NEW address;
+ * the change only takes effect once the user clicks it, so nobody can hijack an
+ * account by typing a new email.
+ */
+export async function changeEmail(
+  currentPassword: string,
+  newEmail: string
+): Promise<void> {
+  const u = auth.currentUser;
+  if (!u) throw new Error("You're not signed in.");
+  const email = newEmail.trim();
+  if (!email.includes("@")) throw new Error("Enter a valid email.");
+  await reauthenticate(currentPassword);
+  await verifyBeforeUpdateEmail(u, email);
+}
+
+/**
+ * Permanently delete the account. Re-authenticates first, then the server (Admin
+ * SDK) removes the user doc + auth account. Signs out afterwards.
+ */
+export async function deleteAccount(currentPassword: string): Promise<void> {
+  const u = auth.currentUser;
+  if (!u) throw new Error("You're not signed in.");
+  await reauthenticate(currentPassword);
+  const token = await u.getIdToken();
+  const res = await fetch("/api/account/delete", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Couldn't delete your account. Please try again.");
+  await signOut(auth);
 }
 
 /**

@@ -137,6 +137,9 @@ function ProfileMenu({ user }: { user: AppUser }) {
               <MenuItem href="/library" onNavigate={() => setOpen(false)}>
                 My library
               </MenuItem>
+              <MenuItem href="/account" onNavigate={() => setOpen(false)}>
+                Account settings
+              </MenuItem>
               {(user.role === "seller" || user.role === "admin") && (
                 <MenuItem href="/dashboard" onNavigate={() => setOpen(false)}>
                   Seller dashboard
