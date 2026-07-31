@@ -23,5 +23,5 @@ export const copy = {
     "Every tool here was built by someone who had an idea. Buy once, own it forever, run it on your own computer.",
   missionTitle: "Why this exists",
   missionBody:
-    "Most small software never gets sold. It's too niche to market, so it sits on someone's laptop. But that niche tool might be exactly what solves your problem. Instead of paying $40 a month for a huge platform you use one feature of, find the one tool that does just that thing. Surf around and find your solution.",
+    "Every useful tool starts as someone's idea — a fix they built for their own problem. Most of those ideas never get sold; too niche to market, so they sit on a laptop. But the small thing someone already built might be exactly what solves your problem. Instead of paying $40 a month for a huge platform you use one feature of, find the one tool made for just that thing — and own it for good.",
 } as const;

@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useUser } from "@/lib/hooks";
 import {
   createListing,
+  updateListing,
   reserveListingId,
+  getListingById,
   notifyListingSubmitted,
+  subscribe,
 } from "@/lib/store";
 import {
   uploadPackage,
@@ -19,11 +23,22 @@ import {
   type Category,
   type Runtime,
   type SetupMode,
+  type Listing,
 } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 
 export default function NewListingPage() {
+  // useSearchParams needs a Suspense boundary in an otherwise-static route.
+  return (
+    <Suspense fallback={null}>
+      <NewListingForm />
+    </Suspense>
+  );
+}
+
+function NewListingForm() {
   const user = useUser();
+  const editId = useSearchParams().get("edit");
 
   const [title, setTitle] = useState("");
   const [tagline, setTagline] = useState("");
@@ -43,6 +58,41 @@ export default function NewListingPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [demoError, setDemoError] = useState("");
+
+  // Edit mode: /dashboard/new?edit=<listingId> loads an existing (rejected or
+  // pending) listing to edit and resubmit. Existing files are kept unless the
+  // seller replaces them.
+  const [editing, setEditing] = useState<Listing | undefined>(undefined);
+  const [existingPackage, setExistingPackage] = useState<string | null>(null);
+  const [existingDemo, setExistingDemo] = useState<string | null>(null);
+  const [existingShots, setExistingShots] = useState<string[]>([]);
+  const prefilled = useRef(false);
+
+  useEffect(() => {
+    if (!editId) return;
+    const read = () => setEditing(getListingById(editId));
+    read();
+    return subscribe(read);
+  }, [editId]);
+
+  useEffect(() => {
+    if (!editing || prefilled.current) return;
+    prefilled.current = true;
+    setTitle(editing.title);
+    setTagline(editing.tagline);
+    setDescription(editing.description);
+    setCategory(editing.category);
+    setRuntime(editing.runtime);
+    setSetupMode(editing.setupMode);
+    setPrice(String(editing.priceCents / 100));
+    setSellerBio(editing.sellerBio ?? "");
+    setSellerEmail(editing.sellerEmail ?? "");
+    setSellerWebsite(editing.sellerWebsite ?? "");
+    setExistingPackage(editing.packagePath ?? null);
+    setExistingDemo(editing.demoVideo ?? null);
+    setExistingShots(editing.screenshots ?? []);
+    setAgreed(true);
+  }, [editing]);
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (
@@ -74,21 +124,26 @@ export default function NewListingPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!packageFile || !demoFile || uploading) return;
+    const hasPackage = Boolean(packageFile || existingPackage);
+    const hasDemo = Boolean(demoFile || existingDemo);
+    if (!hasPackage || !hasDemo || uploading) return;
     setError("");
     setUploading(true);
     try {
-      // Reserve the id first so every uploaded file is keyed by it, then create
-      // the doc already pointing at its Storage paths / URLs.
-      const listingId = reserveListingId();
-      const [packagePath, demoUrl, shotUrls] = await Promise.all([
-        uploadPackage(listingId, packageFile),
-        uploadDemoVideo(listingId, demoFile),
-        uploadScreenshots(listingId, screenshotFiles),
+      // In edit mode reuse the listing id; otherwise reserve a fresh one. Only
+      // upload files the seller actually changed — keep the rest as-is.
+      const listingId = editId ?? reserveListingId();
+      const [packagePath, demoUrl, newShotUrls] = await Promise.all([
+        packageFile ? uploadPackage(listingId, packageFile) : Promise.resolve(existingPackage!),
+        demoFile ? uploadDemoVideo(listingId, demoFile) : Promise.resolve(existingDemo!),
+        screenshotFiles.length
+          ? uploadScreenshots(listingId, screenshotFiles)
+          : Promise.resolve<string[]>([]),
       ]);
+      const screenshots = [...existingShots, ...newShotUrls].slice(0, 5);
 
       const priceCents = Math.round(parseFloat(price || "0") * 100);
-      await createListing(listingId, {
+      const data = {
         sellerId: user!.uid,
         sellerName: user!.displayName,
         title: title.trim(),
@@ -98,15 +153,21 @@ export default function NewListingPage() {
         runtime,
         setupMode,
         priceCents,
-        screenshots: shotUrls,
+        screenshots,
         demoVideo: demoUrl,
         sellerBio: sellerBio.trim() || undefined,
         sellerEmail: sellerEmail.trim(), // required
         sellerWebsite: sellerWebsite.trim() || undefined,
-        version: "1.0.0",
+        version: editing?.version ?? "1.0.0",
         packagePath,
-      });
-      // Best-effort admin notification; don't let it block the confirmation.
+      };
+
+      if (editId) {
+        await updateListing(editId, data); // resets status to pending, clears note
+      } else {
+        await createListing(listingId, data);
+      }
+      // Best-effort admin notification (fires for both new and resubmitted).
       await notifyListingSubmitted(listingId);
       setSubmitted(true);
     } catch (err) {
@@ -120,7 +181,8 @@ export default function NewListingPage() {
 
   function addScreenshots(files: FileList | null) {
     if (!files) return;
-    setScreenshotFiles((prev) => [...prev, ...Array.from(files)].slice(0, 5));
+    const room = Math.max(0, 5 - existingShots.length);
+    setScreenshotFiles((prev) => [...prev, ...Array.from(files)].slice(0, room));
   }
 
   function pickPackage(file: File | null) {
@@ -173,8 +235,8 @@ export default function NewListingPage() {
   if (description.trim().length <= 20) missing.push("a longer description (20+ characters)");
   const priceNum = parseFloat(price || "0");
   if (!(priceNum >= 15 && priceNum <= 250)) missing.push("a price between $15 and $250");
-  if (!packageFile) missing.push("a .zip package");
-  if (!demoFile) missing.push("a demo video");
+  if (!packageFile && !existingPackage) missing.push("a .zip package");
+  if (!demoFile && !existingDemo) missing.push("a demo video");
   if (!sellerEmail.trim() || !sellerEmail.includes("@")) missing.push("a support email");
   if (!agreed) missing.push("the acknowledgment");
   const valid = missing.length === 0;
@@ -182,9 +244,13 @@ export default function NewListingPage() {
   return (
     <Section className="max-w-2xl py-12">
       <ButtonLink href="/dashboard" variant="ghost" size="sm">← Dashboard</ButtonLink>
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight">New listing</h1>
+      <h1 className="mt-4 text-3xl font-semibold tracking-tight">
+        {editId ? "Edit & resubmit" : "New listing"}
+      </h1>
       <p className="mt-1 text-[var(--muted)]">
-        Fill this in, upload your app package, and submit for review.
+        {editId
+          ? "Update your listing and send it back for review. Files you don't replace stay as they are."
+          : "Fill this in, upload your app package, and submit for review."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -303,6 +369,11 @@ export default function NewListingPage() {
             <span className="text-[var(--muted)]">
               {packageFile ? (
                 <span className="text-[var(--foreground)]">📦 {packageFile.name}</span>
+              ) : existingPackage ? (
+                <span className="text-[var(--foreground)]">
+                  📦 {existingPackage.split("/").pop()}{" "}
+                  <span className="text-[var(--muted)]">— current, click to replace</span>
+                </span>
               ) : (
                 "Click to choose your .zip package"
               )}
@@ -325,6 +396,23 @@ export default function NewListingPage() {
           hint="Show the tool actually working. Buyers who see it are far likelier to buy."
         >
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+            {existingShots.map((url, i) => (
+              <div
+                key={`existing-${i}`}
+                className="relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={`Screenshot ${i + 1}`} className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setExistingShots((p) => p.filter((_, j) => j !== i))}
+                  className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
+                  aria-label="Remove screenshot"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
             {screenshotFiles.map((file, i) => (
               <div
                 key={i}
@@ -342,7 +430,7 @@ export default function NewListingPage() {
                 </button>
               </div>
             ))}
-            {screenshotFiles.length < 5 && (
+            {existingShots.length + screenshotFiles.length < 5 && (
               <label className="grid aspect-square cursor-pointer place-items-center rounded-xl border border-dashed border-[var(--border-strong)] text-2xl text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
                 +
                 <input
@@ -364,13 +452,17 @@ export default function NewListingPage() {
         >
           <label
             className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
-              demoFile
+              demoFile || existingDemo
                 ? "border-[var(--success)] bg-[var(--success-soft)]"
                 : "border-[var(--border-strong)] bg-[var(--surface-muted)]"
             }`}
           >
-            <span className={demoFile ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
-              {demoFile ? `▶ ${demoFile.name}` : "Click to upload a demo video (mp4, mov, webm)"}
+            <span className={demoFile || existingDemo ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
+              {demoFile
+                ? `▶ ${demoFile.name}`
+                : existingDemo
+                  ? "▶ Current demo video — click to replace"
+                  : "Click to upload a demo video (mp4, mov, webm)"}
             </span>
             <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
               Browse
@@ -445,7 +537,11 @@ export default function NewListingPage() {
 
         <div className="flex items-center gap-3">
           <Button type="submit" size="lg" disabled={!valid || uploading}>
-            {uploading ? "Uploading…" : "Submit for review"}
+            {uploading
+              ? "Uploading…"
+              : editId
+                ? "Resubmit for review"
+                : "Submit for review"}
           </Button>
           {!valid && !uploading && (
             <Badge tone="neutral">Still needed: {missing.join(", ")}</Badge>

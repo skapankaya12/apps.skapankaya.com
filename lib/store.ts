@@ -412,6 +412,27 @@ export async function requestDownload(listingId: string): Promise<string> {
   return url;
 }
 
+/**
+ * Update a seller's own listing and send it back to review. Used by the
+ * edit-and-resubmit flow for rejected (or pending) listings: it overwrites the
+ * editable fields, resets status to "pending", and clears the old review note.
+ * The Firestore rules allow this only while the listing is pending/rejected.
+ */
+export async function updateListing(
+  id: string,
+  input: Omit<
+    Listing,
+    "id" | "slug" | "status" | "salesCount" | "createdAt" | "updatedAt" | "reviewNote"
+  >
+): Promise<void> {
+  await updateDoc(doc(db, "listings", id), {
+    ...input,
+    status: "pending" as ListingStatus,
+    reviewNote: "",
+    updatedAt: Date.now(),
+  });
+}
+
 export async function reviewListing(
   id: string,
   decision: "approved" | "rejected",

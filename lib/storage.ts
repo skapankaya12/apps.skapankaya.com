@@ -58,9 +58,12 @@ export async function uploadScreenshots(
   listingId: string,
   files: File[]
 ): Promise<string[]> {
+  // Unique filename per upload so re-submissions never overwrite screenshots the
+  // seller chose to keep from a previous version.
+  const stamp = Date.now();
   return Promise.all(
     files.map(async (file, i) => {
-      const path = `public/shots/${listingId}/${i}${ext(file.name) || ".png"}`;
+      const path = `public/shots/${listingId}/${stamp}-${i}${ext(file.name) || ".png"}`;
       const r = ref(storage, path);
       await uploadBytes(r, file, { contentType: file.type || "image/png" });
       return getDownloadURL(r);

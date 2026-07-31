@@ -102,6 +102,14 @@ export default function DashboardPage() {
                         Rejected: {l.reviewNote}
                       </p>
                     )}
+                    {l.status === "rejected" && (
+                      <Link
+                        href={`/dashboard/new?edit=${l.id}`}
+                        className="mt-1 inline-block text-xs font-medium text-[var(--accent)] hover:underline"
+                      >
+                        Edit &amp; resubmit →
+                      </Link>
+                    )}
                   </td>
                   <td className="px-5 py-4"><StatusBadge status={l.status} /></td>
                   <td className="px-5 py-4 tabular-nums">{formatPrice(l.priceCents)}</td>
