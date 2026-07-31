@@ -32,10 +32,10 @@ export function ListingCard({ listing }: { listing: Listing }) {
         </div>
 
         <Link href={`/app/${listing.slug}`} className="flex flex-1 flex-col">
-          <h3 className="mt-4 font-semibold tracking-tight group-hover:text-[var(--accent)]">
+          <h3 className="mt-4 line-clamp-2 break-words font-semibold tracking-tight group-hover:text-[var(--accent)]">
             {listing.title}
           </h3>
-          <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
+          <p className="mt-1 line-clamp-2 break-words text-sm text-[var(--muted)]">
             {listing.tagline}
           </p>
         </Link>

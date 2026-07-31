@@ -254,19 +254,21 @@ function NewListingForm() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-        <Field label="App name" hint="Short and clear.">
+        <Field label="App name" hint="Short and clear. Up to 50 characters.">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={50}
             placeholder="e.g. CSV Cleaner"
             className={inputClass}
           />
         </Field>
 
-        <Field label="One-line tagline">
+        <Field label="One-line tagline" hint="One sentence. Up to 90 characters.">
           <input
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
+            maxLength={90}
             placeholder="What it does, in one sentence."
             className={inputClass}
           />
