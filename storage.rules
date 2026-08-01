@@ -1,21 +1,29 @@
 rules_version = '2';
 
-// Cloud Storage security rules for Apps Marketplace.
-// Deploy with:  firebase deploy --only storage
+// Cloud Storage security rules for The Solo Market.
+// Deploy with:  firebase deploy --only storage --project <project-id>
 //
 // Buyers never read app packages directly — downloads are served through
 // short-lived signed URLs minted server-side (Admin SDK) only after a purchase
 // is confirmed. These rules therefore deny public reads on the paid artifacts.
+//
+// EVERY write path is scoped to the uploader's own uid, and a signed-in user
+// may only write inside their own folder. This matters more than it looks:
+// approved listings are world-readable in Firestore and carry `packagePath`,
+// so with a flat `submissions/{listingId}.zip` layout any signed-in user could
+// read a seller's package path and overwrite it with their own file — which
+// every later buyer would then download. Keep the {uid} segment.
 
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Seller-submitted packages awaiting review: submissions/{listingId}.zip
-    // Any signed-in user can upload their submission; nobody reads them from the
-    // client (admins review via the console / server).
-    match /submissions/{allPaths=**} {
+    // Seller-submitted packages awaiting review:
+    //   submissions/{uid}/{listingId}.zip
+    // Nobody reads these from a client; the server brokers every download.
+    match /submissions/{uid}/{allPaths=**} {
       allow read: if false;
       allow write: if request.auth != null
+        && request.auth.uid == uid
         && request.resource.size < 200 * 1024 * 1024; // 200MB cap
     }
 
@@ -26,11 +34,33 @@ service firebase.storage {
       allow write: if false;
     }
 
-    // Public marketing assets (screenshots, demo videos) safe to serve openly.
+    // Public marketing assets are readable by anyone — that's the point, they
+    // render on the listing page and in link previews. Writes are granted only
+    // by the uid-scoped rules below.
     match /public/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null
-        && request.resource.size < 50 * 1024 * 1024; // 50MB cap
     }
+
+    // Screenshots: public/shots/{uid}/{listingId}/{file}
+    match /public/shots/{uid}/{allPaths=**} {
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Demo video: public/demos/{uid}/{listingId}.{ext}
+    // The submit form also caps this at 50MB and 30 seconds.
+    match /public/demos/{uid}/{allPaths=**} {
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType.matches('video/.*');
+    }
+
+    // Anything not matched above is denied by default. Legacy flat paths from
+    // before uid scoping stay readable where they were public and writable by
+    // nobody; the Admin SDK ignores these rules, so existing server-brokered
+    // downloads keep working.
   }
 }

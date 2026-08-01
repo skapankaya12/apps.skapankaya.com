@@ -1,4 +1,13 @@
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rateLimit";
+
 export const runtime = "nodejs";
+
+// This route is unauthenticated and writes a row to a Google Sheet, so it's the
+// cheapest thing on the site to abuse. Five messages per IP per ten minutes is
+// far above what a real person sends and well below what makes the sheet
+// unusable.
+const CONTACT_LIMIT = 5;
+const CONTACT_WINDOW_MS = 10 * 60 * 1000;
 
 /**
  * Contact-form endpoint. Forwards each submission to a Google Sheet via a Google
@@ -19,6 +28,13 @@ const TOPIC_LABELS: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
+  const limit = rateLimit(
+    `contact:${clientIp(request)}`,
+    CONTACT_LIMIT,
+    CONTACT_WINDOW_MS
+  );
+  if (!limit.ok) return tooManyRequests(limit);
+
   let body: { topic?: string; email?: string; message?: string };
   try {
     body = await request.json();

@@ -8,10 +8,25 @@ import { Section, Button } from "@/components/ui";
 
 type Mode = "signin" | "signup" | "reset";
 
+/**
+ * Only ever redirect to a path on this site.
+ *
+ * `?next=` is attacker-controllable, and a login link on our own domain that
+ * lands somewhere else after sign-in is a ready-made phishing flow ("your
+ * session expired, sign in again" on a lookalike page). Anything that isn't a
+ * single-slash relative path — absolute URLs, protocol-relative `//evil.com`,
+ * backslash tricks — falls back to /browse.
+ */
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/")) return "/browse";
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return "/browse";
+  return raw;
+}
+
 function LoginInner() {
   const router = useRouter();
   const sp = useSearchParams();
-  const next = sp.get("next") ?? "/browse";
+  const next = safeNext(sp.get("next"));
 
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");

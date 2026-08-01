@@ -12,6 +12,26 @@ export const runtime = "nodejs";
 const URL_TTL_MS = 5 * 60 * 1000;
 
 /**
+ * Whether a stored packagePath actually belongs to this listing.
+ *
+ * Two shapes are legitimate:
+ *   submissions/{sellerId}/…      — current, uid-scoped (see storage.rules)
+ *   submissions/{listingId}.zip   — legacy flat layout, bound to this listing
+ *
+ * Anything else — another seller's folder, an `apps/` object, a traversal
+ * attempt — is refused.
+ */
+function isOwnPackagePath(
+  path: string,
+  sellerId: string,
+  listingId: string
+): boolean {
+  if (path.includes("..")) return false;
+  if (path === `submissions/${listingId}.zip`) return true;
+  return path.startsWith(`submissions/${sellerId}/`);
+}
+
+/**
  * Mint a short-lived signed URL for a listing's app package.
  *
  * The Storage rules deny direct client reads on submissions/ and apps/, so the
@@ -76,6 +96,21 @@ export async function POST(req: Request) {
   }
 
   if (!listing.packagePath) {
+    return Response.json({ error: "no-package" }, { status: 409 });
+  }
+
+  // Never hand the bucket a path we haven't bound to this listing's own seller.
+  // packagePath lives on the listing doc, and the Firestore rules let a seller
+  // edit their own listing while it's pending or rejected — so without this
+  // check a seller could point their cheap listing at a rival's package (or at
+  // any other object in the bucket, since the Admin SDK ignores Storage rules)
+  // and resell someone else's work.
+  if (!isOwnPackagePath(listing.packagePath, listing.sellerId, listingId)) {
+    console.error(
+      "[download] rejected packagePath %s on listing %s",
+      listing.packagePath,
+      listingId
+    );
     return Response.json({ error: "no-package" }, { status: 409 });
   }
 

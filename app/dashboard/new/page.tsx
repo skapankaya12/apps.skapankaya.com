@@ -133,11 +133,18 @@ function NewListingForm() {
       // In edit mode reuse the listing id; otherwise reserve a fresh one. Only
       // upload files the seller actually changed — keep the rest as-is.
       const listingId = editId ?? reserveListingId();
+      // Storage paths are scoped by uid — see storage.rules; a seller may only
+      // write inside their own folder.
+      const uid = user!.uid;
       const [packagePath, demoUrl, newShotUrls] = await Promise.all([
-        packageFile ? uploadPackage(listingId, packageFile) : Promise.resolve(existingPackage!),
-        demoFile ? uploadDemoVideo(listingId, demoFile) : Promise.resolve(existingDemo!),
+        packageFile
+          ? uploadPackage(uid, listingId, packageFile)
+          : Promise.resolve(existingPackage!),
+        demoFile
+          ? uploadDemoVideo(uid, listingId, demoFile)
+          : Promise.resolve(existingDemo!),
         screenshotFiles.length
-          ? uploadScreenshots(listingId, screenshotFiles)
+          ? uploadScreenshots(uid, listingId, screenshotFiles)
           : Promise.resolve<string[]>([]),
       ]);
       const screenshots = [...existingShots, ...newShotUrls].slice(0, 5);

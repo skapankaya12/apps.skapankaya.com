@@ -8,11 +8,17 @@ import { app } from "./firebase";
 
    Three kinds of files, matching the paths in storage.rules:
 
-   - The app package (.zip) → submissions/{listingId}.zip. Private: nobody reads
-     it from the client. After a purchase, the server mints a short-lived signed
-     URL (see app/api/download). We keep the raw path.
+   - The app package (.zip) → submissions/{uid}/{listingId}.zip. Private: nobody
+     reads it from the client. After a purchase, the server mints a short-lived
+     signed URL (see app/api/download). We keep the raw path.
    - Demo video + screenshots → public/… . These are marketing assets shown on
      the listing page to everyone, so they get a permanent public download URL.
+
+   Every path starts with the uploader's uid, and storage.rules only lets a user
+   write inside their own uid folder. That is load-bearing, not cosmetic: a
+   listing id is public (approved listings are world-readable and carry
+   packagePath), so a path keyed only by listing id would let any signed-in user
+   overwrite another seller's package or screenshots. Do not drop the uid.
 
    Uploads are keyed by the listing id, which we reserve before writing the
    Firestore doc (see reserveListingId in lib/store), so a listing carries its
@@ -32,10 +38,11 @@ function ext(name: string): string {
  * listing's packagePath; downloads are always brokered server-side.
  */
 export async function uploadPackage(
+  uid: string,
   listingId: string,
   file: File
 ): Promise<string> {
-  const path = `submissions/${listingId}.zip`;
+  const path = `submissions/${uid}/${listingId}.zip`;
   await uploadBytes(ref(storage, path), file, {
     contentType: file.type || "application/zip",
   });
@@ -44,10 +51,11 @@ export async function uploadPackage(
 
 /** Upload the demo video to the public bucket; returns its public URL. */
 export async function uploadDemoVideo(
+  uid: string,
   listingId: string,
   file: File
 ): Promise<string> {
-  const path = `public/demos/${listingId}${ext(file.name) || ".mp4"}`;
+  const path = `public/demos/${uid}/${listingId}${ext(file.name) || ".mp4"}`;
   const r = ref(storage, path);
   await uploadBytes(r, file, { contentType: file.type || "video/mp4" });
   return getDownloadURL(r);
@@ -55,6 +63,7 @@ export async function uploadDemoVideo(
 
 /** Upload screenshots to the public bucket; returns their public URLs in order. */
 export async function uploadScreenshots(
+  uid: string,
   listingId: string,
   files: File[]
 ): Promise<string[]> {
@@ -63,7 +72,9 @@ export async function uploadScreenshots(
   const stamp = Date.now();
   return Promise.all(
     files.map(async (file, i) => {
-      const path = `public/shots/${listingId}/${stamp}-${i}${ext(file.name) || ".png"}`;
+      const path = `public/shots/${uid}/${listingId}/${stamp}-${i}${
+        ext(file.name) || ".png"
+      }`;
       const r = ref(storage, path);
       await uploadBytes(r, file, { contentType: file.type || "image/png" });
       return getDownloadURL(r);

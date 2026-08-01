@@ -2,8 +2,15 @@ import { verifyRequestUid, getAdminDb, adminConfigured } from "@/lib/firebaseAdm
 import { sendEmail, adminNotifyEmail } from "@/lib/email";
 import { newListingAdminEmail } from "@/lib/emailTemplates";
 import { siteOrigin } from "@/lib/stripe";
+import { rateLimit, tooManyRequests } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
+
+// Each call sends the admin an email. Ownership is already checked below, but a
+// seller could still re-fire it in a loop for a listing they own; cap it so the
+// inbox can't be flooded.
+const NOTIFY_LIMIT = 10;
+const NOTIFY_WINDOW_MS = 60 * 60 * 1000;
 
 /**
  * Notify the admin that a new listing was submitted for review. Called by the
@@ -15,6 +22,11 @@ export async function POST(req: Request) {
 
   const uid = await verifyRequestUid(req);
   if (!uid) return Response.json({ ok: false }, { status: 401 });
+
+  // Keyed by uid rather than IP: the caller is authenticated, and an account is
+  // the thing we actually want to limit.
+  const limit = rateLimit(`notify-listing:${uid}`, NOTIFY_LIMIT, NOTIFY_WINDOW_MS);
+  if (!limit.ok) return tooManyRequests(limit);
 
   const { listingId } = (await req.json().catch(() => ({}))) as { listingId?: string };
   if (!listingId) return Response.json({ ok: false }, { status: 400 });

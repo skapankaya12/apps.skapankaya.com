@@ -47,10 +47,12 @@ service cloud.firestore {
         && request.resource.data.status == 'pending';
 
       // Admins change status/notes; a seller may edit their own draft/rejected
-      // listing but cannot flip it to 'approved' themselves.
+      // listing but cannot flip it to 'approved' themselves, and cannot hand
+      // the listing to (or blame it on) another account by rewriting sellerId.
       allow update: if isAdmin()
         || (isSignedIn()
             && resource.data.sellerId == request.auth.uid
+            && request.resource.data.sellerId == resource.data.sellerId
             && resource.data.status in ['pending', 'rejected']
             && request.resource.data.status in ['pending', 'rejected']);
 

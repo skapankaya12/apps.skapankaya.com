@@ -71,7 +71,9 @@ export function ContactForm() {
         setError(
           data?.error === "not-configured"
             ? "Our contact form isn't quite ready yet. Please try again a little later."
-            : "Something went wrong sending that. Please try again in a moment."
+            : data?.error === "rate-limited"
+              ? "That's a few messages in a row — give it a few minutes and try again. If it's urgent, say so in the next one."
+              : "Something went wrong sending that. Please try again in a moment."
         );
       }
     } catch {
