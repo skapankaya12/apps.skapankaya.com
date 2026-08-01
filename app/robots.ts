@@ -31,7 +31,7 @@ export default function robots(): MetadataRoute.Robots {
         "/api/",
       ],
     },
-    sitemap: `https://${brand.domain}/sitemap.xml`,
-    host: `https://${brand.domain}`,
+    sitemap: `${brand.url}/sitemap.xml`,
+    host: brand.url,
   };
 }

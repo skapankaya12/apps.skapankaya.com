@@ -59,7 +59,7 @@ export async function generateMetadata({
       type: "website",
       title: `${listing.title} · ${brand.name}`,
       description,
-      url: `https://${brand.domain}/app/${listing.slug}`,
+      url: `${brand.url}/app/${listing.slug}`,
     },
     twitter: { card: "summary_large_image", title: listing.title, description },
   };
@@ -83,7 +83,7 @@ export default async function AppPage({
   const listing = await getApprovedListingBySlug(slug);
   if (!listing) notFound();
 
-  const url = `https://${brand.domain}/app/${listing.slug}`;
+  const url = `${brand.url}/app/${listing.slug}`;
 
   // SoftwareApplication rather than plain Product: these are programs, and it
   // lets us state the runtime and category in terms Google already understands.
@@ -116,12 +116,12 @@ export default async function AppPage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: `https://${brand.domain}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: brand.url },
       {
         "@type": "ListItem",
         position: 2,
         name: "Browse tools",
-        item: `https://${brand.domain}/browse`,
+        item: `${brand.url}/browse`,
       },
       { "@type": "ListItem", position: 3, name: listing.title, item: url },
     ],

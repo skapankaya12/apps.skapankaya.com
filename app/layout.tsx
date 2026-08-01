@@ -11,7 +11,7 @@ const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(`https://${brand.domain}`),
+  metadataBase: new URL(brand.url),
   title: {
     default: `${brand.name}: ${brand.tagline}`,
     template: `%s · ${brand.name}`,
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     type: "website",
     title: `${brand.name}: ${brand.tagline}`,
     description: brand.description,
-    url: `https://${brand.domain}`,
+    url: brand.url,
     siteName: brand.name,
   },
   twitter: {
@@ -51,7 +51,7 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
-const SITE = `https://${brand.domain}`;
+const SITE = brand.url;
 
 /**
  * Who we are, once, for every page. Search engines and AI answer engines use

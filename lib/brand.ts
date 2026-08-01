@@ -4,7 +4,21 @@
  */
 export const brand = {
   name: "The Solo Market",
+  /**
+   * Display domain — what a human reads on an OG card or in copy. Use this
+   * when the domain is being shown, never when a URL is being built.
+   */
   domain: "thesolomarket.com",
+  /**
+   * Canonical origin — what every machine-readable URL must name: canonical
+   * tags, the sitemap, robots.txt, JSON-LD, OG urls.
+   *
+   * It has to be the www host. The apex 308-redirects to www (and must keep
+   * doing so — the Stripe webhook lives on www and webhooks don't follow
+   * redirects), so a canonical pointing at the apex would be telling Google
+   * that the canonical version of a page lives at a URL that redirects.
+   */
+  url: "https://www.thesolomarket.com",
   tagline: "Encouraging anyone to build, everyone to own.",
   description:
     "The Solo Market is a marketplace for solo builders to sell their creative work, where anyone can buy it once, own it forever, and run it on your own computer. Because we encourage anyone to build and everyone to own.",

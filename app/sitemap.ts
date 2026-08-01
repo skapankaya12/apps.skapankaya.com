@@ -15,7 +15,7 @@ export const revalidate = 300;
 const STATIC_LAST_MODIFIED = new Date("2026-08-01");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = `https://${brand.domain}`;
+  const base = brand.url;
 
   // Legal pages are low priority for search but should still be indexable:
   // "is this marketplace legit" is a question a cautious seller asks, and the

@@ -64,9 +64,9 @@ export default async function ArticlePage({
     publisher: {
       "@type": "Organization",
       name: brand.name,
-      url: `https://${brand.domain}`,
+      url: brand.url,
     },
-    mainEntityOfPage: `https://${brand.domain}/blog/${article.slug}`,
+    mainEntityOfPage: `${brand.url}/blog/${article.slug}`,
   };
 
   return (

@@ -38,7 +38,7 @@ function blocksToText(body: Block[]): string {
 }
 
 export function GET() {
-  const site = `https://${brand.domain}`;
+  const site = brand.url;
   const posts = articlesSorted();
   const updated = posts[0] ? new Date(posts[0].date) : new Date();
 

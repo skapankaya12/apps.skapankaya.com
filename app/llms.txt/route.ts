@@ -16,7 +16,7 @@ import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
 export const revalidate = 3600;
 
 export async function GET() {
-  const site = `https://${brand.domain}`;
+  const site = brand.url;
   // Same filter as the sitemap: don't advertise the handful of legacy rows
   // whose "title" was really a whole paragraph.
   const listings = (await getApprovedListings()).filter((l) =>
