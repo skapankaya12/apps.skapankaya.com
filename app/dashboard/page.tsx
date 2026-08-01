@@ -127,6 +127,8 @@ export default function DashboardPage() {
 function PayoutsCard({ user }: { user: AppUser }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Kept apart from `error` so the expected pre-launch case isn't shown in red.
+  const [notice, setNotice] = useState("");
 
   const active = user.stripeChargesEnabled === true;
   const started = Boolean(user.stripeAccountId);
@@ -142,6 +144,7 @@ function PayoutsCard({ user }: { user: AppUser }) {
   async function go() {
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       const token = await getIdToken();
       const res = await fetch("/api/stripe/connect", {
@@ -153,11 +156,16 @@ function PayoutsCard({ user }: { user: AppUser }) {
         window.location.href = data.url;
         return;
       }
-      setError(
-        data.error === "not-configured"
-          ? "Payouts aren't switched on yet — check back soon."
-          : "Couldn't start payout setup. Please try again."
-      );
+      // Pre-launch this is the expected path, not a fault: payments aren't
+      // switched on until the public launch. Say so plainly, so a seller
+      // listing early doesn't read it as the site being broken.
+      if (data.error === "not-configured") {
+        setNotice(
+          "Payouts open in September, before the public launch. You can list your tool now and connect your bank then — nothing can be sold until you do."
+        );
+      } else {
+        setError("Couldn't start payout setup. Please try again.");
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     }
@@ -184,6 +192,11 @@ function PayoutsCard({ user }: { user: AppUser }) {
               : "Connect your bank through Stripe to get paid. Buyers can't purchase your tools until this is done."}
           </p>
           {error && <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>}
+          {notice && (
+            <p className="mt-3 max-w-md rounded-lg bg-[var(--accent-soft)] px-3 py-2 text-sm text-[var(--foreground)]">
+              {notice}
+            </p>
+          )}
         </div>
         <Button onClick={go} disabled={busy} variant={active ? "secondary" : "primary"}>
           {busy ? "…" : active ? "Manage payouts" : started ? "Finish setup" : "Set up payouts"}

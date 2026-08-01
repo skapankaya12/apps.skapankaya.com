@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
@@ -10,18 +10,23 @@ import type { AppUser } from "@/lib/types";
 import Image from "next/image";
 import { ButtonLink } from "./ui";
 
+const navItems = [
+  { href: "/browse", label: "Browse" },
+  { href: "/sell", label: "Sell your tool" },
+  { href: "/blog", label: "Insights" },
+  { href: "/about", label: "About" },
+];
+
 export function Navbar() {
   const user = useUser();
   const pathname = usePathname();
   const cartCount = useStoreValue(() => getCart().length);
   const savedCount = useStoreValue(() => getBookmarks().length);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const navItems = [
-    { href: "/browse", label: "Browse" },
-    { href: "/sell", label: "Sell your tool" },
-    { href: "/blog", label: "Insights" },
-    { href: "/about", label: "About" },
-  ];
+  // A link tap re-renders with a new pathname but doesn't unmount the header,
+  // so the panel has to be closed explicitly or it stays over the new page.
+  useEffect(() => setMenuOpen(false), [pathname]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md">
@@ -85,9 +90,63 @@ export function Navbar() {
               Sign in
             </ButtonLink>
           )}
+
+          {/* Below md the nav links are hidden, so this is the only way to
+              reach them — which matters most on a phone, where a shared link
+              is usually opened. */}
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            className="ml-1 grid h-9 w-9 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] md:hidden"
+          >
+            {menuOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <nav
+          id="mobile-nav"
+          className="border-t border-[var(--border)] bg-[var(--background)] px-5 py-2 sm:px-8 md:hidden"
+        >
+          {navItems.map((item) => {
+            const active = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className={`block rounded-lg px-3 py-3 text-sm ${
+                  active
+                    ? "font-medium text-[var(--foreground)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </header>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
   );
 }
 

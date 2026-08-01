@@ -82,7 +82,15 @@ export function purchaseReceiptBuyerEmail(a: {
   };
 }
 
-/** To the seller: they made a sale (with the 14-day payout-hold note). */
+/**
+ * To the seller: they made a sale.
+ *
+ * This used to say the payout was held until the 14-day refund window closed.
+ * It isn't: the Stripe setup is a destination charge with transfer_data, so
+ * the seller's share moves to their connected account immediately and Stripe
+ * pays it out on their normal monthly schedule. If a delayed/separate-transfer
+ * hold is ever implemented, this copy changes back — not before.
+ */
 export function saleSellerEmail(a: {
   title: string;
   amountCents: number;
@@ -95,8 +103,10 @@ export function saleSellerEmail(a: {
       `<p>Someone just bought <strong>${escapeHtml(a.title)}</strong>. 🎉</p>
        <p>Sale: ${money(a.amountCents)}<br/>
        Your share (after the ${Math.round(COMMISSION_RATE * 100)}% fee): <strong>${money(sellerCut)}</strong></p>
-       <p style="color:#6b6b76;font-size:13px">Your payout is released after the
-       14-day refund window closes, then paid out on the regular schedule.
+       <p style="color:#6b6b76;font-size:13px">Your share is transferred to your
+       Stripe account now, and Stripe pays it out to your bank on your regular
+       monthly schedule. Buyers have 14 days to request a refund; if one is
+       refunded after your payout, we'll settle it against a later sale.
        Track your sales on your <a href="${a.dashboardUrl}">dashboard</a>.</p>`
     ),
   };
