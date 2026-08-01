@@ -52,6 +52,15 @@ export default function PrivacyPage() {
           give us so we can reply.
         </p>
         <p>
+          <strong className="text-[var(--foreground)]">
+            If you join the launch list.
+          </strong>{" "}
+          Just your email address, kept until we email you at launch or you ask
+          us to remove it, whichever comes first. We send one message, we
+          don&apos;t add you to anything else, and we never pass it on. Reply to
+          that email, or use the contact form, to be taken off the list.
+        </p>
+        <p>
           <strong className="text-[var(--foreground)]">On your own device.</strong>{" "}
           Your cart and saved items are kept in your browser&apos;s local
           storage, not on our servers. Clearing your browser data clears them.
@@ -76,6 +85,10 @@ export default function PrivacyPage() {
           you bought, paying sellers. To meet legal obligations: tax and
           accounting records, and seller reporting under DAC7. And on legitimate
           interest: keeping the marketplace safe from fraud and abuse.
+        </p>
+        <p>
+          The launch list is different: that one runs on your consent, given by
+          entering your address, and you can withdraw it at any time.
         </p>
       </Clause>
 

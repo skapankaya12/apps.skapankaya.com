@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WaitlistForm } from "./WaitlistForm";
 
 /**
  * Pre-launch status card, shown beside the hero.
@@ -23,7 +24,7 @@ export function PreLaunchNotice() {
           <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
         </span>
         <span className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
-          Pre-launch · open to builders
+          Pre-launch · open to solo builders
         </span>
       </div>
 
@@ -31,7 +32,7 @@ export function PreLaunchNotice() {
         We&apos;re collecting listings right now.
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-        The marketplace is still being built — we&apos;re finishing the internal
+        The marketplace is still being built; we&apos;re finishing the internal
         screens and gathering the first tools. For now it&apos;s open to solo
         builders who want to list what they made. The public launch is in{" "}
         <span className="font-medium text-[var(--foreground)]">September</span>.
@@ -39,10 +40,15 @@ export function PreLaunchNotice() {
 
       <Link
         href="/sell"
-        className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] hover:underline"
+        className="mt-4 inline-flex items-center text-sm font-medium text-[var(--accent)] hover:underline"
       >
-        List your tool <span aria-hidden>→</span>
+        List your tool
       </Link>
+
+      {/* Only the form is interactive; the copy above stays server-rendered. */}
+      <div className="mt-4 border-t border-[var(--border)] pt-1">
+        <WaitlistForm />
+      </div>
     </aside>
   );
 }
