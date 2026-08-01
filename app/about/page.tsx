@@ -3,11 +3,13 @@ import Link from "next/link";
 import { brand, copy } from "@/lib/brand";
 import { Section, Badge, ButtonLink } from "@/components/ui";
 import { ContactForm } from "@/components/ContactForm";
+import { JsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
   title: "About the marketplace",
   description:
     "Why this marketplace exists, how buying and running a tool works, what it costs to sell, answers to common questions, and how to request a tool we can build for you.",
+  alternates: { canonical: "/about" },
 };
 
 const FAQS: { q: string; a: string }[] = [
@@ -74,8 +76,27 @@ const DIFFERENTIATORS = [
 export default function AboutPage() {
   const keepPct = Math.round((1 - brand.commissionRate) * 100);
 
+  /*
+   * The FAQ answers are already the clearest plain-language explanation of how
+   * the marketplace works, which makes them the copy most likely to be lifted
+   * into an AI answer or a Google rich result. FAQPage markup just tells both
+   * systems where the question/answer pairs are. No new copy — same array the
+   * page renders.
+   */
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQS.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <>
+      <JsonLd data={faqLd} />
+
       {/* Intro / why this exists */}
       <div className="relative overflow-hidden border-b border-[var(--border)]">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-60" />

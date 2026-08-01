@@ -15,14 +15,25 @@ import {
   isBookmarked,
   toggleBookmark,
 } from "@/lib/store";
-import { CATEGORY_LABELS, RUNTIME_LABELS } from "@/lib/types";
+import { CATEGORY_LABELS, RUNTIME_LABELS, type Listing } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
 
-export function ListingDetail({ slug }: { slug: string }) {
+/**
+ * `initial` is the listing read on the server by the page. It's what gets
+ * rendered into the HTML (so crawlers and the first paint see the real tool,
+ * not a spinner); the live client store takes over the moment it hydrates.
+ */
+export function ListingDetail({
+  slug,
+  initial,
+}: {
+  slug: string;
+  initial?: Listing;
+}) {
   const router = useRouter();
   const user = useUser();
-  const listing = useStoreValue(() => getListingBySlug(slug));
+  const listing = useStoreValue(() => getListingBySlug(slug)) ?? initial;
   const loaded = useStoreValue(getListingsLoaded);
   const owned = useStoreValue(() =>
     user && listing ? hasPurchased(user.uid, listing.id) : false
@@ -108,7 +119,7 @@ export function ListingDetail({ slug }: { slug: string }) {
             {listing.screenshots.length > 0 && (
               <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {listing.screenshots.slice(0, 5).map((shot, i) => (
-                  <Screenshot key={i} src={shot} index={i} />
+                  <Screenshot key={i} src={shot} index={i} title={listing.title} />
                 ))}
               </div>
             )}
@@ -306,7 +317,15 @@ function MailIcon() {
  * as an image; older/seed listings store a plain text label. If an image URL
  * fails to load, we fall back to showing the label text so the tile never breaks.
  */
-function Screenshot({ src, index }: { src: string; index: number }) {
+function Screenshot({
+  src,
+  index,
+  title,
+}: {
+  src: string;
+  index: number;
+  title: string;
+}) {
   const [failed, setFailed] = useState(false);
   const isUrl = /^https?:\/\//.test(src) || src.startsWith("/");
 
@@ -315,7 +334,9 @@ function Screenshot({ src, index }: { src: string; index: number }) {
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
-        alt={`Screenshot ${index + 1}`}
+        // Naming the tool makes this useful in image search and to a screen
+        // reader, where "Screenshot 2" says nothing.
+        alt={`${title} — screenshot ${index + 1}`}
         loading="lazy"
         onError={() => setFailed(true)}
         className="aspect-square w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] object-cover"

@@ -1,17 +1,40 @@
 import type { MetadataRoute } from "next";
 import { brand } from "@/lib/brand";
 import { articles } from "@/lib/articles";
+import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+/** Revalidated with the catalogue, so new listings show up within minutes. */
+export const revalidate = 300;
+
+/**
+ * Static pages change when we edit them, not on every crawl. Stamping
+ * `new Date()` here would tell Google the whole site changed every time it
+ * fetched the sitemap, which is exactly how a site teaches Google to ignore
+ * its lastmod values. Bump this by hand when the marketing pages change.
+ */
+const STATIC_LAST_MODIFIED = new Date("2026-08-01");
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = `https://${brand.domain}`;
-  const staticRoutes = ["", "/browse", "/sell", "/about", "/blog", "/how-to-run"].map(
-    (path) => ({
-      url: `${base}${path}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: path === "" ? 1 : 0.7,
-    })
-  );
+
+  // Legal pages are low priority for search but should still be indexable:
+  // "is this marketplace legit" is a question a cautious seller asks, and the
+  // terms answering it is a trust signal worth having in the index.
+  const legalRoutes = ["/terms", "/privacy", "/refunds"];
+  const staticRoutes = [
+    "",
+    "/browse",
+    "/sell",
+    "/about",
+    "/blog",
+    "/how-to-run",
+    ...legalRoutes,
+  ].map((path) => ({
+    url: `${base}${path}`,
+    lastModified: STATIC_LAST_MODIFIED,
+    changeFrequency: "weekly" as const,
+    priority: path === "" ? 1 : legalRoutes.includes(path) ? 0.3 : 0.7,
+  }));
 
   // One entry per article: the blog's whole reason for existing is discovery.
   const articleRoutes = articles.map((a) => ({
@@ -21,9 +44,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  // TODO: add one entry per approved listing here, read from Firestore via the
-  // Admin SDK at build/request time. Listings are the long-tail traffic engine,
-  // so this matters for SEO once the catalogue is live.
+  // Listings are the long-tail traffic engine — one page per problem someone
+  // might search for — so every approved one gets its own entry.
+  const listings = await getApprovedListings();
+  const listingRoutes = listings
+    .filter((l) => hasPublishableSlug(l.slug))
+    .map((l) => ({
+      url: `${base}/app/${l.slug}`,
+      lastModified: new Date(l.updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
 
-  return [...staticRoutes, ...articleRoutes];
+  return [...staticRoutes, ...listingRoutes, ...articleRoutes];
 }

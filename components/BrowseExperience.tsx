@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useStoreValue } from "@/lib/hooks";
 import { getApprovedListings } from "@/lib/store";
-import { CATEGORY_LABELS, type Category } from "@/lib/types";
+import { CATEGORY_LABELS, type Category, type Listing } from "@/lib/types";
 import { ListingCard } from "./ListingCard";
 
 type Filter = Category | "all";
@@ -11,9 +12,13 @@ type Filter = Category | "all";
 /**
  * The core "find a tool" experience: search + category chip filter + a vertical
  * list of listing rows. Shared by the landing page (below the hero) and /browse.
+ *
+ * `initial` is the catalogue read on the server, so the rows are in the HTML
+ * for crawlers and the first paint.
  */
-export function BrowseExperience() {
-  const listings = useStoreValue(getApprovedListings);
+export function BrowseExperience({ initial = [] }: { initial?: Listing[] }) {
+  const live = useStoreValue(getApprovedListings);
+  const listings = live.length > 0 ? live : initial;
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Filter>("all");
 
@@ -86,6 +91,16 @@ export function BrowseExperience() {
 
   return (
     <div>
+      {/*
+        Reading ?q= is confined to a child that renders nothing, inside
+        Suspense. That keeps useSearchParams from opting the whole route into
+        dynamic rendering, so /browse stays a prerendered, CDN-served page —
+        which matters, because time-to-first-byte is a ranking input.
+      */}
+      <Suspense fallback={null}>
+        <QueryParamSync onQuery={setQuery} />
+      </Suspense>
+
       {search}
 
       <div className="mt-4">
@@ -113,6 +128,19 @@ export function BrowseExperience() {
       <div className="mt-8">{grid}</div>
     </div>
   );
+}
+
+/**
+ * Applies ?q= to the search box on mount. This is what makes a search result
+ * shareable, and it's the URL the sitelinks SearchAction in the root layout
+ * hands to Google.
+ */
+function QueryParamSync({ onQuery }: { onQuery: (q: string) => void }) {
+  const q = useSearchParams().get("q") ?? "";
+  useEffect(() => {
+    if (q) onQuery(q);
+  }, [q, onQuery]);
+  return null;
 }
 
 function SearchIcon() {

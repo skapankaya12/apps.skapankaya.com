@@ -3,16 +3,51 @@ import Link from "next/link";
 import { Section, Badge, ButtonLink } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { brand } from "@/lib/brand";
+import { JsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
   title: "How to run any app you buy",
   description:
     "A two-minute guide to running apps on your own machine, either with one command or by letting an AI assistant set it up for you.",
+  alternates: { canonical: "/how-to-run" },
+};
+
+/**
+ * "How do I actually run this?" is the objection that stops a non-technical
+ * buyer, and it's exactly the kind of question people now ask an AI assistant
+ * instead of a search box. HowTo markup makes the steps machine-readable so
+ * that answer can cite us.
+ */
+const howToLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: `How to run any app you buy on ${brand.name}`,
+  description:
+    "Every app is a small folder you download and run on your own computer. Two ways to do it: one command, or let a free AI assistant set it up for you.",
+  totalTime: "PT2M",
+  step: [
+    {
+      "@type": "HowToStep",
+      name: "Download and unzip the app",
+      text: "After buying, download the app package from your library and unzip it. It's an ordinary folder on your own computer — nothing installs itself and nothing runs in the cloud.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Read the included guide",
+      text: "Every app ships with a short setup guide that names what it needs (for example Node.js or Python) and the single command that starts it.",
+    },
+    {
+      "@type": "HowToStep",
+      name: "Run it — yourself or with an AI assistant",
+      text: "If you're comfortable with a terminal, run the one command from the guide. If you'd rather not, open the folder in a free AI assistant such as Claude or Cursor and say \"set this up and run it\" — it reads the guide and does the rest.",
+    },
+  ],
 };
 
 export default function HowToRunPage() {
   return (
     <Section className="max-w-3xl py-16">
+      <JsonLd data={howToLd} />
       <Badge tone="accent">Guide</Badge>
       <h1 className="mt-4 text-4xl font-semibold tracking-tight">
         How to run any app you buy

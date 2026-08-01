@@ -8,7 +8,11 @@ export const metadata: Metadata = {
   title: "Insights: for indie makers and independent professionals",
   description:
     "Articles on building and selling small software, buying tools instead of bloated SaaS, subscription fatigue, and local-first work. Written for indie makers and solo professionals.",
-  alternates: { canonical: "/blog" },
+  alternates: {
+    canonical: "/blog",
+    // Advertises the feed in <head> so readers and crawlers find it.
+    types: { "application/rss+xml": "/blog/rss.xml" },
+  },
 };
 
 export default function BlogPage() {

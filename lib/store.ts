@@ -432,11 +432,21 @@ export function getListingById(id: string): Listing | undefined {
   return mergedListings().find((l) => l.id === id);
 }
 
+/**
+ * Title → URL slug. Capped at 60 characters and trimmed at a word boundary:
+ * short, readable URLs are what Google's own guidance asks for, and an
+ * uncapped slug from a title that's really a paragraph produces a path long
+ * enough to break the filesystem at build time (it has).
+ */
 function slugify(title: string): string {
-  return title
+  const base = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+  if (base.length <= 60) return base;
+  const cut = base.slice(0, 60);
+  const lastDash = cut.lastIndexOf("-");
+  return (lastDash > 20 ? cut.slice(0, lastDash) : cut).replace(/-+$/, "");
 }
 
 /**
