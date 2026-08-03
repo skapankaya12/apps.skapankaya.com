@@ -381,6 +381,24 @@ function ListingForm({
       )}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        {/* Sits above the fields, where a seller can reach it at any point
+            without scrolling to the bottom of a long form. */}
+        <div className="flex flex-wrap items-center gap-3 border-b border-[var(--border)] pb-6">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={saveDraft}
+            disabled={uploading}
+          >
+            Save draft
+          </Button>
+          {savedAt !== null && !uploading && (
+            <span className="text-xs text-[var(--muted)]">
+              Draft saved {savedAgo(savedAt)} — files still need choosing
+            </span>
+          )}
+        </div>
+
         <Field label="App name" hint="Short and clear. Up to 50 characters.">
           <input
             value={title}
@@ -672,19 +690,6 @@ function ListingForm({
                 ? "Resubmit for review"
                 : "Submit for review"}
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={saveDraft}
-            disabled={uploading}
-          >
-            Save draft
-          </Button>
-          {savedAt !== null && !uploading && (
-            <span className="text-xs text-[var(--muted)]">
-              Draft saved {savedAgo(savedAt)} — files still need choosing
-            </span>
-          )}
           {!valid && !uploading && (
             <Badge tone="neutral">Still needed: {missing.join(", ")}</Badge>
           )}
