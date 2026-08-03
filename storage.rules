@@ -50,11 +50,13 @@ service firebase.storage {
     }
 
     // Demo video: public/demos/{uid}/{listingId}.{ext}
-    // The submit form also caps this at 50MB and 30 seconds.
+    // The submit form mirrors this at 150MB and caps length at 40 seconds.
+    // Keep the two in sync — a form that accepts what the rules reject fails
+    // with an opaque 403 at upload time.
     match /public/demos/{uid}/{allPaths=**} {
       allow write: if request.auth != null
         && request.auth.uid == uid
-        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.size < 150 * 1024 * 1024
         && request.resource.contentType.matches('video/.*');
     }
 

@@ -16,6 +16,7 @@ import {
   toggleBookmark,
 } from "@/lib/store";
 import { CATEGORY_LABELS, RUNTIME_LABELS, type Listing } from "@/lib/types";
+import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
 
@@ -181,7 +182,7 @@ export function ListingDetail({
                 </div>
               </div>
 
-              {(listing.sellerEmail || listing.sellerWebsite) && (
+              {(listing.sellerEmail || safeHttpsUrl(listing.sellerWebsite)) && (
                 <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
                   {listing.sellerEmail && (
                     <a
@@ -191,9 +192,9 @@ export function ListingDetail({
                       <MailIcon /> Contact
                     </a>
                   )}
-                  {listing.sellerWebsite && (
+                  {safeHttpsUrl(listing.sellerWebsite) && (
                     <a
-                      href={listing.sellerWebsite}
+                      href={safeHttpsUrl(listing.sellerWebsite)}
                       target="_blank"
                       rel="noopener noreferrer nofollow"
                       className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"

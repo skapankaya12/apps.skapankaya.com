@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/lib/hooks";
 import {
   createListing,
@@ -24,8 +24,10 @@ import {
   type Runtime,
   type SetupMode,
   type Listing,
+  type AppUser,
 } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
+import { safeHttpsUrl } from "@/lib/utils";
 
 export default function NewListingPage() {
   // useSearchParams needs a Suspense boundary in an otherwise-static route.
@@ -36,37 +38,20 @@ export default function NewListingPage() {
   );
 }
 
+/**
+ * Resolves who's editing what, then hands a fully-known starting point to the
+ * form below. Everything the form starts from — the listing being edited, any
+ * saved draft — is settled *before* it mounts, so the form can initialize its
+ * state instead of syncing it in an effect.
+ */
 function NewListingForm() {
   const user = useUser();
   const editId = useSearchParams().get("edit");
-
-  const [title, setTitle] = useState("");
-  const [tagline, setTagline] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<Category>("productivity");
-  const [runtime, setRuntime] = useState<Runtime>("node");
-  const [setupMode, setSetupMode] = useState<SetupMode>("one-command");
-  const [price, setPrice] = useState("15");
-  const [packageFile, setPackageFile] = useState<File | null>(null);
-  const [screenshotFiles, setScreenshotFiles] = useState<File[]>([]);
-  const [demoFile, setDemoFile] = useState<File | null>(null);
-  const [sellerBio, setSellerBio] = useState("");
-  const [sellerEmail, setSellerEmail] = useState("");
-  const [sellerWebsite, setSellerWebsite] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [agreed, setAgreed] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-  const [demoError, setDemoError] = useState("");
 
   // Edit mode: /dashboard/new?edit=<listingId> loads an existing (rejected or
   // pending) listing to edit and resubmit. Existing files are kept unless the
   // seller replaces them.
   const [editing, setEditing] = useState<Listing | undefined>(undefined);
-  const [existingPackage, setExistingPackage] = useState<string | null>(null);
-  const [existingDemo, setExistingDemo] = useState<string | null>(null);
-  const [existingShots, setExistingShots] = useState<string[]>([]);
-  const prefilled = useRef(false);
 
   useEffect(() => {
     if (!editId) return;
@@ -74,25 +59,6 @@ function NewListingForm() {
     read();
     return subscribe(read);
   }, [editId]);
-
-  useEffect(() => {
-    if (!editing || prefilled.current) return;
-    prefilled.current = true;
-    setTitle(editing.title);
-    setTagline(editing.tagline);
-    setDescription(editing.description);
-    setCategory(editing.category);
-    setRuntime(editing.runtime);
-    setSetupMode(editing.setupMode);
-    setPrice(String(editing.priceCents / 100));
-    setSellerBio(editing.sellerBio ?? "");
-    setSellerEmail(editing.sellerEmail ?? "");
-    setSellerWebsite(editing.sellerWebsite ?? "");
-    setExistingPackage(editing.packagePath ?? null);
-    setExistingDemo(editing.demoVideo ?? null);
-    setExistingShots(editing.screenshots ?? []);
-    setAgreed(true);
-  }, [editing]);
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (
@@ -103,6 +69,136 @@ function NewListingForm() {
       </Section>
     );
   }
+
+  if (editId && !editing) {
+    return (
+      <Section className="py-24 text-center">
+        <p className="text-sm text-[var(--muted)]">Loading your listing…</p>
+      </Section>
+    );
+  }
+
+  return <ListingForm user={user} editId={editId} editing={editing} />;
+}
+
+function ListingForm({
+  user,
+  editId,
+  editing,
+}: {
+  user: AppUser;
+  editId: string | null;
+  editing?: Listing;
+}) {
+  // Filling this form takes real effort, and until now a refresh or a stray
+  // click on the nav threw all of it away.
+  const draftKey = draftKeyFor(user.uid, editId);
+  // Read once, at mount. The draft wins over the listing being edited, because
+  // it's the newer intent.
+  const [start] = useState(() => {
+    const base = editing ? draftFromListing(editing) : EMPTY_DRAFT;
+    const saved = readDraft(draftKey);
+    return { values: saved ?? base, fromDraft: Boolean(saved) };
+  });
+
+  const [title, setTitle] = useState(start.values.title);
+  const [tagline, setTagline] = useState(start.values.tagline);
+  const [description, setDescription] = useState(start.values.description);
+  const [category, setCategory] = useState<Category>(start.values.category);
+  const [runtime, setRuntime] = useState<Runtime>(start.values.runtime);
+  const [setupMode, setSetupMode] = useState<SetupMode>(start.values.setupMode);
+  const [price, setPrice] = useState(start.values.price);
+  const [packageFile, setPackageFile] = useState<File | null>(null);
+  const [screenshotFiles, setScreenshotFiles] = useState<File[]>([]);
+  const [demoFile, setDemoFile] = useState<File | null>(null);
+  const [sellerBio, setSellerBio] = useState(start.values.sellerBio);
+  const [sellerEmail, setSellerEmail] = useState(start.values.sellerEmail);
+  const [sellerWebsite, setSellerWebsite] = useState(start.values.sellerWebsite);
+  const [submitted, setSubmitted] = useState(false);
+  // Never restored from a draft: an acknowledgment you didn't tick this time
+  // isn't an acknowledgment. It is kept when resuming your own live listing.
+  const [agreed, setAgreed] = useState(Boolean(editing));
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [demoError, setDemoError] = useState("");
+
+  // Fixed for the life of the form: replacing either means picking a new file,
+  // which is tracked by packageFile / demoFile above.
+  const existingPackage = editing?.packagePath ?? null;
+  const existingDemo = editing?.demoVideo ?? null;
+  // Screenshots are the exception — individual ones can be removed.
+  const [existingShots, setExistingShots] = useState<string[]>(
+    editing?.screenshots ?? []
+  );
+
+  const [savedAt, setSavedAt] = useState<number | null>(
+    start.fromDraft ? start.values.savedAt : null
+  );
+  const [restoredDraft, setRestoredDraft] = useState(start.fromDraft);
+  const [leavingTo, setLeavingTo] = useState<string | null>(null);
+  const router = useRouter();
+
+  const draft: Draft = {
+    title, tagline, description, category, runtime, setupMode, price,
+    sellerBio, sellerEmail, sellerWebsite, savedAt: 0,
+  };
+  const draftJson = JSON.stringify(draft);
+
+  function saveDraft() {
+    const now = Date.now();
+    writeDraft(draftKey, { ...draft, savedAt: now });
+    setSavedAt(now);
+  }
+
+  // Autosave shortly after typing stops, so the explicit button below is a
+  // reassurance rather than a requirement.
+  useEffect(() => {
+    if (submitted) return;
+    if (draftJson === EMPTY_DRAFT_JSON) return;
+    const t = setTimeout(() => {
+      const now = Date.now();
+      writeDraft(draftKey, { ...JSON.parse(draftJson), savedAt: now });
+      setSavedAt(now);
+    }, 800);
+    return () => clearTimeout(t);
+  }, [draftJson, draftKey, submitted]);
+
+  // Files can't go in localStorage, so they're the one thing a reload really
+  // does destroy. That's what these two guards are protecting.
+  const hasPickedFiles =
+    Boolean(packageFile) || Boolean(demoFile) || screenshotFiles.length > 0;
+  const hasWork = hasPickedFiles || draftJson !== EMPTY_DRAFT_JSON;
+  const guard = hasWork && !submitted && !uploading;
+
+  useEffect(() => {
+    if (!guard) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [guard]);
+
+  // In-app links (the nav, the footer, "← Dashboard") unmount this form, so
+  // beforeunload never fires for them. Catch the click instead.
+  useEffect(() => {
+    if (!guard) return;
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const anchor = (e.target as HTMLElement | null)?.closest?.("a");
+      const href = anchor?.getAttribute("href");
+      if (!anchor || !href || !href.startsWith("/")) return;
+      if (anchor.target === "_blank") return;
+      if (href === window.location.pathname + window.location.search) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setLeavingTo(href);
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [guard]);
 
   if (submitted) {
     return (
@@ -164,7 +260,7 @@ function NewListingForm() {
         demoVideo: demoUrl,
         sellerBio: sellerBio.trim() || undefined,
         sellerEmail: sellerEmail.trim(), // required
-        sellerWebsite: sellerWebsite.trim() || undefined,
+        sellerWebsite: safeHttpsUrl(sellerWebsite),
         version: editing?.version ?? "1.0.0",
         packagePath,
       };
@@ -176,6 +272,7 @@ function NewListingForm() {
       }
       // Best-effort admin notification (fires for both new and resubmitted).
       await notifyListingSubmitted(listingId);
+      if (draftKey) clearDraft(draftKey); // it's in Firestore now
       setSubmitted(true);
     } catch (err) {
       console.error("[new listing] submit failed:", err);
@@ -214,7 +311,7 @@ function NewListingForm() {
     if (file.size > MAX_DEMO_BYTES) {
       setDemoFile(null);
       setDemoError(
-        "That video is too large — keep it under 50MB (a 30-second clip usually is)."
+        "That video is over 150MB. Export it smaller rather than shorter — 1080p is plenty."
       );
       return;
     }
@@ -227,7 +324,7 @@ function NewListingForm() {
     if (duration !== null && duration > MAX_DEMO_SECONDS + 1) {
       setDemoFile(null);
       setDemoError(
-        `Demo videos must be 30 seconds or shorter (this one is ${Math.round(duration)}s).`
+        `Demo videos must be ${MAX_DEMO_SECONDS} seconds or shorter (this one is ${Math.round(duration)}s).`
       );
       return;
     }
@@ -245,6 +342,7 @@ function NewListingForm() {
   if (!packageFile && !existingPackage) missing.push("a .zip package");
   if (!demoFile && !existingDemo) missing.push("a demo video");
   if (!sellerEmail.trim() || !sellerEmail.includes("@")) missing.push("a support email");
+  if (sellerWebsite.trim() && !safeHttpsUrl(sellerWebsite)) missing.push("a valid https:// website link");
   if (!agreed) missing.push("the acknowledgment");
   const valid = missing.length === 0;
 
@@ -259,6 +357,28 @@ function NewListingForm() {
           ? "Update your listing and send it back for review. Files you don't replace stay as they are."
           : "Fill this in, upload your app package, and submit for review."}
       </p>
+
+      {restoredDraft && (
+        <div className="mt-6 flex items-start gap-3 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)]/40 p-4 text-sm">
+          <span className="mt-0.5">↩</span>
+          <div>
+            <p className="font-medium">We brought your draft back.</p>
+            <p className="mt-0.5 text-[var(--muted)]">
+              Everything you typed was restored. Your package, demo video and
+              screenshots weren&apos;t — browsers can&apos;t hold on to files, so
+              please choose those again.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRestoredDraft(false)}
+            className="ml-auto shrink-0 text-[var(--muted)] hover:text-[var(--foreground)]"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <Field label="App name" hint="Short and clear. Up to 50 characters.">
@@ -457,7 +577,7 @@ function NewListingForm() {
         {/* Demo video, required */}
         <Field
           label="Demo video (required)"
-          hint="A short screen recording of the tool in action — max 30 seconds and 50MB. It's the single biggest thing that sells a small tool, so keep it tight."
+          hint="A short screen recording of the tool in action — up to 40 seconds and 150MB. It's the single biggest thing that sells a small tool, so keep it tight. Buyers watch this on their phone too: aim for under 25MB at 1080p."
         >
           <label
             className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
@@ -544,7 +664,7 @@ function NewListingForm() {
           </span>
         </label>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" size="lg" disabled={!valid || uploading}>
             {uploading
               ? "Uploading…"
@@ -552,6 +672,19 @@ function NewListingForm() {
                 ? "Resubmit for review"
                 : "Submit for review"}
           </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={saveDraft}
+            disabled={uploading}
+          >
+            Save draft
+          </Button>
+          {savedAt !== null && !uploading && (
+            <span className="text-xs text-[var(--muted)]">
+              Draft saved {savedAgo(savedAt)} — files still need choosing
+            </span>
+          )}
           {!valid && !uploading && (
             <Badge tone="neutral">Still needed: {missing.join(", ")}</Badge>
           )}
@@ -563,17 +696,185 @@ function NewListingForm() {
           </p>
         )}
       </form>
+
+      {leavingTo && (
+        <LeaveWarning
+          hasPickedFiles={hasPickedFiles}
+          onStay={() => setLeavingTo(null)}
+          onLeave={() => {
+            saveDraft();
+            const href = leavingTo;
+            setLeavingTo(null);
+            router.push(href);
+          }}
+        />
+      )}
     </Section>
+  );
+}
+
+/**
+ * Shown when the seller clicks away mid-listing. It's deliberately specific
+ * about what survives: the typed fields are already in a draft, the chosen
+ * files are not, and a vague "you have unsaved changes" wouldn't tell them
+ * which one they're about to lose.
+ */
+function LeaveWarning({
+  hasPickedFiles,
+  onStay,
+  onLeave,
+}: {
+  hasPickedFiles: boolean;
+  onStay: () => void;
+  onLeave: () => void;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="leave-title"
+      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+      onClick={onStay}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)]"
+      >
+        <h2 id="leave-title" className="text-lg font-semibold">
+          Leave this listing?
+        </h2>
+        <p className="mt-2 text-sm text-[var(--muted)]">
+          Everything you&apos;ve typed is saved as a draft and will be waiting
+          when you come back.
+          {hasPickedFiles && (
+            <>
+              {" "}
+              <span className="text-[var(--foreground)]">
+                The files you chose can&apos;t be saved
+              </span>{" "}
+              — you&apos;ll need to pick your package, demo video and
+              screenshots again.
+            </>
+          )}
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variant="secondary" onClick={onStay}>
+            Keep editing
+          </Button>
+          <Button variant="ghost" onClick={onLeave}>
+            Leave anyway
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
 const inputClass =
   "w-full rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)]";
 
-// Upload limits. Demo video lives in public/ (Storage caps it at 50MB) and is
-// meant to be a short clip; the package .zip goes to submissions/ (200MB cap).
-const MAX_DEMO_BYTES = 50 * 1024 * 1024;
-const MAX_DEMO_SECONDS = 30;
+/**
+ * The typed half of the form, kept in localStorage so a refresh, a crash or a
+ * misclick doesn't cost the seller twenty minutes of writing. Files are not in
+ * here and cannot be — the browser won't serialize a File — which is exactly
+ * why leaving the page still warns.
+ */
+type Draft = {
+  title: string;
+  tagline: string;
+  description: string;
+  category: Category;
+  runtime: Runtime;
+  setupMode: SetupMode;
+  price: string;
+  sellerBio: string;
+  sellerEmail: string;
+  sellerWebsite: string;
+  savedAt: number;
+};
+
+const EMPTY_DRAFT: Draft = {
+  title: "",
+  tagline: "",
+  description: "",
+  category: "productivity",
+  runtime: "node",
+  setupMode: "one-command",
+  price: "15",
+  sellerBio: "",
+  sellerEmail: "",
+  sellerWebsite: "",
+  savedAt: 0,
+};
+
+const EMPTY_DRAFT_JSON = JSON.stringify(EMPTY_DRAFT);
+
+/** Scoped per seller and per listing, so drafts never leak between them. */
+function draftKeyFor(uid: string, editId: string | null) {
+  return `solomarket:listing-draft:${uid}:${editId ?? "new"}`;
+}
+
+/** The editable fields of a listing being resubmitted. */
+function draftFromListing(listing: Listing): Draft {
+  return {
+    title: listing.title,
+    tagline: listing.tagline,
+    description: listing.description,
+    category: listing.category,
+    runtime: listing.runtime,
+    setupMode: listing.setupMode,
+    price: String(listing.priceCents / 100),
+    sellerBio: listing.sellerBio ?? "",
+    sellerEmail: listing.sellerEmail ?? "",
+    sellerWebsite: listing.sellerWebsite ?? "",
+    savedAt: 0,
+  };
+}
+
+function readDraft(key: string): Draft | null {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    // Merge over the defaults so a draft written by an older version of this
+    // form (missing a field) still loads instead of blanking the input.
+    return { ...EMPTY_DRAFT, ...(JSON.parse(raw) as Partial<Draft>) };
+  } catch {
+    return null; // private mode, full quota, or hand-edited junk
+  }
+}
+
+function writeDraft(key: string, draft: Draft) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(draft));
+  } catch {
+    // Storage unavailable or full: autosave is a convenience, never a blocker.
+  }
+}
+
+function clearDraft(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {}
+}
+
+function savedAgo(ts: number) {
+  const secs = Math.round((Date.now() - ts) / 1000);
+  if (secs < 60) return "just now";
+  const mins = Math.round(secs / 60);
+  if (mins < 60) return `${mins} min ago`;
+  return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+// Upload limits. These are mirrored in storage.rules — raising one without the
+// other just moves the failure from a friendly message to a raw 403.
+//
+// The demo ceiling is deliberately far above what a good demo weighs: an
+// unedited QuickTime screen recording is wildly inefficient (a 40s retina
+// capture can pass 100MB) and we'd rather accept it than lose the listing. The
+// video still plays on hover in the browse grid, so the form nudges sellers
+// toward something small — the cap is a backstop, not a target.
+const MAX_DEMO_BYTES = 150 * 1024 * 1024;
+const MAX_DEMO_SECONDS = 40;
 const MAX_PACKAGE_BYTES = 200 * 1024 * 1024;
 
 /** Read a video file's duration (seconds) from its metadata, without playing it. */
