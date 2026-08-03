@@ -134,7 +134,6 @@ function ListingForm({
   const [savedAt, setSavedAt] = useState<number | null>(
     start.fromDraft ? start.values.savedAt : null
   );
-  const [restoredDraft, setRestoredDraft] = useState(start.fromDraft);
   const [leavingTo, setLeavingTo] = useState<string | null>(null);
   const router = useRouter();
 
@@ -357,28 +356,6 @@ function ListingForm({
           ? "Update your listing and send it back for review. Files you don't replace stay as they are."
           : "Fill this in, upload your app package, and submit for review."}
       </p>
-
-      {restoredDraft && (
-        <div className="mt-6 flex items-start gap-3 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)]/40 p-4 text-sm">
-          <span className="mt-0.5">↩</span>
-          <div>
-            <p className="font-medium">We brought your draft back.</p>
-            <p className="mt-0.5 text-[var(--muted)]">
-              Everything you typed was restored. Your package, demo video and
-              screenshots weren&apos;t — browsers can&apos;t hold on to files, so
-              please choose those again.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setRestoredDraft(false)}
-            className="ml-auto shrink-0 text-[var(--muted)] hover:text-[var(--foreground)]"
-            aria-label="Dismiss"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         {/* Sits above the fields, where a seller can reach it at any point
