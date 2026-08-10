@@ -89,6 +89,10 @@ export default function AdminPage() {
                 <tr>
                   <th className="px-5 py-3 font-medium">App</th>
                   <th className="px-5 py-3 font-medium">Seller</th>
+                  {/* Which browse filter it files under — editable on the
+                      listing's review page. Shown here so a mis-filed tool can
+                      be spotted without opening every one. */}
+                  <th className="px-5 py-3 font-medium">Category</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Sales</th>
                 </tr>
@@ -102,6 +106,9 @@ export default function AdminPage() {
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-[var(--muted)]">{l.sellerName}</td>
+                    <td className="px-5 py-3 text-[var(--muted)]">
+                      {CATEGORY_LABELS[l.category]}
+                    </td>
                     <td className="px-5 py-3"><StatusBadge status={l.status} /></td>
                     <td className="px-5 py-3 tabular-nums">{l.salesCount}</td>
                   </tr>

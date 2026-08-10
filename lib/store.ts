@@ -25,7 +25,14 @@ import {
   EmailAuthProvider,
 } from "firebase/auth";
 import { auth, db } from "./firebase";
-import type { Listing, ListingStatus, Purchase, AppUser, Role } from "./types";
+import type {
+  Listing,
+  ListingStatus,
+  Purchase,
+  AppUser,
+  Role,
+  Category,
+} from "./types";
 
 /* ---------------------------------------------------------------------------
    Data store, backed by Firestore + Firebase Auth.
@@ -539,6 +546,31 @@ export async function reviewListing(
   await updateDoc(doc(db, "listings", id), {
     status: decision,
     reviewNote,
+    updatedAt: Date.now(),
+  });
+}
+
+/**
+ * Re-file a listing under a different category — which is what decides the
+ * browse filter it shows up under.
+ *
+ * Sellers pick their own category at submission and often pick wrong, so an
+ * admin needs to correct it after the fact. Deliberately NOT `updateListing`:
+ * that resets status to 'pending', which would pull a live tool off the
+ * marketplace just to change which chip it files under. This touches the
+ * category and nothing else.
+ *
+ * Admin-only in practice. The Firestore rules are the real gate — an admin may
+ * update any listing, a seller only their own and only while it's pending or
+ * rejected — so a non-admin calling this is rejected by the server, not just
+ * hidden from in the UI.
+ */
+export async function setListingCategory(
+  id: string,
+  category: Category
+): Promise<void> {
+  await updateDoc(doc(db, "listings", id), {
+    category,
     updatedAt: Date.now(),
   });
 }

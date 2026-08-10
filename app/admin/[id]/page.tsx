@@ -9,8 +9,9 @@ import {
   requestDownload,
   notifyReviewDecision,
   formatPrice,
+  setListingCategory,
 } from "@/lib/store";
-import { CATEGORY_LABELS, RUNTIME_LABELS } from "@/lib/types";
+import { CATEGORY_LABELS, RUNTIME_LABELS, type Category } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
@@ -32,6 +33,8 @@ export default function AdminReviewPage() {
   const [note, setNote] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState("");
 
   if (!user || user.role !== "admin") {
     return (
@@ -99,13 +102,54 @@ export default function AdminReviewPage() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Badge tone="neutral">{CATEGORY_LABELS[listing.category]}</Badge>
             <Badge tone="neutral">{RUNTIME_LABELS[listing.runtime]}</Badge>
             <Badge tone="neutral">v{listing.version}</Badge>
             <Badge tone="accent">
               {listing.setupMode === "one-command" ? "1-command" : "AI-assisted"}
             </Badge>
             <Badge tone="neutral">{formatPrice(listing.priceCents)}</Badge>
+          </div>
+
+          {/*
+            Category is editable here rather than shown as a badge: it decides
+            which browse filter the tool appears under, sellers pick it
+            themselves at submission, and they often pick wrong. Saves on change
+            and leaves status alone, so re-filing a live tool doesn't unpublish
+            it.
+          */}
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <label htmlFor="category" className="text-sm font-medium">
+              Browse category
+            </label>
+            <select
+              id="category"
+              value={listing.category}
+              onChange={async (e) => {
+                const next = e.target.value as Category;
+                setCategoryError("");
+                setSavingCategory(true);
+                try {
+                  await setListingCategory(listing!.id, next);
+                } catch {
+                  setCategoryError("Couldn't save. Check your admin access.");
+                }
+                setSavingCategory(false);
+              }}
+              disabled={savingCategory}
+              className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 text-sm outline-none focus:border-[var(--accent)] disabled:opacity-60"
+            >
+              {(Object.keys(CATEGORY_LABELS) as Category[]).map((c) => (
+                <option key={c} value={c}>
+                  {CATEGORY_LABELS[c]}
+                </option>
+              ))}
+            </select>
+            {savingCategory && (
+              <span className="text-sm text-[var(--muted)]">Saving…</span>
+            )}
+            {categoryError && (
+              <span className="text-sm text-[var(--danger)]">{categoryError}</span>
+            )}
           </div>
 
           <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
