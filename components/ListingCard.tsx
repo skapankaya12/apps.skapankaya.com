@@ -10,6 +10,11 @@ import { ListingMedia } from "./ListingMedia";
  * A listing as a horizontal list row: the demo video sits on the left (playing
  * on hover) with the details beside it. Stacks vertically on mobile.
  *
+ * Give this the full content width — stack rows in a single column rather than
+ * a multi-column grid. The media panel is a fixed 288px, so in a narrow column
+ * it takes nearly all of it and the title and price wrap to a few characters
+ * per line.
+ *
  * The whole row is clickable, but it is NOT one big <a>: the row carries real
  * links of its own (the "View details" link, the bookmark button), and an
  * anchor can't be nested inside another anchor. Instead the title link is

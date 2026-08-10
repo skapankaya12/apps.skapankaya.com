@@ -23,7 +23,11 @@ export default function SavedPage() {
           </ButtonLink>
         </div>
       ) : (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        // A single column, like /browse. ListingCard is a full-width horizontal
+        // row with a fixed 288px media panel, so in a multi-column grid the
+        // media eats the column and the title and price get squeezed into a
+        // few characters per line.
+        <div className="mt-8 flex flex-col gap-4">
           {items.map((l) => (
             <ListingCard key={l.id} listing={l} />
           ))}
