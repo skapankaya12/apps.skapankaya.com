@@ -34,7 +34,7 @@ export const copy = {
   heroHeadline: "we encourage anyone to build,",
   heroHeadlineAccent: "everyone to own.",
   heroSub:
-    "This is a solo project, for solo builders to sell their solutions or creative works, where anyone can buy it once, own it forever, and run it on your own computer.",
+    "Connecting solo creative builders with buyers who value one-time purchases, self-hosted assets, and full data ownership.",
   missionTitle: "Why this exists",
   missionBody:
     "Every useful tool starts as someone's idea..a fix they built for their own problem. Most of those ideas never get sold; too niche to market, so they sit on a laptop. But the small thing someone already built might be exactly what solves your problem. Instead of paying $40 a month for a huge platform you use one feature of, find the one tool made for just that thing and own it for good.",

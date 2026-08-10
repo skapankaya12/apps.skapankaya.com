@@ -34,8 +34,8 @@ export function PreLaunchNotice() {
       <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
         The marketplace is still being built; we&apos;re finishing the internal
         screens and gathering the first tools. For now it&apos;s open to solo
-        builders who want to list what they made. The public launch is in{" "}
-        <span className="font-medium text-[var(--foreground)]">September</span>.
+        builders who want to list what they made. The public launch is coming{" "}
+        <span className="font-medium text-[var(--foreground)]">soon</span>.
       </p>
 
       <Link
