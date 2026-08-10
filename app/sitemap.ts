@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { brand } from "@/lib/brand";
 import { articles } from "@/lib/articles";
+import { DOCS, docPath } from "@/components/Docs";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
 
 /** Revalidated with the catalogue, so new listings show up within minutes. */
@@ -36,6 +37,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : legalRoutes.includes(path) ? 0.3 : 0.7,
   }));
 
+  // Documentation: the /docs hub plus one page per doc. These are the pages an
+  // AI assistant is most likely to quote when explaining the marketplace, so
+  // every one is in the index.
+  const docRoutes = ["/docs", ...DOCS.map((d) => docPath(d.slug))].map(
+    (path) => ({
+      url: `${base}${path}`,
+      lastModified: STATIC_LAST_MODIFIED,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })
+  );
+
   // One entry per article: the blog's whole reason for existing is discovery.
   const articleRoutes = articles.map((a) => ({
     url: `${base}/blog/${a.slug}`,
@@ -56,5 +69,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-  return [...staticRoutes, ...listingRoutes, ...articleRoutes];
+  return [...staticRoutes, ...docRoutes, ...listingRoutes, ...articleRoutes];
 }

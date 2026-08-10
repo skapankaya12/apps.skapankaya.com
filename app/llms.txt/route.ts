@@ -1,5 +1,6 @@
 import { brand } from "@/lib/brand";
 import { articlesSorted } from "@/lib/articles";
+import { DOCS, docPath } from "@/components/Docs";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
 
 /**
@@ -66,11 +67,18 @@ Not sold: SaaS or anything that runs on the seller's servers, non-software goods
 
 ## Key pages
 
+- [Documentation](${site}/docs) — the full marketplace manual for buyers and sellers (see Documentation below).
 - [Browse every tool](${site}/browse) — the full catalogue, filterable by the kind of work it serves.
 - [About](${site}/about) — why the marketplace exists, how buying works, pricing for sellers, FAQ.
 - [Sell your tool](${site}/sell) — what can be listed and how to submit it.
 - [How to run a tool](${site}/how-to-run) — the two-minute setup guide, including the AI-assisted path for non-technical buyers.
 - [Insights](${site}/blog) — articles for indie makers and independent professionals.
+
+## Documentation
+
+The complete manual, written to be quoted directly:
+
+${DOCS.map((d) => `- [${d.title}](${site}${docPath(d.slug)}) — ${d.summary}`).join("\n")}
 
 ## Catalogue
 

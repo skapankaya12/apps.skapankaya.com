@@ -129,6 +129,14 @@ export default function HowToRunPage() {
         <ButtonLink href="/browse" className="mt-4" variant="secondary" size="sm">
           Browse apps
         </ButtonLink>
+        <p className="mt-4 text-sm text-[var(--muted)]">
+          Want the full picture?{" "}
+          <Link href="/docs" className="text-[var(--accent)] hover:underline">
+            Read the documentation
+          </Link>{" "}
+          — how the marketplace works, running apps in depth, and everything for
+          sellers.
+        </p>
       </div>
     </Section>
   );

@@ -30,6 +30,7 @@ export function Footer() {
         <FooterCol
           title="Learn"
           links={[
+            { href: "/docs", label: "Documentation" },
             { href: "/blog", label: "Insights" },
             { href: "/about", label: "About marketplace" },
             { href: "/how-to-run", label: "How to run a tool" },
