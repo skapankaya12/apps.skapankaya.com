@@ -30,23 +30,6 @@ function countChar(value: string, char: string): number {
 }
 
 /**
- * Find the first https URL in free text. Sellers routinely paste a demo link
- * into the description rather than anywhere structured, so this is how we
- * surface one as a real button on the listing card.
- *
- * https only, for the same reason as `safeHttpsUrl` in lib/utils: a bare http
- * link from a seller is a mixed-content downgrade on a page we host.
- */
-export function firstDemoUrl(text?: string): string | undefined {
-  if (!text) return undefined;
-  for (const match of text.match(URL_PATTERN) ?? []) {
-    const [url] = splitTrailing(match);
-    if (url.startsWith("https://")) return url;
-  }
-  return undefined;
-}
-
-/**
  * One paragraph of seller-written text with any URLs turned into real links.
  *
  * Only https becomes a link. An http:// URL is left as plain text rather than

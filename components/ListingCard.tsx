@@ -5,21 +5,19 @@ import type { Listing } from "@/lib/types";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
 import { ListingMedia } from "./ListingMedia";
-import { firstDemoUrl } from "./RichText";
 
 /**
  * A listing as a horizontal list row: the demo video sits on the left (playing
  * on hover) with the details beside it. Stacks vertically on mobile.
  *
  * The whole row is clickable, but it is NOT one big <a>: the row carries real
- * links of its own (the demo, the bookmark button), and an anchor can't be
- * nested inside another anchor. Instead the title link is "stretched" over the
- * card with an ::after overlay, and anything that needs its own click sits
- * above it on `relative z-10`.
+ * links of its own (the "View details" link, the bookmark button), and an
+ * anchor can't be nested inside another anchor. Instead the title link is
+ * "stretched" over the card with an ::after overlay, and anything that needs
+ * its own click sits above it on `relative z-10`.
  */
 export function ListingCard({ listing }: { listing: Listing }) {
   const saved = useStoreValue(() => isBookmarked(listing.id));
-  const demoUrl = firstDemoUrl(listing.description);
   const href = `/app/${listing.slug}`;
 
   return (
@@ -61,24 +59,12 @@ export function ListingCard({ listing }: { listing: Listing }) {
           <span className="text-base font-semibold tabular-nums">
             {formatPrice(listing.priceCents)}
           </span>
-          <div className="flex items-center gap-3 text-sm">
-            {demoUrl && (
-              <a
-                href={demoUrl}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="relative z-10 font-medium text-[var(--muted)] hover:text-[var(--accent)] hover:underline"
-              >
-                Live demo ↗
-              </a>
-            )}
-            <Link
-              href={href}
-              className="relative z-10 font-medium text-[var(--accent)] hover:underline"
-            >
-              View details →
-            </Link>
-          </div>
+          <Link
+            href={href}
+            className="relative z-10 text-sm font-medium text-[var(--accent)] hover:underline"
+          >
+            View details →
+          </Link>
         </div>
         <span className="mt-2 text-xs text-[var(--muted)]">by {listing.sellerName}</span>
       </div>

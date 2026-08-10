@@ -19,7 +19,7 @@ import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
 import { ListingGallery } from "./ListingGallery";
-import { RichText, firstDemoUrl } from "./RichText";
+import { RichText } from "./RichText";
 
 /**
  * `initial` is the listing read on the server by the page. It's what gets
@@ -74,10 +74,6 @@ export function ListingDetail({
     router.push(`/checkout/${slug}`);
   }
 
-  // Sellers paste a demo link into the description rather than a dedicated
-  // field (there isn't one yet), so surface the first one as a real button.
-  const demoUrl = firstDemoUrl(listing.description);
-
   return (
     <Section className="py-12">
       <Link href="/browse" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
@@ -114,16 +110,6 @@ export function ListingDetail({
               text={listing.description}
               className="mt-3 max-w-prose text-[var(--foreground)]/85"
             />
-            {demoUrl && (
-              <a
-                href={demoUrl}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm font-medium hover:border-[var(--accent)] hover:text-[var(--accent)]"
-              >
-                <GlobeIcon /> Try the live demo
-              </a>
-            )}
           </div>
 
           {/* How to run, softened for non-devs */}
