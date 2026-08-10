@@ -57,17 +57,23 @@ export default function Image() {
             <span style={{ color: "#101014" }}>{copy.heroHeadline}&nbsp;</span>
             <span style={{ color: "#4f46e5" }}>{copy.heroHeadlineAccent}</span>
           </div>
+          {/*
+            The same sub-line as the hero, read from `copy` rather than written
+            out again here. It was a second hardcoded copy of the pitch, so
+            rewriting the hero left the social card advertising the old one.
+            Deliberately just the pitch — no pre-launch notice.
+          */}
           <div
             style={{
               display: "flex",
-              marginTop: 28,
-              fontSize: 32,
+              marginTop: 26,
+              fontSize: 30,
               color: "#5b5b66",
               lineHeight: 1.4,
-              maxWidth: 900,
+              maxWidth: 1000,
             }}
           >
-            A marketplace for small software you run on your own computer.
+            {copy.heroSub}
           </div>
         </div>
 
