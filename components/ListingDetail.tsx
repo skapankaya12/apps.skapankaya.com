@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
@@ -19,6 +18,8 @@ import { CATEGORY_LABELS, RUNTIME_LABELS, type Listing } from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
+import { ListingGallery } from "./ListingGallery";
+import { RichText, firstDemoUrl } from "./RichText";
 
 /**
  * `initial` is the listing read on the server by the page. It's what gets
@@ -73,6 +74,10 @@ export function ListingDetail({
     router.push(`/checkout/${slug}`);
   }
 
+  // Sellers paste a demo link into the description rather than a dedicated
+  // field (there isn't one yet), so surface the first one as a real button.
+  const demoUrl = firstDemoUrl(listing.description);
+
   return (
     <Section className="py-12">
       <Link href="/browse" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
@@ -94,43 +99,31 @@ export function ListingDetail({
             <Badge tone="neutral">v{listing.version}</Badge>
           </div>
 
-          {/* Media: demo video (full controls here) + screenshots */}
+          {/* Demo video and screenshots share one gallery — see ListingGallery */}
           <div className="mt-8">
-            {listing.demoVideo ? (
-              <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-black">
-                <video
-                  src={listing.demoVideo}
-                  controls
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className="aspect-video w-full"
-                />
-                <Badge tone="accent" className="absolute left-4 top-4">
-                  ▶ See it work
-                </Badge>
-              </div>
-            ) : (
-              <div className="grid aspect-video place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] text-sm text-[var(--muted)]">
-                No demo video yet
-              </div>
-            )}
-
-            {listing.screenshots.length > 0 && (
-              <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
-                {listing.screenshots.slice(0, 5).map((shot, i) => (
-                  <Screenshot key={i} src={shot} index={i} title={listing.title} />
-                ))}
-              </div>
-            )}
+            <ListingGallery
+              demoVideo={listing.demoVideo}
+              screenshots={listing.screenshots}
+              title={listing.title}
+            />
           </div>
 
           <div className="mt-8">
             <h2 className="text-lg font-semibold">What it does</h2>
-            <p className="mt-3 leading-relaxed text-[var(--foreground)]/85">
-              {listing.description}
-            </p>
+            <RichText
+              text={listing.description}
+              className="mt-3 max-w-prose text-[var(--foreground)]/85"
+            />
+            {demoUrl && (
+              <a
+                href={demoUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm font-medium hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                <GlobeIcon /> Try the live demo
+              </a>
+            )}
           </div>
 
           {/* How to run, softened for non-devs */}
@@ -310,47 +303,6 @@ function MailIcon() {
       <rect x="2" y="4" width="20" height="16" rx="2" />
       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
-  );
-}
-
-/**
- * One screenshot tile. Real listings store a public Storage URL, which we render
- * as an image; older/seed listings store a plain text label. If an image URL
- * fails to load, we fall back to showing the label text so the tile never breaks.
- */
-function Screenshot({
-  src,
-  index,
-  title,
-}: {
-  src: string;
-  index: number;
-  title: string;
-}) {
-  const [failed, setFailed] = useState(false);
-  const isUrl = /^https?:\/\//.test(src) || src.startsWith("/");
-
-  if (isUrl && !failed) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={src}
-        // Naming the tool makes this useful in image search and to a screen
-        // reader, where "Screenshot 2" says nothing.
-        alt={`${title} — screenshot ${index + 1}`}
-        loading="lazy"
-        onError={() => setFailed(true)}
-        className="aspect-square w-full rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] object-cover"
-      />
-    );
-  }
-
-  return (
-    <div className="flex aspect-square items-end rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center">
-      <span className="w-full text-[10px] leading-tight text-[var(--muted)]">
-        {src}
-      </span>
-    </div>
   );
 }
 

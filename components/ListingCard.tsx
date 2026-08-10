@@ -5,20 +5,29 @@ import type { Listing } from "@/lib/types";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
 import { ListingMedia } from "./ListingMedia";
+import { firstDemoUrl } from "./RichText";
 
 /**
  * A listing as a horizontal list row: the demo video sits on the left (playing
  * on hover) with the details beside it. Stacks vertically on mobile.
+ *
+ * The whole row is clickable, but it is NOT one big <a>: the row carries real
+ * links of its own (the demo, the bookmark button), and an anchor can't be
+ * nested inside another anchor. Instead the title link is "stretched" over the
+ * card with an ::after overlay, and anything that needs its own click sits
+ * above it on `relative z-10`.
  */
 export function ListingCard({ listing }: { listing: Listing }) {
   const saved = useStoreValue(() => isBookmarked(listing.id));
+  const demoUrl = firstDemoUrl(listing.description);
+  const href = `/app/${listing.slug}`;
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-strong)] sm:flex-row">
       {/* Demo video doubles as the cover, playing on hover */}
-      <Link href={`/app/${listing.slug}`} className="block shrink-0 sm:w-72">
+      <div className="shrink-0 sm:w-72">
         <ListingMedia src={listing.demoVideo} title={listing.title} rounded="rounded-none" />
-      </Link>
+      </div>
 
       <button
         aria-label={saved ? "Remove bookmark" : "Save for later"}
@@ -28,24 +37,51 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <HeartIcon filled={saved} />
       </button>
 
-      <Link href={`/app/${listing.slug}`} className="flex min-w-0 flex-1 flex-col p-5">
-        <h3 className="line-clamp-1 break-words text-lg font-semibold tracking-tight group-hover:text-[var(--accent)]">
-          {listing.title}
+      <div className="flex min-w-0 flex-1 flex-col p-5">
+        <h3 className="text-lg font-semibold tracking-tight group-hover:text-[var(--accent)]">
+          {/* The ::after overlay is what makes the whole row clickable */}
+          <Link href={href} className="line-clamp-1 break-words after:absolute after:inset-0">
+            {listing.title}
+          </Link>
         </h3>
         <p className="mt-1.5 line-clamp-2 break-words text-sm text-[var(--muted)]">
           {listing.tagline}
         </p>
-        <p className="mt-2 hidden line-clamp-2 break-words text-sm leading-relaxed text-[var(--muted)]/75 sm:block">
+        {/*
+          `max-sm:hidden` rather than `hidden sm:block`: line-clamp works by
+          setting `display: -webkit-box`, so a `sm:block` further down the
+          cascade silently cancels it — which is why full descriptions were
+          spilling down the page at desktop widths instead of clamping.
+        */}
+        <p className="mt-2 line-clamp-3 break-words text-sm leading-relaxed text-[var(--muted)]/75 max-sm:hidden">
           {listing.description}
         </p>
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-4">
           <span className="text-base font-semibold tabular-nums">
             {formatPrice(listing.priceCents)}
           </span>
-          <span className="text-xs text-[var(--muted)]">by {listing.sellerName}</span>
+          <div className="flex items-center gap-3 text-sm">
+            {demoUrl && (
+              <a
+                href={demoUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="relative z-10 font-medium text-[var(--muted)] hover:text-[var(--accent)] hover:underline"
+              >
+                Live demo ↗
+              </a>
+            )}
+            <Link
+              href={href}
+              className="relative z-10 font-medium text-[var(--accent)] hover:underline"
+            >
+              View details →
+            </Link>
+          </div>
         </div>
-      </Link>
+        <span className="mt-2 text-xs text-[var(--muted)]">by {listing.sellerName}</span>
+      </div>
     </div>
   );
 }

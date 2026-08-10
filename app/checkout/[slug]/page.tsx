@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListingBySlug, getListingsLoaded, formatPrice, getIdToken } from "@/lib/store";
+import {
+  getListingBySlug,
+  getListingsLoaded,
+  formatPrice,
+  getIdToken,
+  isBookmarked,
+  toggleBookmark,
+} from "@/lib/store";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 import { ScanDisclaimer } from "@/components/Disclaimer";
 import { brand } from "@/lib/brand";
@@ -16,6 +23,12 @@ export default function CheckoutPage() {
   const loaded = useStoreValue(getListingsLoaded);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  /**
+   * Set when checkout is refused because payments aren't switched on yet. That
+   * isn't the buyer's problem to solve and there's nothing for them to retry,
+   * so instead of a red error we keep the tool for them and say so.
+   */
+  const [savedForLater, setSavedForLater] = useState(false);
 
   if (!listing) {
     if (!loaded) {
@@ -67,7 +80,14 @@ export default function CheckoutPage() {
         window.location.href = data.url;
         return;
       }
-      setError(checkoutError(data.error));
+      if (data.error === "not-configured") {
+        // toggleBookmark flips, so only call it when it isn't already saved —
+        // otherwise trying to buy something you'd saved would un-save it.
+        if (!isBookmarked(listing.id)) toggleBookmark(listing.id);
+        setSavedForLater(true);
+      } else {
+        setError(checkoutError(data.error));
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     }
@@ -119,13 +139,34 @@ export default function CheckoutPage() {
             </dl>
 
             <div className="mt-5">
-              <Button onClick={pay} disabled={busy} size="lg" className="w-full">
-                {busy ? "Taking you to Stripe…" : `Pay ${formatPrice(total)}`}
-              </Button>
-              {error && <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>}
-              <p className="mt-2 text-center text-xs text-[var(--muted)]">
-                Secure payment by Stripe. You&apos;ll get instant access after paying.
-              </p>
+              {savedForLater ? (
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-center">
+                  <p className="text-sm font-medium">
+                    Saved for later ♥
+                  </p>
+                  <p className="mt-1.5 text-sm text-[var(--muted)]">
+                    Payments aren&apos;t switched on yet, so we&apos;ve kept{" "}
+                    <span className="text-[var(--foreground)]">{listing.title}</span>{" "}
+                    in your saved list. We&apos;ll email you at launch.
+                  </p>
+                  <ButtonLink href="/saved" variant="secondary" className="mt-4 w-full">
+                    View saved tools
+                  </ButtonLink>
+                  <ButtonLink href="/browse" variant="ghost" size="sm" className="mt-2 w-full">
+                    Keep browsing →
+                  </ButtonLink>
+                </div>
+              ) : (
+                <>
+                  <Button onClick={pay} disabled={busy} size="lg" className="w-full">
+                    {busy ? "Taking you to Stripe…" : `Pay ${formatPrice(total)}`}
+                  </Button>
+                  {error && <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>}
+                  <p className="mt-2 text-center text-xs text-[var(--muted)]">
+                    Secure payment by Stripe. You&apos;ll get instant access after paying.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </aside>
