@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { brand } from "@/lib/brand";
 import { DocPage, H2, Callout, docMetadata, docPath } from "@/components/Docs";
 
 const SLUG = "running-apps";

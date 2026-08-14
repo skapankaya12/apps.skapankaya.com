@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
@@ -26,7 +26,18 @@ export function Navbar() {
 
   // A link tap re-renders with a new pathname but doesn't unmount the header,
   // so the panel has to be closed explicitly or it stays over the new page.
-  useEffect(() => setMenuOpen(false), [pathname]);
+  // The panel's own links close it on click; this covers everything else that
+  // changes the route — the logo, the cart, back/forward, a redirect.
+  //
+  // Adjusted during render rather than in an effect: React finishes this render
+  // and re-runs the component before committing anything to the DOM, so the
+  // panel is already gone on the first paint of the new page. From an effect it
+  // would paint open, then close.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setMenuOpen(false);
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md">
