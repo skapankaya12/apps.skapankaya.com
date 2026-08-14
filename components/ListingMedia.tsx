@@ -6,6 +6,12 @@ import { useRef, useState } from "react";
  * A listing's visual. Shows a still first frame, and plays the demo video on
  * hover (muted + looping, which browsers allow without a user gesture).
  * Falls back to a title monogram when a listing has no video yet.
+ *
+ * The frame is 16:9 but demo videos are whatever shape the maker recorded —
+ * a 16:10 Mac screen, a square capture, a phone in portrait. The video is
+ * fitted inside the frame rather than filling it, so nothing is cropped: a
+ * cropped preview cuts off exactly the chrome and edges that show what the
+ * tool is. The leftover space is the surface colour, which reads as a letterbox.
  */
 export function ListingMedia({
   src,
@@ -65,7 +71,7 @@ export function ListingMedia({
         playsInline
         preload="metadata"
         onError={() => setFailed(true)}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
       />
       {/* Play affordance, hidden while the video is running */}
       <div
