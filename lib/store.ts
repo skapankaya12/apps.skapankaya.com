@@ -4,8 +4,11 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
+  writeBatch,
   onSnapshot,
   query,
   where,
@@ -25,13 +28,18 @@ import {
   EmailAuthProvider,
 } from "firebase/auth";
 import { auth, db } from "./firebase";
-import type {
-  Listing,
-  ListingStatus,
-  Purchase,
-  AppUser,
-  Role,
-  Category,
+import {
+  DEFAULT_CATEGORIES,
+  sortCategories,
+  categoryLabel,
+  toCategoryId,
+  type Listing,
+  type ListingStatus,
+  type Purchase,
+  type AppUser,
+  type Role,
+  type Category,
+  type CategoryDef,
 } from "./types";
 
 /* ---------------------------------------------------------------------------
@@ -68,6 +76,8 @@ let listingsLoaded = false;
 let approvedListings: Listing[] = []; // public: every approved listing
 let contextListings: Listing[] = []; // seller's own, or all listings for an admin
 let purchases: Purchase[] = [];
+/** The admin-managed browse filters. Empty until an admin has saved any. */
+let categories: CategoryDef[] = [];
 
 let unsubContext: Unsubscribe | undefined;
 let unsubPurchases: Unsubscribe | undefined;
@@ -136,6 +146,26 @@ export function markClientReady() {
       listingsLoaded = true;
       console.error("[store] approved listings listener:", err.message);
       emit();
+    }
+  );
+
+  // Public listener: the browse filters, world-readable like approved listings.
+  // Also session-long — every page shows category labels somewhere.
+  onSnapshot(
+    collection(db, "categories"),
+    (snap) => {
+      categories = sortCategories(
+        snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<CategoryDef, "id">),
+        }))
+      );
+      emit();
+    },
+    (err) => {
+      // Leaving `categories` empty falls back to DEFAULT_CATEGORIES, so browse
+      // keeps its filters rather than losing them to a transient error.
+      console.error("[store] categories listener:", err.message);
     }
   );
 
@@ -573,6 +603,185 @@ export async function setListingCategory(
     category,
     updatedAt: Date.now(),
   });
+}
+
+/* ------------------------------ categories ------------------------------ */
+
+/**
+ * The browse filters, in chip order.
+ *
+ * Falls back to DEFAULT_CATEGORIES until the collection has documents — which
+ * is also what the server renders, so the chips don't change shape between the
+ * HTML and hydration on a database nobody has customised yet.
+ */
+export function getCategories(): CategoryDef[] {
+  if (!clientReady || categories.length === 0) return DEFAULT_CATEGORIES;
+  return categories;
+}
+
+/** Display label for a listing's category id. Never empty — see categoryLabel. */
+export function getCategoryLabel(id: Category): string {
+  return categoryLabel(id, getCategories());
+}
+
+/** How many listings (of every status the caller can see) sit in a category. */
+export function countListingsInCategory(id: Category): number {
+  return mergedListings().filter((l) => l.category === id).length;
+}
+
+/**
+ * Materialise DEFAULT_CATEGORIES into Firestore the first time an admin edits
+ * the filters. Until then the defaults are code, not data, so renaming or
+ * deleting one has nothing to write to — this makes them real documents in a
+ * single batch, and every later edit is an ordinary write.
+ */
+async function ensureCategoriesSeeded(): Promise<void> {
+  const snap = await getDocs(collection(db, "categories"));
+  if (!snap.empty) return;
+  const now = Date.now();
+  const batch = writeBatch(db);
+  for (const c of DEFAULT_CATEGORIES) {
+    const { id, ...rest } = c;
+    batch.set(doc(db, "categories", id), {
+      ...rest,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+  await batch.commit();
+}
+
+/**
+ * Add a browse filter. The id is slugified from the label, because it's what
+ * gets stored on every listing filed under it and what an admin reads in the
+ * console — a slug survives a later rename, a random doc id wouldn't mean
+ * anything. Returns the new id.
+ *
+ * Admin-only; the Firestore rules are the real gate.
+ */
+export async function createCategory(
+  label: string,
+  hint: string
+): Promise<string> {
+  const name = label.trim();
+  if (!name) throw new Error("Give the filter a name.");
+  const id = toCategoryId(name);
+  if (!id) throw new Error("That name has no letters or numbers in it.");
+
+  await ensureCategoriesSeeded();
+  const ref = doc(db, "categories", id);
+  if ((await getDoc(ref)).exists()) {
+    throw new Error(`“${name}” already exists as a filter.`);
+  }
+
+  const now = Date.now();
+  // New filters go last, so adding one never reshuffles the chips buyers know.
+  const order =
+    getCategories().reduce((max, c) => Math.max(max, c.order), -1) + 1;
+  await setDoc(ref, {
+    label: name,
+    hint: hint.trim(),
+    order,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return id;
+}
+
+/**
+ * Rename a filter or reword its hint. The id stays put, so listings already
+ * filed under it follow the new name without a single listing being touched.
+ */
+export async function updateCategory(
+  id: Category,
+  patch: { label?: string; hint?: string }
+): Promise<void> {
+  const label = patch.label?.trim();
+  if (patch.label !== undefined && !label) {
+    throw new Error("Give the filter a name.");
+  }
+  await ensureCategoriesSeeded();
+  await setDoc(
+    doc(db, "categories", id),
+    {
+      ...(label !== undefined ? { label } : {}),
+      ...(patch.hint !== undefined ? { hint: patch.hint.trim() } : {}),
+      updatedAt: Date.now(),
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * Move a filter one place along the chip row. Swaps `order` with its
+ * neighbour rather than renumbering everything, so two admins reordering at
+ * once can only disagree about one pair.
+ */
+export async function moveCategory(
+  id: Category,
+  direction: -1 | 1
+): Promise<void> {
+  await ensureCategoriesSeeded();
+  const list = getCategories();
+  const i = list.findIndex((c) => c.id === id);
+  const j = i + direction;
+  if (i < 0 || j < 0 || j >= list.length) return;
+
+  const now = Date.now();
+  const batch = writeBatch(db);
+  batch.set(
+    doc(db, "categories", list[i].id),
+    { order: list[j].order, updatedAt: now },
+    { merge: true }
+  );
+  batch.set(
+    doc(db, "categories", list[j].id),
+    { order: list[i].order, updatedAt: now },
+    { merge: true }
+  );
+  await batch.commit();
+}
+
+/**
+ * Remove a filter.
+ *
+ * A listing stores its category as a plain id, so deleting one out from under
+ * live tools would strand them: they'd stay on sale but sit under no chip,
+ * findable only by search. So this refuses unless the category is empty or the
+ * admin says where its tools should go — and re-files them in the same
+ * operation. Status is untouched: re-filing must never unpublish anything.
+ */
+export async function deleteCategory(
+  id: Category,
+  reassignTo?: Category
+): Promise<void> {
+  if (getCategories().length <= 1) {
+    throw new Error("Keep at least one filter — browse needs somewhere to file tools.");
+  }
+  if (reassignTo === id) {
+    throw new Error("Pick a different filter to move the tools to.");
+  }
+
+  const affected = mergedListings().filter((l) => l.category === id);
+  if (affected.length > 0 && !reassignTo) {
+    throw new Error(
+      `${affected.length} ${affected.length === 1 ? "tool is" : "tools are"} filed under this filter. Choose where to move them first.`
+    );
+  }
+
+  await ensureCategoriesSeeded();
+  if (affected.length > 0) {
+    const now = Date.now();
+    const batch = writeBatch(db);
+    for (const l of affected) {
+      batch.update(doc(db, "listings", l.id), {
+        category: reassignTo,
+        updatedAt: now,
+      });
+    }
+    await batch.commit();
+  }
+  await deleteDoc(doc(db, "categories", id));
 }
 
 /* ------------------------------ purchases ------------------------------ */

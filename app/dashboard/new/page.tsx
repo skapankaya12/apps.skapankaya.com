@@ -2,13 +2,14 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useUser } from "@/lib/hooks";
+import { useStoreValue, useUser } from "@/lib/hooks";
 import {
   createListing,
   updateListing,
   reserveListingId,
   getListingById,
   notifyListingSubmitted,
+  getCategories,
   subscribe,
 } from "@/lib/store";
 import {
@@ -17,8 +18,6 @@ import {
   uploadScreenshots,
 } from "@/lib/storage";
 import {
-  CATEGORY_LABELS,
-  CATEGORY_HINTS,
   RUNTIME_LABELS,
   type Category,
   type Runtime,
@@ -105,6 +104,7 @@ function ListingForm({
   const [tagline, setTagline] = useState(start.values.tagline);
   const [description, setDescription] = useState(start.values.description);
   const [category, setCategory] = useState<Category>(start.values.category);
+  const categories = useStoreValue(getCategories);
   const [runtime, setRuntime] = useState<Runtime>(start.values.runtime);
   const [setupMode, setSetupMode] = useState<SetupMode>(start.values.setupMode);
   const [price, setPrice] = useState(start.values.price);
@@ -137,9 +137,18 @@ function ListingForm({
   const [leavingTo, setLeavingTo] = useState<string | null>(null);
   const router = useRouter();
 
+  // An admin can retire a filter between the day a draft is saved and the day
+  // it's submitted. Fall back to the first live one, so a tool is never filed
+  // under a category that no longer exists and nobody can browse to. Derived
+  // rather than stored, so a filter reappearing restores the seller's choice.
+  const activeCategory =
+    categories.some((c) => c.id === category)
+      ? category
+      : (categories[0]?.id ?? category);
+
   const draft: Draft = {
-    title, tagline, description, category, runtime, setupMode, price,
-    sellerBio, sellerEmail, sellerWebsite, savedAt: 0,
+    title, tagline, description, category: activeCategory, runtime, setupMode,
+    price, sellerBio, sellerEmail, sellerWebsite, savedAt: 0,
   };
   const draftJson = JSON.stringify(draft);
 
@@ -251,7 +260,7 @@ function ListingForm({
         title: title.trim(),
         tagline: tagline.trim(),
         description: description.trim(),
-        category,
+        category: activeCategory,
         runtime,
         setupMode,
         priceCents,
@@ -409,16 +418,16 @@ function ListingForm({
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label="What job does it do?">
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as Category)}
+              value={activeCategory}
+              onChange={(e) => setCategory(e.target.value)}
               className={inputClass}
             >
-              {(Object.keys(CATEGORY_LABELS) as Category[]).map((c) => (
-                <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}</option>
               ))}
             </select>
             <p className="mt-1.5 text-xs text-[var(--muted)]">
-              {CATEGORY_HINTS[category]}
+              {categories.find((c) => c.id === activeCategory)?.hint}
             </p>
           </Field>
 

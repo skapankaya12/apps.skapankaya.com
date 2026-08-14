@@ -7,7 +7,7 @@ import {
   hasPublishableSlug,
   formatPriceServer,
 } from "@/lib/listings.server";
-import { CATEGORY_LABELS } from "@/lib/types";
+import { getCategoryLabelServer } from "@/lib/categories.server";
 import { ListingDetail } from "@/components/ListingDetail";
 import { JsonLd } from "@/components/JsonLd";
 
@@ -84,6 +84,7 @@ export default async function AppPage({
   if (!listing) notFound();
 
   const url = `${brand.url}/app/${listing.slug}`;
+  const category = await getCategoryLabelServer(listing.category);
 
   // SoftwareApplication rather than plain Product: these are programs, and it
   // lets us state the runtime and category in terms Google already understands.
@@ -95,7 +96,7 @@ export default async function AppPage({
     name: listing.title,
     description: listing.description,
     url,
-    applicationCategory: CATEGORY_LABELS[listing.category],
+    applicationCategory: category,
     operatingSystem: RUNTIME_OS[listing.runtime] ?? RUNTIME_OS.other,
     softwareVersion: listing.version,
     ...(listing.screenshots.some((s) => /^https?:\/\//.test(s))

@@ -10,8 +10,9 @@ import {
   notifyReviewDecision,
   formatPrice,
   setListingCategory,
+  getCategories,
 } from "@/lib/store";
-import { CATEGORY_LABELS, RUNTIME_LABELS, type Category } from "@/lib/types";
+import { RUNTIME_LABELS } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
@@ -29,6 +30,7 @@ export default function AdminReviewPage() {
   const router = useRouter();
   const user = useUser();
   const listing = useStoreValue(() => getListingById(params.id));
+  const categories = useStoreValue(getCategories);
   const [checks, setChecks] = useState<boolean[]>(CHECKLIST.map(() => false));
   const [note, setNote] = useState("");
   const [downloading, setDownloading] = useState(false);
@@ -125,7 +127,7 @@ export default function AdminReviewPage() {
               id="category"
               value={listing.category}
               onChange={async (e) => {
-                const next = e.target.value as Category;
+                const next = e.target.value;
                 setCategoryError("");
                 setSavingCategory(true);
                 try {
@@ -138,9 +140,18 @@ export default function AdminReviewPage() {
               disabled={savingCategory}
               className="rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 text-sm outline-none focus:border-[var(--accent)] disabled:opacity-60"
             >
-              {(Object.keys(CATEGORY_LABELS) as Category[]).map((c) => (
-                <option key={c} value={c}>
-                  {CATEGORY_LABELS[c]}
+              {/* A listing can hold a category an admin has since removed.
+                  Keep it in the list, marked, so the select shows what the
+                  listing actually says instead of silently reading as the
+                  first option. */}
+              {!categories.some((c) => c.id === listing.category) && (
+                <option value={listing.category}>
+                  {listing.category} (removed filter)
+                </option>
+              )}
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
                 </option>
               ))}
             </select>

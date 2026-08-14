@@ -13,8 +13,9 @@ import {
   removeFromCart,
   isBookmarked,
   toggleBookmark,
+  getCategories,
 } from "@/lib/store";
-import { CATEGORY_LABELS, RUNTIME_LABELS, type Listing } from "@/lib/types";
+import { RUNTIME_LABELS, categoryLabel, type Listing } from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
@@ -42,6 +43,7 @@ export function ListingDetail({
   );
   const inCart = useStoreValue(() => (listing ? isInCart(listing.id) : false));
   const saved = useStoreValue(() => (listing ? isBookmarked(listing.id) : false));
+  const categories = useStoreValue(getCategories);
 
   if (!listing) {
     // Still waiting on Firestore's first response: show a loader, not "not found".
@@ -90,7 +92,7 @@ export function ListingDetail({
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <VerifiedBadge />
-            <Badge tone="neutral">{CATEGORY_LABELS[listing.category]}</Badge>
+            <Badge tone="neutral">{categoryLabel(listing.category, categories)}</Badge>
             <Badge tone="neutral">{RUNTIME_LABELS[listing.runtime]}</Badge>
             <Badge tone="neutral">v{listing.version}</Badge>
           </div>

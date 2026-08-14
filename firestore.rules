@@ -2,7 +2,7 @@ rules_version = '2';
 
 // Firestore security rules for Apps Marketplace.
 // Deploy with:  firebase deploy --only firestore:rules
-// The data model mirrors lib/types.ts (users, listings, purchases).
+// The data model mirrors lib/types.ts (users, listings, categories, purchases).
 
 service cloud.firestore {
   match /databases/{db}/documents {
@@ -55,6 +55,23 @@ service cloud.firestore {
             && request.resource.data.sellerId == resource.data.sellerId
             && resource.data.status in ['pending', 'rejected']
             && request.resource.data.status in ['pending', 'rejected']);
+
+      allow delete: if isAdmin();
+    }
+
+    match /categories/{id} {
+      // The browse filters are public vocabulary — every visitor needs them to
+      // render the chips and the badge on a listing. Only an admin edits them.
+      allow read: if true;
+
+      // A malformed category document breaks browse for everyone, so the shape
+      // is checked here rather than trusted from the console. These hold after a
+      // merge write too: request.resource.data is the document as it will be.
+      allow create, update: if isAdmin()
+        && request.resource.data.label is string
+        && request.resource.data.label.size() > 0
+        && request.resource.data.label.size() <= 60
+        && request.resource.data.order is number;
 
       allow delete: if isAdmin();
     }

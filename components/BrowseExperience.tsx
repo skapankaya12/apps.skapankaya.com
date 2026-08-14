@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useStoreValue } from "@/lib/hooks";
-import { getApprovedListings } from "@/lib/store";
-import { CATEGORY_LABELS, type Category, type Listing } from "@/lib/types";
+import { getApprovedListings, getCategories } from "@/lib/store";
+import type { Category, Listing } from "@/lib/types";
 import { ListingCard } from "./ListingCard";
 
 type Filter = Category | "all";
@@ -19,13 +19,25 @@ type Filter = Category | "all";
 export function BrowseExperience({ initial = [] }: { initial?: Listing[] }) {
   const live = useStoreValue(getApprovedListings);
   const listings = live.length > 0 ? live : initial;
+  const definedCategories = useStoreValue(getCategories);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Filter>("all");
+
+  /**
+   * An admin can retire a filter while someone is browsing it. The active chip
+   * is derived rather than trusted, so a filter disappearing falls back to
+   * "All tools" instead of leaving the visitor on a chip that no longer exists,
+   * staring at an empty list with nothing highlighted.
+   */
+  const active: Filter =
+    category === "all" || definedCategories.some((c) => c.id === category)
+      ? category
+      : "all";
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return listings.filter((l) => {
-      const matchesCat = category === "all" || l.category === category;
+      const matchesCat = active === "all" || l.category === active;
       const matchesQuery =
         !q ||
         l.title.toLowerCase().includes(q) ||
@@ -33,7 +45,7 @@ export function BrowseExperience({ initial = [] }: { initial?: Listing[] }) {
         l.description.toLowerCase().includes(q);
       return matchesCat && matchesQuery;
     });
-  }, [listings, query, category]);
+  }, [listings, query, active]);
 
   /**
    * Show every department filter, always, so professionals see the full range
@@ -45,16 +57,16 @@ export function BrowseExperience({ initial = [] }: { initial?: Listing[] }) {
     listings.forEach((l) =>
       counts.set(l.category, (counts.get(l.category) ?? 0) + 1)
     );
-    const all = (Object.keys(CATEGORY_LABELS) as Category[]).map((c) => ({
-      value: c as Filter,
-      label: CATEGORY_LABELS[c],
-      count: counts.get(c) ?? 0,
+    const all = definedCategories.map((c) => ({
+      value: c.id as Filter,
+      label: c.label,
+      count: counts.get(c.id) ?? 0,
     }));
     return [
       { value: "all" as Filter, label: "All tools", count: listings.length },
       ...all,
     ];
-  }, [listings]);
+  }, [listings, definedCategories]);
 
   const search = (
     <div className="relative">
@@ -113,7 +125,7 @@ export function BrowseExperience({ initial = [] }: { initial?: Listing[] }) {
               key={c.value}
               onClick={() => setCategory(c.value)}
               className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
-                category === c.value
+                active === c.value
                   ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
                   : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--foreground)]"
               }`}

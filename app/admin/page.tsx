@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListings, formatPrice } from "@/lib/store";
-import { CATEGORY_LABELS } from "@/lib/types";
+import { getListings, getCategories, formatPrice } from "@/lib/store";
+import { categoryLabel } from "@/lib/types";
 import { Section, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
 export default function AdminPage() {
   const user = useUser();
   const all = useStoreValue(() => getListings());
+  const categories = useStoreValue(getCategories);
 
   if (!user || user.role !== "admin") {
     return (
@@ -31,8 +32,15 @@ export default function AdminPage() {
 
   return (
     <Section className="py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">Admin console</h1>
-      <p className="mt-1 text-[var(--muted)]">Review submissions and monitor the marketplace.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Admin console</h1>
+          <p className="mt-1 text-[var(--muted)]">Review submissions and monitor the marketplace.</p>
+        </div>
+        <ButtonLink href="/admin/categories" variant="secondary" size="sm">
+          Browse filters
+        </ButtonLink>
+      </div>
 
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-4">
@@ -67,7 +75,7 @@ export default function AdminPage() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{l.title}</span>
-                  <Badge tone="neutral">{CATEGORY_LABELS[l.category]}</Badge>
+                  <Badge tone="neutral">{categoryLabel(l.category, categories)}</Badge>
                 </div>
                 <p className="text-sm text-[var(--muted)]">
                   {l.tagline} · by {l.sellerName} · {formatPrice(l.priceCents)}
@@ -107,7 +115,7 @@ export default function AdminPage() {
                     </td>
                     <td className="px-5 py-3 text-[var(--muted)]">{l.sellerName}</td>
                     <td className="px-5 py-3 text-[var(--muted)]">
-                      {CATEGORY_LABELS[l.category]}
+                      {categoryLabel(l.category, categories)}
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={l.status} /></td>
                     <td className="px-5 py-3 tabular-nums">{l.salesCount}</td>
