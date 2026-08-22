@@ -14,6 +14,7 @@ import { RUNTIME_LABELS, type Runtime, type SetupMode } from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, StatusBadge } from "@/components/ui";
 import { Field, inputClass } from "@/components/ui/form";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 
 /**
  * Admin edit for any listing on the marketplace.
@@ -230,12 +231,7 @@ function EditForm({
         </Field>
 
         <Field label="Description" hint="What problem it solves, and how it runs locally.">
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={8}
-            className={`${inputClass} resize-y`}
-          />
+          <MarkdownEditor value={description} onChange={setDescription} rows={12} />
         </Field>
 
         <Field
@@ -374,7 +370,7 @@ function EditForm({
 
         <Field
           label="Demo video"
-          hint="Replace a demo that won't play. MP4 (H.264) only — .mov is refused, because it's the container that breaks playback for buyers on Android. Up to 40 seconds and 150MB."
+          hint="Upload a new video to replace the current one, or leave it alone to keep it. MP4 (H.264) only — .mov is refused, because that container doesn't play for buyers on Android. Up to 40 seconds and 150MB."
         >
           <label
             className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${

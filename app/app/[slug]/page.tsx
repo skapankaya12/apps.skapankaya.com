@@ -10,6 +10,7 @@ import {
 import { getCategoryLabelServer } from "@/lib/categories.server";
 import { ListingDetail } from "@/components/ListingDetail";
 import { JsonLd } from "@/components/JsonLd";
+import { stripMarkdown } from "@/lib/markdown";
 
 /**
  * A listing page is the marketplace's long-tail search surface: someone types
@@ -94,7 +95,10 @@ export default async function AppPage({
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: listing.title,
-    description: listing.description,
+    // Stripped: JSON-LD takes a bare string, so a description with headings and
+    // bold would publish raw ## and ** to every search engine and AI crawler
+    // that reads this block.
+    description: stripMarkdown(listing.description),
     url,
     applicationCategory: category,
     operatingSystem: RUNTIME_OS[listing.runtime] ?? RUNTIME_OS.other,

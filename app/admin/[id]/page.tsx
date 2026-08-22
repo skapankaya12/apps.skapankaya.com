@@ -15,6 +15,7 @@ import {
 import { RUNTIME_LABELS } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
+import { RichText } from "@/components/RichText";
 
 /** The reviewer's checklist, mirroring BUSINESS_MODEL.md §3. */
 const CHECKLIST = [
@@ -171,9 +172,12 @@ export default function AdminReviewPage() {
           <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
             Description
           </h2>
-          <p className="mt-2 leading-relaxed text-[var(--foreground)]/85">
-            {listing.description}
-          </p>
+          {/* Rendered, not raw: a reviewer is judging the listing buyers will
+              see, so the description has to look the way it will on the page. */}
+          <RichText
+            text={listing.description}
+            className="mt-2 text-[var(--foreground)]/85"
+          />
 
           <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
             Submitted package

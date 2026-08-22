@@ -27,6 +27,7 @@ import {
 } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 import { Field, inputClass } from "@/components/ui/form";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { MAX_PACKAGE_BYTES, validateDemo } from "@/lib/media";
 import { safeHttpsUrl } from "@/lib/utils";
 
@@ -393,13 +394,15 @@ function ListingForm({
           />
         </Field>
 
-        <Field label="Description" hint="What problem it solves, and how it runs locally.">
-          <textarea
+        <Field
+          label="Description"
+          hint="What problem it solves, and how it runs locally. Use headings and lists — this is the main thing a buyer reads."
+        >
+          <MarkdownEditor
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={5}
+            onChange={setDescription}
+            rows={10}
             placeholder="Describe the app…"
-            className={`${inputClass} resize-y`}
           />
         </Field>
 

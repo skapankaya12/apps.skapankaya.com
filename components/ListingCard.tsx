@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Listing } from "@/lib/types";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
+import { stripMarkdown } from "@/lib/markdown";
 import { firstScreenshot } from "@/lib/utils";
 import { ListingMedia } from "./ListingMedia";
 
@@ -62,8 +63,10 @@ export function ListingCard({ listing }: { listing: Listing }) {
           cascade silently cancels it — which is why full descriptions were
           spilling down the page at desktop widths instead of clamping.
         */}
+        {/* Stripped, not rendered: a three-line clamp is no place for headings
+            and lists, but showing the raw ## and ** instead is worse. */}
         <p className="mt-2 line-clamp-3 break-words text-sm leading-relaxed text-[var(--muted)]/75 max-sm:hidden">
-          {listing.description}
+          {stripMarkdown(listing.description)}
         </p>
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-4">
