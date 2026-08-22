@@ -19,6 +19,7 @@ import { RUNTIME_LABELS, categoryLabel, type Listing } from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
+import { Expandable } from "./Expandable";
 import { ListingGallery } from "./ListingGallery";
 import { RichText } from "./RichText";
 
@@ -116,10 +117,14 @@ export function ListingDetail({
 
           <div className="mt-8">
             <h2 className="text-lg font-semibold">What it does</h2>
-            <RichText
-              text={listing.description}
-              className="mt-3 max-w-prose text-[var(--foreground)]/85"
-            />
+            {/* Collapsed behind "Read more" — the full text is still in the
+                HTML, see Expandable. */}
+            <Expandable moreLabel="Read the full description">
+              <RichText
+                text={listing.description}
+                className="mt-3 max-w-prose text-[var(--foreground)]/85"
+              />
+            </Expandable>
           </div>
 
           {/* How to run, softened for non-devs */}
