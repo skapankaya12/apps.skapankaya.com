@@ -15,6 +15,7 @@ import {
 import {
   uploadPackage,
   uploadDemoVideo,
+  uploadPoster,
   uploadScreenshots,
 } from "@/lib/storage";
 import {
@@ -28,7 +29,7 @@ import {
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 import { Field, inputClass } from "@/components/ui/form";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
-import { MAX_PACKAGE_BYTES, validateDemo } from "@/lib/media";
+import { MAX_PACKAGE_BYTES, captureVideoPoster, validateDemo } from "@/lib/media";
 import { safeHttpsUrl } from "@/lib/utils";
 
 export default function NewListingPage() {
@@ -243,7 +244,7 @@ function ListingForm({
       // Storage paths are scoped by uid — see storage.rules; a seller may only
       // write inside their own folder.
       const uid = user!.uid;
-      const [packagePath, demoUrl, newShotUrls] = await Promise.all([
+      const [packagePath, demoUrl, newShotUrls, posterUrl] = await Promise.all([
         packageFile
           ? uploadPackage(uid, listingId, packageFile)
           : Promise.resolve(existingPackage!),
@@ -253,6 +254,12 @@ function ListingForm({
         screenshotFiles.length
           ? uploadScreenshots(uid, listingId, screenshotFiles)
           : Promise.resolve<string[]>([]),
+        // A still cut from this exact video, so the card can never show a frame
+        // of a demo that's been replaced. Best-effort: a file we can't decode
+        // falls back to the first screenshot at render time.
+        demoFile
+          ? capturePoster(uid, listingId, demoFile)
+          : Promise.resolve(editing?.posterImage),
       ]);
       const screenshots = [...existingShots, ...newShotUrls].slice(0, 5);
 
@@ -269,6 +276,7 @@ function ListingForm({
         priceCents,
         screenshots,
         demoVideo: demoUrl,
+        posterImage: posterUrl,
         sellerBio: sellerBio.trim() || undefined,
         sellerEmail: sellerEmail.trim(), // required
         sellerWebsite: safeHttpsUrl(sellerWebsite),
@@ -789,6 +797,28 @@ const EMPTY_DRAFT: Draft = {
 const EMPTY_DRAFT_JSON = JSON.stringify(EMPTY_DRAFT);
 
 /** Scoped per seller and per listing, so drafts never leak between them. */
+/**
+ * Grab and upload a poster for a demo.
+ *
+ * Never fatal — a demo that saves without a poster is far better than one that
+ * doesn't save. On failure it returns "" rather than undefined, and that matters:
+ * the Firestore client ignores undefined fields, so undefined would leave the
+ * PREVIOUS video's poster attached to the new video. "" clears it, and rendering
+ * falls back to the first screenshot.
+ */
+async function capturePoster(
+  uid: string,
+  listingId: string,
+  file: File
+): Promise<string> {
+  try {
+    const blob = await captureVideoPoster(file);
+    return blob ? await uploadPoster(uid, listingId, blob) : "";
+  } catch {
+    return "";
+  }
+}
+
 function draftKeyFor(uid: string, editId: string | null) {
   return `solomarket:listing-draft:${uid}:${editId ?? "new"}`;
 }

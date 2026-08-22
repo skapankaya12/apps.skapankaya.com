@@ -110,6 +110,7 @@ export function ListingDetail({
           <div className="mt-8">
             <ListingGallery
               demoVideo={listing.demoVideo}
+              posterImage={listing.posterImage}
               screenshots={listing.screenshots}
               title={listing.title}
             />

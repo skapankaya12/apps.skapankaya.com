@@ -583,7 +583,7 @@ export type AdminListingEdit = Pick<
   | "sellerBio"
   | "sellerEmail"
   | "sellerWebsite"
-> & { demoVideo?: string };
+> & { demoVideo?: string; posterImage?: string };
 
 /**
  * Edit a listing as an admin: fix a typo, re-file it, replace a demo video the

@@ -6,7 +6,7 @@ import type { Listing } from "@/lib/types";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
 import { stripMarkdown } from "@/lib/markdown";
-import { firstScreenshot } from "@/lib/utils";
+import { listingPoster } from "@/lib/utils";
 import { ListingMedia } from "./ListingMedia";
 
 /**
@@ -47,7 +47,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
       <div className="shrink-0 sm:w-72">
         <ListingMedia
           src={listing.demoVideo}
-          poster={firstScreenshot(listing.screenshots)}
+          poster={listingPoster(listing)}
           title={listing.title}
           play={hovered}
           rounded="rounded-none"

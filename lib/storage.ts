@@ -64,16 +64,46 @@ export async function uploadPackage(
   return path;
 }
 
-/** Upload the demo video to the public bucket; returns its public URL. */
+/**
+ * Upload the demo video to the public bucket; returns its public URL.
+ *
+ * The filename carries a timestamp so a replacement never lands on the path it
+ * replaced. That's required, not tidy: these are served `immutable` for a year,
+ * so overwriting in place would leave every browser that had seen the old demo
+ * showing it until the cache expired.
+ */
 export async function uploadDemoVideo(
   uid: string,
   listingId: string,
   file: File
 ): Promise<string> {
-  const path = `public/demos/${uid}/${listingId}${ext(file.name) || ".mp4"}`;
+  const path = `public/demos/${uid}/${listingId}-${Date.now()}${
+    ext(file.name) || ".mp4"
+  }`;
   const r = ref(storage, path);
   await uploadBytes(r, file, {
     contentType: file.type || "video/mp4",
+    cacheControl: PUBLIC_ASSET_CACHE,
+  });
+  return getDownloadURL(r);
+}
+
+/**
+ * Upload a poster still cut from the demo video (see captureVideoPoster).
+ *
+ * Lives under the screenshots prefix so it needs no new rule in storage.rules —
+ * that path already allows image/* writes inside the uploader's own folder.
+ * It is never added to `screenshots`; it's referenced by `posterImage` alone.
+ */
+export async function uploadPoster(
+  uid: string,
+  listingId: string,
+  blob: Blob
+): Promise<string> {
+  const path = `public/shots/${uid}/${listingId}/poster-${Date.now()}.jpg`;
+  const r = ref(storage, path);
+  await uploadBytes(r, blob, {
+    contentType: "image/jpeg",
     cacheControl: PUBLIC_ASSET_CACHE,
   });
   return getDownloadURL(r);

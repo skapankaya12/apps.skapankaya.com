@@ -70,3 +70,79 @@ export async function validateDemo(file: File): Promise<string | null> {
   }
   return null;
 }
+
+/**
+ * Grab a still frame from a demo video, to use as its poster.
+ *
+ * The poster used to be the listing's first screenshot, which quietly rots:
+ * replace the demo and the card keeps showing a frame of the old recording
+ * until someone hovers, because the screenshot is a separate file nobody
+ * thought to update. A frame cut from the video itself can't drift out of sync
+ * with it.
+ *
+ * Returns null rather than throwing if the browser can't decode the file — the
+ * caller falls back to the first screenshot, which is where we started.
+ */
+export async function captureVideoPoster(file: File): Promise<Blob | null> {
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.preload = "auto";
+  video.muted = true;
+  video.playsInline = true;
+  video.src = url;
+
+  try {
+    await once(video, "loadeddata");
+    // Not frame 0: recordings routinely open on a fade-in, a blank editor or a
+    // desktop, and a poster of nothing sells nothing. A moment in is
+    // representative without being arbitrary.
+    const target = Math.min(1, (Number.isFinite(video.duration) ? video.duration : 2) / 10);
+    video.currentTime = target;
+    await once(video, "seeked");
+
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    if (!width || !height) return null;
+
+    // Capped at 1280 wide: this is a poster behind a 288px card and a
+    // ~700px stage, and a retina capture is pointlessly heavy for both.
+    const scale = Math.min(1, 1280 / width);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(width * scale);
+    canvas.height = Math.round(height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // JPEG, not PNG: a screen recording frame is a photograph as far as the
+    // encoder is concerned, and the PNG screenshots sellers upload run to 1MB+.
+    return await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.82)
+    );
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+    video.src = "";
+  }
+}
+
+/** Resolve on an event, reject on error, so the steps above can be awaited. */
+function once(el: HTMLVideoElement, event: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const ok = () => {
+      cleanup();
+      resolve();
+    };
+    const fail = () => {
+      cleanup();
+      reject(new Error(`video ${event} failed`));
+    };
+    const cleanup = () => {
+      el.removeEventListener(event, ok);
+      el.removeEventListener("error", fail);
+    };
+    el.addEventListener(event, ok, { once: true });
+    el.addEventListener("error", fail, { once: true });
+  });
+}

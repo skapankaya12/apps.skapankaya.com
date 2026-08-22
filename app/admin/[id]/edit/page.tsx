@@ -8,8 +8,8 @@ import {
   adminUpdateListing,
   getCategories,
 } from "@/lib/store";
-import { uploadDemoVideo, uploadScreenshots } from "@/lib/storage";
-import { validateDemo } from "@/lib/media";
+import { uploadDemoVideo, uploadPoster, uploadScreenshots } from "@/lib/storage";
+import { captureVideoPoster, validateDemo } from "@/lib/media";
 import { RUNTIME_LABELS, type Runtime, type SetupMode } from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, StatusBadge } from "@/components/ui";
@@ -147,13 +147,20 @@ function EditForm({
       // listing.sellerId here would fail with a 403. Safe to diverge because
       // these are public marketing assets read straight from their URL — unlike
       // the .zip, whose path the download route binds back to the seller.
-      const [demoUrl, newShotUrls] = await Promise.all([
+      const [demoUrl, newShotUrls, posterUrl] = await Promise.all([
         demoFile
           ? uploadDemoVideo(uploaderUid, listing.id, demoFile)
           : Promise.resolve(listing.demoVideo),
         shotFiles.length
           ? uploadScreenshots(uploaderUid, listing.id, shotFiles)
           : Promise.resolve<string[]>([]),
+        // Replacing the demo re-cuts its poster. Without this, swapping a video
+        // left the old recording's frame on the card until someone hovered —
+        // the poster was the first screenshot, a separate file nobody thought
+        // to change.
+        demoFile
+          ? capturePoster(uploaderUid, listing.id, demoFile)
+          : Promise.resolve(listing.posterImage),
       ]);
 
       await adminUpdateListing(listing.id, {
@@ -167,6 +174,7 @@ function EditForm({
         version: version.trim() || listing.version,
         screenshots: [...existingShots, ...newShotUrls].slice(0, 5),
         demoVideo: demoUrl,
+        posterImage: posterUrl,
         // Empty string, not undefined: the client is configured with
         // ignoreUndefinedProperties, so an undefined field is dropped from the
         // update rather than written — which on an edit form means clearing a
@@ -465,4 +473,26 @@ function EditForm({
       </form>
     </Section>
   );
+}
+
+/**
+ * Grab and upload a poster for a demo.
+ *
+ * Never fatal — a demo that saves without a poster is far better than one that
+ * doesn't save. On failure it returns "" rather than undefined, and that matters:
+ * the Firestore client ignores undefined fields, so undefined would leave the
+ * PREVIOUS video's poster attached to the new video. "" clears it, and rendering
+ * falls back to the first screenshot.
+ */
+async function capturePoster(
+  uid: string,
+  listingId: string,
+  file: File
+): Promise<string> {
+  try {
+    const blob = await captureVideoPoster(file);
+    return blob ? await uploadPoster(uid, listingId, blob) : "";
+  } catch {
+    return "";
+  }
 }

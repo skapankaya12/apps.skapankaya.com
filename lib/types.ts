@@ -69,6 +69,18 @@ export interface Listing {
   screenshots: string[];
   /** Required demo video URL. Doubles as the card's visual, playing on hover. */
   demoVideo?: string;
+  /**
+   * Still frame grabbed from the demo video at upload, used as its poster.
+   *
+   * Before this, the poster was the listing's first screenshot — which meant
+   * replacing a demo left the old recording's frame sitting on the card until
+   * someone hovered, because the screenshot is a different file nobody thought
+   * to change. A poster cut from the video itself cannot disagree with it.
+   *
+   * Optional: listings from before this, and any demo whose first frame can't
+   * be decoded, still fall back to the first screenshot.
+   */
+  posterImage?: string;
   status: ListingStatus;
   version: string;
   /** Path to the uploaded App Package zip in storage. */

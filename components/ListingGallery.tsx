@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { firstScreenshot, isImageSrc } from "@/lib/utils";
+import { isImageSrc, listingPoster } from "@/lib/utils";
 
 type MediaItem =
   | { kind: "video"; src: string }
@@ -24,10 +24,12 @@ function classify(src: string): MediaItem {
  */
 export function ListingGallery({
   demoVideo,
+  posterImage,
   screenshots,
   title,
 }: {
   demoVideo?: string;
+  posterImage?: string;
   screenshots: string[];
   title: string;
 }) {
@@ -55,7 +57,7 @@ export function ListingGallery({
   // A demo is a big file that a phone has no way to start (nothing hovers), so
   // an unposted <video> is just a black rectangle. The first screenshot stands
   // in until playback begins — and stays put if the video never decodes.
-  const poster = firstScreenshot(screenshots);
+  const poster = listingPoster({ posterImage, screenshots });
 
   // Moving off the video should stop it — otherwise its audio keeps playing
   // over a screenshot the buyer has moved on to.

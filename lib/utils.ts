@@ -37,11 +37,30 @@ export function isImageSrc(src: string): boolean {
 }
 
 /**
- * The first screenshot that is a real image, used as the poster frame for a
- * listing's demo video. A demo is a big file in a container the browser may not
- * even decode, so without a poster the video is a black rectangle — which is
- * all a phone ever shows, since nothing there can hover to start playback.
+ * The first screenshot that is a real image.
+ *
+ * Only a fallback for the poster now — see listingPoster. A demo is a big file
+ * in a container the browser may not even decode, so without a poster the video
+ * is a black rectangle, which is all a phone ever shows since nothing there can
+ * hover to start playback.
  */
 export function firstScreenshot(screenshots?: string[]): string | undefined {
   return screenshots?.find(isImageSrc);
+}
+
+/**
+ * The still to show before a listing's demo plays.
+ *
+ * Prefers the frame cut from the video at upload, because that one cannot
+ * disagree with what plays. The first screenshot is the fallback, for listings
+ * uploaded before posters existed and for demos whose frame couldn't be
+ * decoded — and it is exactly the case that made this function necessary:
+ * replacing a demo left the old recording's frame on the card, since the
+ * screenshot is a separate file nobody thought to replace.
+ */
+export function listingPoster(listing: {
+  posterImage?: string;
+  screenshots?: string[];
+}): string | undefined {
+  return listing.posterImage || firstScreenshot(listing.screenshots);
 }
