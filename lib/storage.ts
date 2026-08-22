@@ -27,6 +27,21 @@ import { app } from "./firebase";
 
 const storage = getStorage(app);
 
+/**
+ * Cache header for the public marketing assets (demo video, screenshots).
+ *
+ * Firebase Storage defaults to `private, max-age=0`, so every visit re-fetched
+ * every demo from scratch — tens of megabytes per browse page, per visit, for
+ * files that never change. `immutable` is safe here precisely because these
+ * paths are never reused: the demo is keyed by listing id and the screenshots
+ * carry an upload timestamp, so replacing one produces a new URL rather than
+ * new bytes at the old one.
+ *
+ * Not applied to packages — those are private and served through short-lived
+ * signed URLs, never cached by a browser.
+ */
+const PUBLIC_ASSET_CACHE = "public, max-age=31536000, immutable";
+
 /** Lowercase file extension including the dot, or "" if none. */
 function ext(name: string): string {
   const i = name.lastIndexOf(".");
@@ -57,7 +72,10 @@ export async function uploadDemoVideo(
 ): Promise<string> {
   const path = `public/demos/${uid}/${listingId}${ext(file.name) || ".mp4"}`;
   const r = ref(storage, path);
-  await uploadBytes(r, file, { contentType: file.type || "video/mp4" });
+  await uploadBytes(r, file, {
+    contentType: file.type || "video/mp4",
+    cacheControl: PUBLIC_ASSET_CACHE,
+  });
   return getDownloadURL(r);
 }
 
@@ -76,7 +94,10 @@ export async function uploadScreenshots(
         ext(file.name) || ".png"
       }`;
       const r = ref(storage, path);
-      await uploadBytes(r, file, { contentType: file.type || "image/png" });
+      await uploadBytes(r, file, {
+        contentType: file.type || "image/png",
+        cacheControl: PUBLIC_ASSET_CACHE,
+      });
       return getDownloadURL(r);
     })
   );
