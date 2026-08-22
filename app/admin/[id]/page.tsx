@@ -87,7 +87,12 @@ export default function AdminReviewPage() {
 
   return (
     <Section className="max-w-4xl py-12">
-      <ButtonLink href="/admin" variant="ghost" size="sm">← Review queue</ButtonLink>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <ButtonLink href="/admin" variant="ghost" size="sm">← Review queue</ButtonLink>
+        <ButtonLink href={`/admin/${listing.id}/edit`} variant="secondary" size="sm">
+          Edit listing
+        </ButtonLink>
+      </div>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
         {/* Submission details */}

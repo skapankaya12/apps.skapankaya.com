@@ -26,6 +26,8 @@ import {
   type AppUser,
 } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
+import { Field, inputClass } from "@/components/ui/form";
+import { MAX_PACKAGE_BYTES, validateDemo } from "@/lib/media";
 import { safeHttpsUrl } from "@/lib/utils";
 
 export default function NewListingPage() {
@@ -316,24 +318,10 @@ function ListingForm({
       setDemoFile(null);
       return;
     }
-    if (file.size > MAX_DEMO_BYTES) {
+    const problem = await validateDemo(file);
+    if (problem) {
       setDemoFile(null);
-      setDemoError(
-        "That video is over 150MB. Export it smaller rather than shorter — 1080p is plenty."
-      );
-      return;
-    }
-    let duration: number | null = null;
-    try {
-      duration = await readVideoDuration(file);
-    } catch {
-      duration = null; // couldn't read metadata; fall through and allow it
-    }
-    if (duration !== null && duration > MAX_DEMO_SECONDS + 1) {
-      setDemoFile(null);
-      setDemoError(
-        `Demo videos must be ${MAX_DEMO_SECONDS} seconds or shorter (this one is ${Math.round(duration)}s).`
-      );
+      setDemoError(problem);
       return;
     }
     setDemoFile(file);
@@ -581,7 +569,7 @@ function ListingForm({
         {/* Demo video, required */}
         <Field
           label="Demo video (required)"
-          hint="A short screen recording of the tool in action — up to 40 seconds and 150MB. It's the single biggest thing that sells a small tool, so keep it tight. Buyers watch this on their phone too: aim for under 25MB at 1080p."
+          hint="A short screen recording of the tool in action — up to 40 seconds and 150MB. It's the single biggest thing that sells a small tool, so keep it tight. Export MP4 (H.264) — .mov won't play for buyers on Android. They watch this on a phone, so aim for under 25MB at 1080p."
         >
           <label
             className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
@@ -595,14 +583,14 @@ function ListingForm({
                 ? `▶ ${demoFile.name}`
                 : existingDemo
                   ? "▶ Current demo video — click to replace"
-                  : "Click to upload a demo video (mp4, mov, webm)"}
+                  : "Click to upload a demo video (mp4 or webm)"}
             </span>
             <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
               Browse
             </span>
             <input
               type="file"
-              accept="video/*"
+              accept="video/mp4,video/webm"
               className="hidden"
               onChange={(e) => pickDemo(e.target.files?.[0] ?? null)}
             />
@@ -761,9 +749,6 @@ function LeaveWarning({
   );
 }
 
-const inputClass =
-  "w-full rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-4 py-2.5 text-sm outline-none focus:border-[var(--accent)]";
-
 /**
  * The typed half of the form, kept in localStorage so a refresh, a crash or a
  * misclick doesn't cost the seller twenty minutes of writing. Files are not in
@@ -856,51 +841,4 @@ function savedAgo(ts: number) {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// Upload limits. These are mirrored in storage.rules — raising one without the
-// other just moves the failure from a friendly message to a raw 403.
-//
-// The demo ceiling is deliberately far above what a good demo weighs: an
-// unedited QuickTime screen recording is wildly inefficient (a 40s retina
-// capture can pass 100MB) and we'd rather accept it than lose the listing. The
-// video still plays on hover in the browse grid, so the form nudges sellers
-// toward something small — the cap is a backstop, not a target.
-const MAX_DEMO_BYTES = 150 * 1024 * 1024;
-const MAX_DEMO_SECONDS = 40;
-const MAX_PACKAGE_BYTES = 200 * 1024 * 1024;
 
-/** Read a video file's duration (seconds) from its metadata, without playing it. */
-function readVideoDuration(file: File): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const v = document.createElement("video");
-    v.preload = "metadata";
-    v.onloadedmetadata = () => {
-      const d = v.duration;
-      URL.revokeObjectURL(v.src);
-      resolve(d);
-    };
-    v.onerror = () => {
-      URL.revokeObjectURL(v.src);
-      reject(new Error("cannot read video metadata"));
-    };
-    v.src = URL.createObjectURL(file);
-  });
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      {hint && <p className="mb-1.5 mt-0.5 text-xs text-[var(--muted)]">{hint}</p>}
-      {!hint && <div className="mb-1.5" />}
-      {children}
-    </div>
-  );
-}

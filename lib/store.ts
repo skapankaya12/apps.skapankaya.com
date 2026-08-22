@@ -568,6 +568,56 @@ export async function updateListing(
   });
 }
 
+/** What an admin is allowed to rewrite on someone else's listing. */
+export type AdminListingEdit = Pick<
+  Listing,
+  | "title"
+  | "tagline"
+  | "description"
+  | "category"
+  | "runtime"
+  | "setupMode"
+  | "priceCents"
+  | "version"
+  | "screenshots"
+  | "sellerBio"
+  | "sellerEmail"
+  | "sellerWebsite"
+> & { demoVideo?: string };
+
+/**
+ * Edit a listing as an admin: fix a typo, re-file it, replace a demo video the
+ * browser can't play.
+ *
+ * Deliberately not `updateListing`. That one resets status to "pending" and
+ * clears the review note, which is right for a seller resubmitting — but an
+ * admin correcting a live listing would be pulling the tool off the marketplace
+ * as a side effect of fixing its tagline. Status and reviewNote are left
+ * exactly as they were, same reasoning as setListingCategory below.
+ *
+ * Three fields are absent on purpose, and it matters:
+ *   - `sellerId` / `sellerName`, because the checkout route resolves the payout
+ *     account from sellerId. Rewriting it while saving would silently redirect
+ *     the seller's earnings to whoever did the edit.
+ *   - `packagePath`, because the download route only mints URLs for a package
+ *     sitting under the seller's own uid folder (see app/api/download). An
+ *     admin-uploaded replacement would land under the admin's uid and break
+ *     downloads for every buyer. Swapping the product itself stays the
+ *     seller's job.
+ *
+ * The Firestore rules are the real gate — an admin may update any listing — so
+ * a non-admin calling this is refused by the server, not merely hidden from.
+ */
+export async function adminUpdateListing(
+  id: string,
+  input: AdminListingEdit
+): Promise<void> {
+  await updateDoc(doc(db, "listings", id), {
+    ...input,
+    updatedAt: Date.now(),
+  });
+}
+
 export async function reviewListing(
   id: string,
   decision: "approved" | "rejected",

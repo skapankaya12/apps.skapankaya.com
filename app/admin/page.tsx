@@ -91,8 +91,8 @@ export default function AdminPage() {
       {(approved.length > 0 || rejected.length > 0) && (
         <>
           <h2 className="mt-12 text-lg font-semibold">All listings</h2>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)]">
-            <table className="w-full text-sm">
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--border)]">
+            <table className="w-full min-w-[36rem] text-sm">
               <thead className="bg-[var(--surface-muted)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
                 <tr>
                   <th className="px-5 py-3 font-medium">App</th>
@@ -103,6 +103,11 @@ export default function AdminPage() {
                   <th className="px-5 py-3 font-medium">Category</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Sales</th>
+                  {/* Straight to the edit form. Most admin fixes — a typo, a
+                      wrong filter, an unplayable demo — start from this table,
+                      and routing them via the review page first is a click
+                      spent re-reading a checklist nobody is filling in. */}
+                  <th className="px-5 py-3 font-medium"><span className="sr-only">Edit</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -119,6 +124,14 @@ export default function AdminPage() {
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={l.status} /></td>
                     <td className="px-5 py-3 tabular-nums">{l.salesCount}</td>
+                    <td className="px-5 py-3 text-right">
+                      <Link
+                        href={`/admin/${l.id}/edit`}
+                        className="text-sm font-medium text-[var(--accent)] hover:underline"
+                      >
+                        Edit
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
