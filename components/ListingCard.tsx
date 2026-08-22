@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { Listing } from "@/lib/types";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
@@ -26,15 +27,29 @@ import { ListingMedia } from "./ListingMedia";
 export function ListingCard({ listing }: { listing: Listing }) {
   const saved = useStoreValue(() => isBookmarked(listing.id));
   const href = `/app/${listing.slug}`;
+  /*
+    The row, not the media panel, is the hover target — and it has to be. The
+    stretched ::after below covers the whole card, media included, so a pointer
+    over the video hit-tests to that overlay and never enters the media panel:
+    handlers on the media itself simply never fired, and the demo never played.
+
+    Hovering anywhere on the row also just reads better. The row is one object.
+  */
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-strong)] sm:flex-row">
-      {/* Screenshot is the cover; the demo plays over it on hover */}
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-strong)] sm:flex-row"
+    >
+      {/* Screenshot is the cover; the demo plays over it while the row is hovered */}
       <div className="shrink-0 sm:w-72">
         <ListingMedia
           src={listing.demoVideo}
           poster={firstScreenshot(listing.screenshots)}
           title={listing.title}
+          play={hovered}
           rounded="rounded-none"
         />
       </div>

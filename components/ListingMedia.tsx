@@ -1,11 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * A listing's visual. Shows a still image, and plays the demo video on hover
- * (muted + looping, which browsers allow without a user gesture). Falls back to
- * a title monogram when a listing has neither.
+ * A listing's visual: a still image that plays the demo video while `play` is
+ * true (muted + looping, which browsers allow without a user gesture). Falls
+ * back to a title monogram when a listing has neither.
+ *
+ * Playback is driven by a prop rather than this component's own hover, because
+ * this component is never actually hoverable. Its card stretches the title
+ * link's ::after over the whole row to make the row clickable, and that overlay
+ * sits on top of the media — so `onMouseEnter` here never fired and the demo
+ * never played. The card owns the hover now (see ListingCard) and tells us. The
+ * local handlers below stay as a fallback for any caller that doesn't pass
+ * `play`, so this still works standalone.
  *
  * That still is the listing's first screenshot, passed in as the video's
  * poster. Relying on the video to render its own first frame put a black
@@ -24,18 +32,22 @@ export function ListingMedia({
   src,
   poster,
   title,
+  play,
   className = "",
   rounded = "rounded-xl",
 }: {
   src?: string;
   poster?: string;
   title: string;
+  /** Whether the demo should be running. Omit to let this component's own hover decide. */
+  play?: boolean;
   className?: string;
   rounded?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [failed, setFailed] = useState(false);
+  const controlled = play !== undefined;
 
   function start() {
     const v = videoRef.current;
@@ -51,6 +63,12 @@ export function ListingMedia({
     v.currentTime = 0;
     setPlaying(false);
   }
+
+  useEffect(() => {
+    if (!controlled) return;
+    if (play) start();
+    else stop();
+  }, [controlled, play]);
 
   if (!src || failed) {
     if (poster) {
@@ -77,10 +95,10 @@ export function ListingMedia({
 
   return (
     <div
-      onMouseEnter={start}
-      onMouseLeave={stop}
-      onFocus={start}
-      onBlur={stop}
+      onMouseEnter={controlled ? undefined : start}
+      onMouseLeave={controlled ? undefined : stop}
+      onFocus={controlled ? undefined : start}
+      onBlur={controlled ? undefined : stop}
       className={`relative aspect-video overflow-hidden bg-[var(--surface-muted)] ${rounded} ${className}`}
     >
       <video
@@ -90,7 +108,16 @@ export function ListingMedia({
         muted
         loop
         playsInline
-        preload="metadata"
+        /*
+          Nothing is fetched until someone actually wants to watch. A demo is
+          tens of megabytes, and a browse page of them was pulling all of it on
+          load for videos most visitors never hover. The poster carries the
+          visual until then; play() starts the fetch.
+
+          Without a poster there'd be nothing at all to show, so those fall back
+          to loading metadata for a first frame.
+        */
+        preload={poster ? "none" : "metadata"}
         onError={() => setFailed(true)}
         className="h-full w-full object-contain"
       />
