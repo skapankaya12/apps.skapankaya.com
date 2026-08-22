@@ -24,3 +24,24 @@ export function safeHttpsUrl(value?: string): string | undefined {
     return undefined;
   }
 }
+
+/**
+ * True when a `Listing.screenshots` entry is a renderable image and not a label.
+ *
+ * The field is a mixed bag by design (see the type): production listings store
+ * Storage URLs, while seed and older listings store plain text like
+ * "Before / after cleanup". Only the URLs can go in an `<img>`.
+ */
+export function isImageSrc(src: string): boolean {
+  return /^https?:\/\//.test(src) || src.startsWith("/");
+}
+
+/**
+ * The first screenshot that is a real image, used as the poster frame for a
+ * listing's demo video. A demo is a big file in a container the browser may not
+ * even decode, so without a poster the video is a black rectangle — which is
+ * all a phone ever shows, since nothing there can hover to start playback.
+ */
+export function firstScreenshot(screenshots?: string[]): string | undefined {
+  return screenshots?.find(isImageSrc);
+}

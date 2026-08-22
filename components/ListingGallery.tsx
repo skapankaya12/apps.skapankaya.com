@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { firstScreenshot, isImageSrc } from "@/lib/utils";
 
 type MediaItem =
   | { kind: "video"; src: string }
@@ -9,9 +10,7 @@ type MediaItem =
   | { kind: "label"; src: string };
 
 function classify(src: string): MediaItem {
-  return /^https?:\/\//.test(src) || src.startsWith("/")
-    ? { kind: "image", src }
-    : { kind: "label", src };
+  return isImageSrc(src) ? { kind: "image", src } : { kind: "label", src };
 }
 
 /**
@@ -32,17 +31,31 @@ export function ListingGallery({
   screenshots: string[];
   title: string;
 }) {
-  const items: MediaItem[] = [
-    ...(demoVideo ? [{ kind: "video" as const, src: demoVideo }] : []),
-    ...screenshots.slice(0, 5).map(classify),
-  ];
-
-  const [index, setIndex] = useState(0);
+  const [rawIndex, setIndex] = useState(0);
+  // Sellers upload whatever their screen recorder produced, and a QuickTime
+  // .mov is not something every browser can decode. When the demo turns out to
+  // be one of those, drop it and let the screenshots carry the listing rather
+  // than leading with a stage that never plays.
+  const [videoFailed, setVideoFailed] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const video = demoVideo && !videoFailed ? demoVideo : undefined;
+  const items: MediaItem[] = [
+    ...(video ? [{ kind: "video" as const, src: video }] : []),
+    ...screenshots.slice(0, 5).map(classify),
+  ];
+
   const count = items.length;
+  // Clamp rather than reset: dropping a failed video shortens the list under a
+  // selection that may already be past the new end.
+  const index = Math.min(rawIndex, Math.max(count - 1, 0));
   const current = items[index];
+
+  // A demo is a big file that a phone has no way to start (nothing hovers), so
+  // an unposted <video> is just a black rectangle. The first screenshot stands
+  // in until playback begins — and stays put if the video never decodes.
+  const poster = firstScreenshot(screenshots);
 
   // Moving off the video should stop it — otherwise its audio keeps playing
   // over a screenshot the buyer has moved on to.
@@ -52,8 +65,13 @@ export function ListingGallery({
 
   if (count === 0) {
     return (
-      <div className="grid aspect-video place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] text-sm text-[var(--muted)]">
-        No demo video yet
+      <div className="grid aspect-video place-items-center rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-6 text-center text-sm text-[var(--muted)]">
+        {/* A listing with a demo but no screenshots has nothing left to show
+            once the demo turns out to be unplayable. Say which of the two it
+            is, so a buyer knows the tool isn't the thing that's broken. */}
+        {videoFailed
+          ? "This demo video won't play in your browser."
+          : "No demo video yet"}
       </div>
     );
   }
@@ -87,18 +105,20 @@ export function ListingGallery({
           <video
             ref={videoRef}
             src={current.src}
+            poster={poster}
             controls
             muted
             loop
             playsInline
             preload="metadata"
-            className="aspect-video w-full"
+            onError={() => setVideoFailed(true)}
+            className="aspect-video w-full object-contain"
           />
         ) : current.kind === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={current.src}
-            alt={`${title} — screenshot ${index + (demoVideo ? 0 : 1)}`}
+            alt={`${title} — screenshot ${index + (video ? 0 : 1)}`}
             className="aspect-video w-full bg-[var(--surface-muted)] object-contain"
           />
         ) : (
@@ -118,8 +138,15 @@ export function ListingGallery({
         )}
       </div>
 
+      {/*
+        `w-0 min-w-full` on the strip keeps it from reporting its scrolled-away
+        width as a size requirement. Chrome sizes an overflow container's
+        intrinsic width from its contents, so five tiles asked every ancestor
+        for 528px — width:0 makes that contribution nothing, and min-width takes
+        the row back out to the column it actually sits in.
+      */}
       {count > 1 && (
-        <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+        <div className="mt-3 flex w-0 min-w-full gap-3 overflow-x-auto pb-1">
           {items.map((item, i) => (
             <button
               key={i}

@@ -82,9 +82,17 @@ export function ListingDetail({
         ← Browse
       </Link>
 
-      <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_340px]">
+      {/*
+        `min-w-0` on both cells is load-bearing, not tidying. A grid item
+        defaults to `min-width: auto`, so the column grows to fit its widest
+        unbreakable content instead of the container — and the gallery's
+        thumbnail strip is five 96px tiles, i.e. 528px of it. On a 375px phone
+        that stretched the single mobile column to 528px and pushed the whole
+        page sideways: headings, badges and video all clipped at the right edge.
+      */}
+      <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Main */}
-        <div>
+        <div className="min-w-0">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">{listing.title}</h1>
             <p className="mt-1 text-lg text-[var(--muted)]">{listing.tagline}</p>
@@ -155,8 +163,11 @@ export function ListingDetail({
                   {listing.sellerName.trim().charAt(0).toUpperCase() || "?"}
                 </div>
                 <div className="min-w-0">
-                  <div className="font-medium">{listing.sellerName}</div>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
+                  {/* break-words: a name or bio can carry a long URL or an
+                      unspaced run, which otherwise pushes straight out of the
+                      card on a phone instead of wrapping. */}
+                  <div className="break-words font-medium">{listing.sellerName}</div>
+                  <p className="mt-1 break-words text-sm text-[var(--muted)]">
                     {listing.sellerBio?.trim() ||
                       "An independent maker selling small, local-first tools on the marketplace."}
                   </p>
@@ -194,7 +205,7 @@ export function ListingDetail({
         </div>
 
         {/* Buy sidebar */}
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)]">
             <div className="flex items-start justify-between">
               <div>

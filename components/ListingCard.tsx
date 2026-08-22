@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Listing } from "@/lib/types";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
+import { firstScreenshot } from "@/lib/utils";
 import { ListingMedia } from "./ListingMedia";
 
 /**
@@ -27,9 +28,14 @@ export function ListingCard({ listing }: { listing: Listing }) {
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-strong)] sm:flex-row">
-      {/* Demo video doubles as the cover, playing on hover */}
+      {/* Screenshot is the cover; the demo plays over it on hover */}
       <div className="shrink-0 sm:w-72">
-        <ListingMedia src={listing.demoVideo} title={listing.title} rounded="rounded-none" />
+        <ListingMedia
+          src={listing.demoVideo}
+          poster={firstScreenshot(listing.screenshots)}
+          title={listing.title}
+          rounded="rounded-none"
+        />
       </div>
 
       <button

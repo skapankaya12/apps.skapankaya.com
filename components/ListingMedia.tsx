@@ -3,9 +3,16 @@
 import { useRef, useState } from "react";
 
 /**
- * A listing's visual. Shows a still first frame, and plays the demo video on
- * hover (muted + looping, which browsers allow without a user gesture).
- * Falls back to a title monogram when a listing has no video yet.
+ * A listing's visual. Shows a still image, and plays the demo video on hover
+ * (muted + looping, which browsers allow without a user gesture). Falls back to
+ * a title monogram when a listing has neither.
+ *
+ * That still is the listing's first screenshot, passed in as the video's
+ * poster. Relying on the video to render its own first frame put a black
+ * rectangle on every card on a phone: touch devices never hover, so playback
+ * never starts, and a demo in a container the browser can't decode (a .mov,
+ * say) shows nothing anywhere. A poster paints immediately in both cases, and
+ * survives the video failing outright.
  *
  * The frame is 16:9 but demo videos are whatever shape the maker recorded —
  * a 16:10 Mac screen, a square capture, a phone in portrait. The video is
@@ -15,11 +22,13 @@ import { useRef, useState } from "react";
  */
 export function ListingMedia({
   src,
+  poster,
   title,
   className = "",
   rounded = "rounded-xl",
 }: {
   src?: string;
+  poster?: string;
   title: string;
   className?: string;
   rounded?: string;
@@ -44,6 +53,17 @@ export function ListingMedia({
   }
 
   if (!src || failed) {
+    if (poster) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={poster}
+          alt=""
+          loading="lazy"
+          className={`aspect-video w-full bg-[var(--surface-muted)] object-contain ${rounded} ${className}`}
+        />
+      );
+    }
     return (
       <div
         className={`grid aspect-video place-items-center bg-[var(--surface-muted)] ${rounded} ${className}`}
@@ -66,6 +86,7 @@ export function ListingMedia({
       <video
         ref={videoRef}
         src={src}
+        poster={poster}
         muted
         loop
         playsInline
