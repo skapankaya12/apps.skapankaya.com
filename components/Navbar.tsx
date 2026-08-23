@@ -58,7 +58,7 @@ export function Navbar() {
               width={1160}
               height={620}
               priority
-              className="h-10 w-auto rounded-md"
+              className="h-10 w-auto"
             />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
