@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LiquidMetalButton } from "@/components/ui/liquid-metal-button";
 
 /**
  * Launch-list signup, shown inside the pre-launch card.
@@ -73,13 +74,13 @@ export function WaitlistForm() {
           autoComplete="email"
           className="min-w-0 flex-1 rounded-lg border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
         />
-        <button
+        <LiquidMetalButton
           type="submit"
           disabled={!valid || state === "busy"}
-          className="shrink-0 rounded-lg bg-[var(--accent)] px-3.5 py-2 text-sm font-medium text-[var(--accent-fg)] transition-opacity hover:opacity-90 disabled:pointer-events-none disabled:opacity-50"
+          className="shrink-0 px-3.5 py-2"
         >
           {state === "busy" ? "…" : "Notify me"}
-        </button>
+        </LiquidMetalButton>
       </div>
       <p className="mt-1.5 text-xs text-[var(--muted)]">
         One email, at launch. Nothing else, and we never pass it on.

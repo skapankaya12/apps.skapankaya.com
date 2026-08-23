@@ -9,6 +9,7 @@ import { logout, getCart, getBookmarks } from "@/lib/store";
 import type { AppUser } from "@/lib/types";
 import Image from "next/image";
 import { ButtonLink } from "./ui";
+import { LiquidMetalButton } from "./ui/liquid-metal-button";
 
 const navItems = [
   { href: "/browse", label: "Browse" },
@@ -56,6 +57,20 @@ export function Navbar() {
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => {
               const active = pathname.startsWith(item.href);
+              // The seller CTA is the one nav item that gets the treatment —
+              // it is what this pre-launch phase is recruiting for. Making all
+              // four a shader would be four WebGL contexts and no hierarchy.
+              if (item.href === "/sell") {
+                return (
+                  <LiquidMetalButton
+                    key={item.href}
+                    href={item.href}
+                    className="mx-1 px-3.5 py-1.5"
+                  >
+                    {item.label}
+                  </LiquidMetalButton>
+                );
+              }
               return (
                 <Link
                   key={item.href}
