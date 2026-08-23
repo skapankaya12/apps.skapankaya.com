@@ -25,7 +25,10 @@ import {
   updatePassword,
   verifyBeforeUpdateEmail,
   reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  signInWithPopup,
   EmailAuthProvider,
+  GoogleAuthProvider,
 } from "firebase/auth";
 import { auth, db } from "./firebase";
 import {
@@ -71,6 +74,8 @@ let clientReady = false;
 let currentUser: AppUser | null = null;
 /** Whether the signed-in user's email is verified (from Firebase Auth, not the doc). */
 let currentEmailVerified = false;
+/** Sign-in providers on the current account, e.g. ["password"], ["google.com"]. */
+let currentProviders: string[] = [];
 /** True once the public approved-listings listener has responded at least once. */
 let listingsLoaded = false;
 let approvedListings: Listing[] = []; // public: every approved listing
@@ -179,6 +184,7 @@ export function markClientReady() {
     if (!fbUser) {
       currentUser = null;
       currentEmailVerified = false;
+      currentProviders = [];
       contextListings = [];
       purchases = [];
       emit();
@@ -186,6 +192,7 @@ export function markClientReady() {
     }
 
     currentEmailVerified = fbUser.emailVerified;
+    currentProviders = fbUser.providerData.map((p) => p.providerId);
 
     // Ensure a user doc exists (first sign-in creates it as a buyer). Prefer the
     // Auth displayName (set at signup); fall back to the email's local part.
@@ -233,6 +240,36 @@ export function getUser(): AppUser | null {
 /** Whether the signed-in user has verified their email. False when signed out. */
 export function isEmailVerified(): boolean {
   return clientReady ? currentEmailVerified : true;
+}
+
+/**
+ * Whether this account can sign in with a password. Google-only accounts can't,
+ * so the password and email panels in /account don't apply to them and
+ * re-authentication has to go back through Google.
+ */
+export function hasPasswordSignIn(): boolean {
+  return clientReady ? currentProviders.includes("password") : true;
+}
+
+/** A Google provider that always asks which account to use. */
+function googleProvider(): GoogleAuthProvider {
+  const provider = new GoogleAuthProvider();
+  // Without this, Google silently reuses whichever account the browser is
+  // already signed into — surprising on a shared machine.
+  provider.setCustomParameters({ prompt: "select_account" });
+  return provider;
+}
+
+/**
+ * Sign in (or sign up — Google doesn't distinguish) with a Google account.
+ *
+ * Popup rather than redirect: browsers that partition third-party storage break
+ * the redirect flow, and the popup is started from a click so it isn't blocked.
+ * The user doc is created by the onAuthStateChanged handler above, using the
+ * name Google gives us.
+ */
+export async function signInWithGoogle(): Promise<void> {
+  await signInWithPopup(auth, googleProvider());
 }
 
 export async function signUp(email: string, password: string, displayName?: string) {
@@ -310,9 +347,36 @@ export async function updateDisplayName(name: string): Promise<void> {
  * the person at the keyboard is the account owner. Maps common errors to
  * friendly messages.
  */
-async function reauthenticate(currentPassword: string): Promise<void> {
+async function reauthenticate(currentPassword?: string): Promise<void> {
   const u = auth.currentUser;
-  if (!u || !u.email) throw new Error("You're not signed in.");
+  if (!u) throw new Error("You're not signed in.");
+
+  // Google-only account: there's no password to check, so prove it's them by
+  // signing in through Google again.
+  if (!currentProviders.includes("password")) {
+    try {
+      await reauthenticateWithPopup(u, googleProvider());
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (
+        code === "auth/popup-closed-by-user" ||
+        code === "auth/cancelled-popup-request"
+      ) {
+        throw new Error("Google sign-in was closed before it finished.");
+      }
+      if (code === "auth/popup-blocked") {
+        throw new Error("Your browser blocked the Google window. Allow popups and try again.");
+      }
+      if (code === "auth/user-mismatch") {
+        throw new Error("That's a different Google account. Use the one you signed in with.");
+      }
+      throw new Error("Couldn't confirm it's you with Google. Please try again.");
+    }
+    return;
+  }
+
+  if (!u.email) throw new Error("You're not signed in.");
+  if (!currentPassword) throw new Error("Enter your current password.");
   const cred = EmailAuthProvider.credential(u.email, currentPassword);
   try {
     await reauthenticateWithCredential(u, cred);
@@ -335,6 +399,9 @@ export async function changePassword(
 ): Promise<void> {
   const u = auth.currentUser;
   if (!u) throw new Error("You're not signed in.");
+  if (!hasPasswordSignIn()) {
+    throw new Error("Your password is managed by Google.");
+  }
   if (newPassword.length < 6) throw new Error("Use at least 6 characters.");
   await reauthenticate(currentPassword);
   await updatePassword(u, newPassword);
@@ -351,6 +418,9 @@ export async function changeEmail(
 ): Promise<void> {
   const u = auth.currentUser;
   if (!u) throw new Error("You're not signed in.");
+  if (!hasPasswordSignIn()) {
+    throw new Error("Your email address is managed by Google.");
+  }
   const email = newEmail.trim();
   if (!email.includes("@")) throw new Error("Enter a valid email.");
   await reauthenticate(currentPassword);
@@ -361,7 +431,7 @@ export async function changeEmail(
  * Permanently delete the account. Re-authenticates first, then the server (Admin
  * SDK) removes the user doc + auth account. Signs out afterwards.
  */
-export async function deleteAccount(currentPassword: string): Promise<void> {
+export async function deleteAccount(currentPassword?: string): Promise<void> {
   const u = auth.currentUser;
   if (!u) throw new Error("You're not signed in.");
   await reauthenticate(currentPassword);

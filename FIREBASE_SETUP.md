@@ -2,7 +2,7 @@
 
 **Status:** the data layer is already migrated — `lib/store.ts` reads and writes
 Firestore live (via `onSnapshot`), auth is real email/password with email
-verification + password reset, and `lib/firebase.ts` is initialised from
+verification + password reset plus Google sign-in, and `lib/firebase.ts` is initialised from
 `NEXT_PUBLIC_*` env vars. What's left is project setup, deploying the rules,
 Storage-backed file delivery, and Stripe. Do it in this order.
 
@@ -11,13 +11,16 @@ Storage-backed file delivery, and Stripe. Do it in this order.
 ## 1. Create the Firebase project
 1. [console.firebase.google.com](https://console.firebase.google.com) → **Add project**.
 2. Enable **Authentication** → **Sign-in method** → turn on **Email/Password**
-   (this is what the app uses today; Google is optional and not yet wired).
+   and **Google**. The app offers both; Google accounts arrive already verified,
+   so they skip the verification banner and have no password to manage.
    - **Templates → Email address verification**: set the sender name / wording.
      The app calls `sendEmailVerification` on signup and shows a "verify your
      email" banner until the user confirms (see `components/VerifyEmailBanner.tsx`).
    - **Templates → Password reset**: the "Forgot password?" flow uses this.
    - **Settings → Authorized domains**: add your production domain at deploy time
-     (`localhost` is already allowed for dev).
+     (`localhost` is already allowed for dev). Google sign-in opens a popup on
+     this domain, so it fails with `auth/unauthorized-domain` until the live
+     domain is listed.
 3. Enable **Firestore Database** (production mode, region close to your buyers).
 4. Enable **Storage** (this holds the app packages buyers download).
 5. Project settings → **Your apps** → Web app → copy the config into `.env.local`

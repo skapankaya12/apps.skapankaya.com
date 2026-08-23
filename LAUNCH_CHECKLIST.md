@@ -19,10 +19,11 @@ public launch · **P2** = soon after launch.
 - [x] ~~Remove the demo role switcher.~~ **Done.**
 - [x] ~~Draft the security rules.~~ **Done** — now version-controlled in
       `firestore.rules` / `storage.rules`, and the self-assign-admin hole is closed.
-- [ ] **Create the Firebase project** and enable **Auth (Email/Password)**,
+- [ ] **Create the Firebase project** and enable **Auth (Email/Password + Google)**,
       **Firestore**, **Storage** (manual, console — see FIREBASE_SETUP.md §1).
 - [ ] **Set the verification + password-reset email templates** (sender name),
       and add your production domain under Auth → Authorized domains at deploy.
+      Google sign-in's popup needs that domain listed too, or it errors out.
 - [ ] **Deploy the security rules**: `firebase deploy --only firestore:rules,storage`.
       Until this runs, the rules aren't live. **(Security-critical.)**
 - [ ] **Make yourself the first admin** (set `role: "admin"` on your user doc).

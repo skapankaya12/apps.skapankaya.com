@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/lib/hooks";
+import { useUser, useStoreValue } from "@/lib/hooks";
 import {
   updateDisplayName,
   changePassword,
   changeEmail,
   deleteAccount,
+  hasPasswordSignIn,
 } from "@/lib/store";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 
@@ -16,6 +17,9 @@ const inputClass =
 
 export default function AccountPage() {
   const user = useUser();
+  // Google-only accounts have no password here, and their email lives with
+  // Google — so those two panels would only offer them dead ends.
+  const hasPassword = useStoreValue(hasPasswordSignIn);
 
   if (!user) {
     return (
@@ -36,9 +40,15 @@ export default function AccountPage() {
 
       <div className="mt-8 space-y-6">
         <NameSection currentName={user.displayName} />
-        <PasswordSection />
-        <EmailSection currentEmail={user.email} />
-        <DangerSection />
+        {hasPassword ? (
+          <>
+            <PasswordSection />
+            <EmailSection currentEmail={user.email} />
+          </>
+        ) : (
+          <GoogleSection currentEmail={user.email} />
+        )}
+        <DangerSection hasPassword={hasPassword} />
       </div>
     </Section>
   );
@@ -114,6 +124,20 @@ function NameSection({ currentName }: { currentName: string }) {
         </Button>
       </div>
       <Feedback ok={ok} msg={msg} />
+    </Panel>
+  );
+}
+
+function GoogleSection({ currentEmail }: { currentEmail: string }) {
+  return (
+    <Panel
+      title="Sign-in"
+      description={`You sign in with Google as ${currentEmail}.`}
+    >
+      <p className="text-sm text-[var(--muted)]">
+        Your password and email address are managed in your Google Account, so
+        there&apos;s nothing to change here.
+      </p>
     </Panel>
   );
 }
@@ -233,7 +257,7 @@ function EmailSection({ currentEmail }: { currentEmail: string }) {
   );
 }
 
-function DangerSection() {
+function DangerSection({ hasPassword }: { hasPassword: boolean }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState(false);
@@ -244,7 +268,8 @@ function DangerSection() {
     setBusy(true);
     setMsg("");
     try {
-      await deleteAccount(password);
+      // Google accounts confirm it's them in the Google window instead.
+      await deleteAccount(hasPassword ? password : undefined);
       router.push("/");
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Couldn't delete your account.");
@@ -255,17 +280,23 @@ function DangerSection() {
   return (
     <Panel
       title="Delete account"
-      description="Permanently deletes your account and sign-in. This can't be undone."
+      description={
+        hasPassword
+          ? "Permanently deletes your account and sign-in. This can't be undone."
+          : "Permanently deletes your account and sign-in. You'll confirm with Google first. This can't be undone."
+      }
       danger
     >
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Current password"
-        autoComplete="current-password"
-        className={`${inputClass} max-w-xs`}
-      />
+      {hasPassword && (
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Current password"
+          autoComplete="current-password"
+          className={`${inputClass} max-w-xs`}
+        />
+      )}
       <label className="mt-3 flex items-start gap-2.5 text-sm text-[var(--muted)]">
         <input
           type="checkbox"
@@ -276,7 +307,11 @@ function DangerSection() {
         <span>I understand this permanently deletes my account and can&apos;t be undone.</span>
       </label>
       <div className="mt-3 flex items-center gap-3">
-        <Button variant="danger" onClick={remove} disabled={busy || !password || !confirm}>
+        <Button
+          variant="danger"
+          onClick={remove}
+          disabled={busy || (hasPassword && !password) || !confirm}
+        >
           {busy ? "Deleting…" : "Delete my account"}
         </Button>
         {msg && <Badge tone="danger">{msg}</Badge>}
