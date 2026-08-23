@@ -4,6 +4,7 @@ import { getApprovedListings } from "@/lib/listings.server";
 import { BrowseExperience } from "@/components/BrowseExperience";
 import { PreLaunchNotice } from "@/components/PreLaunchNotice";
 import { ButtonLink, Section, Badge } from "@/components/ui";
+import { GradientWave } from "@/components/ui/gradient-wave";
 
 export const revalidate = 300;
 
@@ -26,13 +27,30 @@ export default async function HomePage() {
     <>
       {/* Compact hero */}
       <div className="relative overflow-hidden border-b border-[var(--border)]">
-        <div className="bg-grid pointer-events-none absolute inset-0 opacity-70" />
+        {/* Backdrop, back to front: the animated gradient, then the hairline
+            grid on top of it. The grid is the page's signature and the gradient
+            alone reads as generic, so they layer rather than replace. Both are
+            masked out before the bottom border so nothing hard-cuts against it. */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            maskImage: "linear-gradient(to bottom, #000 30%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, #000 30%, transparent 100%)",
+          }}
+        >
+          <GradientWave className="opacity-90" />
+        </div>
+        <div className="bg-grid pointer-events-none absolute inset-0 opacity-50" />
         <Section className="relative py-8 sm:py-11">
           {/* Pitch, with the pre-launch card alongside it on wide screens and
               stacked underneath on narrow ones. */}
           <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="mx-auto max-w-2xl text-center animate-fade-up">
-              <Badge tone="accent" className="mb-3">
+              {/* White rather than the accent tint: the badge now sits on the
+                  gradient wash, and --accent-soft is close enough to it to
+                  read as a smudge. `!` because the tone's own background is a
+                  utility of equal weight. */}
+              <Badge tone="accent" className="mb-3 bg-white!">
                  Buy once · own it forever · no subscription
               </Badge>
               <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-4xl">
