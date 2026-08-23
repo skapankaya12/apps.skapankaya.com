@@ -31,10 +31,13 @@ export function PreLaunchNotice() {
       <h2 className="mt-3 text-base font-semibold tracking-tight">
         We&apos;re collecting listings right now.
       </h2>
+      {/* Short on purpose. The badge already says pre-launch and open to solo
+          builders, and the heading already says listings are being collected —
+          the old paragraph said all three again. What was left to say is why
+          the catalogue looks thin, and when it opens. */}
       <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-        The marketplace is still being built; we&apos;re finishing the internal
-        screens and gathering the first tools. For now it&apos;s open to solo
-        builders who want to list what they made. The public launch is coming{" "}
+        Still being built, so the catalogue is small for now. The public launch
+        is coming{" "}
         <span className="font-medium text-[var(--foreground)]">soon</span>.
       </p>
 
