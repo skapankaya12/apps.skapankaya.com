@@ -9,7 +9,7 @@
  * every one of those moves together.
  */
 const PITCH =
-  "Connecting solo creative builders with buyers who value one-time purchases, self-hosted assets, and full data ownership.";
+  "A marketplace for small software tools made by solo builders. Pay once, run it yourself, keep it for good. No subscriptions.";
 
 /**
  * Single source of truth for brand identity.
@@ -44,8 +44,8 @@ export const brand = {
 
 /** Longer marketing copy, kept here so it's easy to iterate on the message. */
 export const copy = {
-  heroHeadline: "we encourage anyone to build,",
-  heroHeadlineAccent: "everyone to own.",
+  heroHeadline: "small software tools by one person,",
+  heroHeadlineAccent: "owned by you.",
   /** Same sentence as brand.description — see PITCH. */
   heroSub: PITCH,
   missionTitle: "Why this exists",
