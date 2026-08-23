@@ -44,8 +44,12 @@ export default async function HomePage() {
         <Section className="relative py-8 sm:py-11">
           {/* Pitch, with the pre-launch card alongside it on wide screens and
               stacked underneath on narrow ones. */}
-          <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="mx-auto max-w-2xl text-center animate-fade-up">
+          {/* Splits at xl, not lg. At lg the text column came out ~590px and the
+              headline needs 592px at text-4xl — it wrapped by a single pixel.
+              Below xl the card stacks (it centres itself at max-w-md) and the
+              pitch gets the full section width. */}
+          <div className="grid items-center gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="mx-auto max-w-4xl text-center animate-fade-up">
               {/* White rather than the accent tint: the badge now sits on the
                   gradient wash, and --accent-soft is close enough to it to
                   read as a smudge. `!` because the tone's own background is a
@@ -53,9 +57,15 @@ export default async function HomePage() {
               <Badge tone="accent" className="mb-3 bg-white!">
                  Buy once · own it forever · no subscription
               </Badge>
-              <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-4xl">
+              {/* Two deliberate lines: the headline, then the accent clause.
+                  `block` on the span pins that break instead of leaving it to
+                  the balancer, which was splitting mid-phrase ("built by /
+                  one person"). text-balance still earns its keep on narrow
+                  screens, where line one cannot fit either way. The {" "} stays
+                  for whoever drops the `block` — see the SWC whitespace gotcha. */}
+              <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl 2xl:text-5xl">
                 {copy.heroHeadline}{" "}
-                <span className="text-[var(--accent)]">{copy.heroHeadlineAccent}</span>
+                <span className="block text-[var(--accent)]">{copy.heroHeadlineAccent}</span>
               </h1>
               <p className="mx-auto mt-3 max-w-lg text-balance text-[var(--muted)]">
                 {copy.heroSub}

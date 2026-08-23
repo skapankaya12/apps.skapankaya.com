@@ -16,7 +16,7 @@ export function PreLaunchNotice() {
   return (
     <aside
       aria-label="Pre-launch status"
-      className="mx-auto w-full max-w-md rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-5 text-left shadow-[var(--shadow-sm)] lg:max-w-none"
+      className="mx-auto w-full max-w-md rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-5 text-left shadow-[var(--shadow-sm)] xl:max-w-none"
     >
       <div className="flex items-center gap-2">
         <span className="relative flex h-2 w-2">
