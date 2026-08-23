@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
@@ -10,6 +10,8 @@ import type { AppUser } from "@/lib/types";
 import Image from "next/image";
 import { ButtonLink } from "./ui";
 import { LiquidMetalButton } from "./ui/liquid-metal-button";
+import { Dock, DockItem } from "./ui/dock";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/browse", label: "Browse" },
@@ -40,9 +42,48 @@ export function Navbar() {
     setMenuOpen(false);
   }
 
+  // Docked once you've scrolled off the top: the bar detaches from the edge and
+  // becomes a floating dock. A stranger still meets a conventional header on
+  // first paint; the dock is what the page turns into as you read it.
+  //
+  // rAF-throttled, and setDocked is called with a boolean — React bails out of
+  // the re-render when it hasn't changed, so this costs one render per crossing
+  // rather than one per scroll event.
+  const [docked, setDocked] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const apply = () => {
+      frame = 0;
+      setDocked(window.scrollY > 24);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
+    <header
+      className={cn(
+        "sticky top-0 z-40 transition-[background-color,border-color,padding] duration-300",
+        docked
+          ? "border-b border-transparent bg-transparent py-2.5"
+          : "border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md"
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto flex items-center justify-between gap-4 transition-all duration-300",
+          docked
+            ? "h-14 w-[calc(100%-1.5rem)] max-w-5xl rounded-2xl border border-[var(--border-strong)] bg-[var(--background)]/85 px-4 shadow-[var(--shadow-lg)] backdrop-blur-xl"
+            : "h-16 w-full max-w-6xl px-5 sm:px-8"
+        )}
+      >
         <div className="flex items-center gap-7">
           <Link href="/" className="flex items-center" aria-label={brand.name}>
             <Image
@@ -54,7 +95,7 @@ export function Navbar() {
               className="h-10 w-auto rounded-md"
             />
           </Link>
-          <nav className="hidden items-center gap-1 md:flex">
+          <Dock className="hidden md:block" listClassName="gap-1">
             {navItems.map((item) => {
               const active = pathname.startsWith(item.href);
               // The seller CTA is the one nav item that gets the treatment —
@@ -62,30 +103,29 @@ export function Navbar() {
               // four a shader would be four WebGL contexts and no hierarchy.
               if (item.href === "/sell") {
                 return (
-                  <LiquidMetalButton
-                    key={item.href}
-                    href={item.href}
-                    className="mx-1 px-3.5 py-1.5"
-                  >
-                    {item.label}
-                  </LiquidMetalButton>
+                  <DockItem key={item.href} className="mx-1">
+                    <LiquidMetalButton href={item.href} className="px-3.5 py-1.5">
+                      {item.label}
+                    </LiquidMetalButton>
+                  </DockItem>
                 );
               }
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                    active
-                      ? "text-[var(--foreground)] font-medium"
-                      : "text-[var(--muted)] hover:text-[var(--foreground)]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
+                <DockItem key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                      active
+                        ? "text-[var(--foreground)] font-medium"
+                        : "text-[var(--muted)] hover:text-[var(--foreground)]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </DockItem>
               );
             })}
-          </nav>
+          </Dock>
         </div>
 
         <div className="flex items-center gap-1.5">
