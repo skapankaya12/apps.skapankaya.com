@@ -10,7 +10,6 @@ import type { AppUser } from "@/lib/types";
 import Image from "next/image";
 import { ButtonLink } from "./ui";
 import { LiquidMetalButton } from "./ui/liquid-metal-button";
-import { Dock, DockItem } from "./ui/dock";
 
 const navItems = [
   { href: "/browse", label: "Browse" },
@@ -44,10 +43,12 @@ export function Navbar() {
   // The dock is the header, from first paint — there is no scroll state to be
   // in. The <header> stays transparent and only reserves the space; the
   // floating bar inside it is the whole chrome, so the page scrolls underneath
-  // it rather than up to a hard edge. Being fixed it reserves no space, so
-  // AppShell pads for it and the homepage hero bleeds back up behind it.
+  // it rather than up to a hard edge. Absolute, not fixed: it floats over the
+  // hero but scrolls away with the page instead of following you down it.
+  // Either way it reserves no space, so AppShell pads for it and the homepage
+  // hero bleeds back up behind it.
   return (
-    <header className="fixed inset-x-0 top-0 z-40 py-2.5">
+    <header className="absolute inset-x-0 top-0 z-40 py-2.5">
       <div className="mx-auto flex h-14 w-[calc(100%-1.5rem)] max-w-5xl items-center justify-between gap-4 rounded-2xl border border-white/60 bg-[var(--background)]/55 px-4 shadow-[var(--shadow-lg)] backdrop-blur-xl">
         <div className="flex items-center gap-7">
           <Link href="/" className="flex items-center" aria-label={brand.name}>
@@ -60,7 +61,7 @@ export function Navbar() {
               className="h-10 w-auto rounded-md"
             />
           </Link>
-          <Dock className="hidden md:block" listClassName="gap-1">
+          <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => {
               const active = pathname.startsWith(item.href);
               // The seller CTA is the one nav item that gets the treatment —
@@ -68,29 +69,30 @@ export function Navbar() {
               // four a shader would be four WebGL contexts and no hierarchy.
               if (item.href === "/sell") {
                 return (
-                  <DockItem key={item.href} className="mx-1">
-                    <LiquidMetalButton href={item.href} className="px-3.5 py-1.5">
-                      {item.label}
-                    </LiquidMetalButton>
-                  </DockItem>
+                  <LiquidMetalButton
+                    key={item.href}
+                    href={item.href}
+                    className="mx-1 px-3.5 py-1.5"
+                  >
+                    {item.label}
+                  </LiquidMetalButton>
                 );
               }
               return (
-                <DockItem key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                      active
-                        ? "text-[var(--foreground)] font-medium"
-                        : "text-[var(--muted)] hover:text-[var(--foreground)]"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </DockItem>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    active
+                      ? "text-[var(--foreground)] font-medium"
+                      : "text-[var(--muted)] hover:text-[var(--foreground)]"
+                  }`}
+                >
+                  {item.label}
+                </Link>
               );
             })}
-          </Dock>
+          </nav>
         </div>
 
         <div className="flex items-center gap-1.5">
