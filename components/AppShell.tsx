@@ -16,8 +16,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <Navbar />
-      <VerifyEmailBanner />
-      <main className="flex-1">{children}</main>
+      {/* The header is fixed, so nothing below it reserves its height — this
+          wrapper does, for the banner and the page alike. The homepage hero
+          takes that height back with .hero-bleed so its gradient runs up
+          behind the dock. */}
+      <div className="flex flex-1 flex-col pt-[var(--header-h)]">
+        <VerifyEmailBanner />
+        <main className="flex-1">{children}</main>
+      </div>
       <Footer />
     </>
   );

@@ -44,10 +44,11 @@ export function Navbar() {
   // The dock is the header, from first paint — there is no scroll state to be
   // in. The <header> stays transparent and only reserves the space; the
   // floating bar inside it is the whole chrome, so the page scrolls underneath
-  // it rather than up to a hard edge.
+  // it rather than up to a hard edge. Being fixed it reserves no space, so
+  // AppShell pads for it and the homepage hero bleeds back up behind it.
   return (
-    <header className="sticky top-0 z-40 border-b border-transparent bg-transparent py-2.5">
-      <div className="mx-auto flex h-14 w-[calc(100%-1.5rem)] max-w-5xl items-center justify-between gap-4 rounded-2xl border border-[var(--border-strong)] bg-[var(--background)]/85 px-4 shadow-[var(--shadow-lg)] backdrop-blur-xl">
+    <header className="fixed inset-x-0 top-0 z-40 py-2.5">
+      <div className="mx-auto flex h-14 w-[calc(100%-1.5rem)] max-w-5xl items-center justify-between gap-4 rounded-2xl border border-white/60 bg-[var(--background)]/55 px-4 shadow-[var(--shadow-lg)] backdrop-blur-xl">
         <div className="flex items-center gap-7">
           <Link href="/" className="flex items-center" aria-label={brand.name}>
             <Image

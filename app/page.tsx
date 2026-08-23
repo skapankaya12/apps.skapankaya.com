@@ -26,7 +26,7 @@ export default async function HomePage() {
   return (
     <>
       {/* Compact hero */}
-      <div className="relative overflow-hidden border-b border-[var(--border)]">
+      <div className="hero-bleed relative overflow-hidden border-b border-[var(--border)]">
         {/* Backdrop, back to front: the animated gradient, then the hairline
             grid on top of it. The grid is the page's signature and the gradient
             alone reads as generic, so they layer rather than replace. Both are

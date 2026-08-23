@@ -28,6 +28,8 @@
   --shadow-sm: 0 1px 2px rgba(16, 16, 20, 0.04), 0 1px 3px rgba(16, 16, 20, 0.06);
   --shadow-md: 0 4px 12px rgba(16, 16, 20, 0.06), 0 2px 4px rgba(16, 16, 20, 0.04);
   --shadow-lg: 0 12px 40px rgba(16, 16, 20, 0.10);
+  /* Floating dock height: h-14 (56) + the header's py-2.5 either side (20). */
+  --header-h: 76px;
 }
 
 @theme inline {
@@ -263,4 +265,21 @@ h3 {
     transform: none;
     transition: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Hero bleed
+
+   The header floats over the page rather than sitting above it, so the hero
+   runs up behind it: its gradient reaches the top of the window and the dock
+   reads as floating ON the hero instead of on a white strip.
+
+   Scoped to `main:first-child` on purpose. VerifyEmailBanner renders null when
+   there is nothing to verify, which leaves main as the first child; when the
+   banner IS showing it takes that slot, the rule stops matching, and the hero
+   stays put instead of sliding up over the banner and hiding it.
+--------------------------------------------------------------------------- */
+main:first-child .hero-bleed {
+  margin-top: calc(var(--header-h) * -1);
+  padding-top: var(--header-h);
 }
