@@ -24,6 +24,10 @@ export default function Image() {
           flexDirection: "column",
           justifyContent: "space-between",
           background: "#ffffff",
+          // Flat approximation of the hero's WebGL wash — Satori has no canvas,
+          // but the card and the page should read as the same surface.
+          backgroundImage:
+            "linear-gradient(120deg, #e4e9ff 0%, #f4f5ff 34%, #ffffff 58%, #f3efff 100%)",
           padding: 72,
           fontFamily: "sans-serif",
         }}
@@ -43,19 +47,30 @@ export default function Image() {
           >
             Buy once · own it forever · no subscription
           </div>
+          {/*
+            A column, not a wrapping row: the headline gets one line and the
+            accent clause the next, matching the hero. As a wrapping row the
+            first clause broke mid-phrase ("...by one / person,").
+            62px is sized so that clause fits the 1056px of content width at
+            Satori's fallback face, which is wider than Manrope.
+          */}
           <div
             style={{
               display: "flex",
-              flexWrap: "wrap",
+              flexDirection: "column",
               marginTop: 40,
-              fontSize: 76,
+              fontSize: 62,
               fontWeight: 800,
-              lineHeight: 1.1,
+              lineHeight: 1.15,
               letterSpacing: -2,
             }}
           >
-            <span style={{ color: "#101014" }}>{copy.heroHeadline}&nbsp;</span>
-            <span style={{ color: "#4f46e5" }}>{copy.heroHeadlineAccent}</span>
+            <div style={{ display: "flex", color: "#101014" }}>
+              {copy.heroHeadline}
+            </div>
+            <div style={{ display: "flex", color: "#4f46e5" }}>
+              {copy.heroHeadlineAccent}
+            </div>
           </div>
           {/*
             The same sub-line as the hero, read from `copy` rather than written
