@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { brand } from "@/lib/brand";
+import { RuixenGradientFooter } from "@/components/ui/ruixen-gradient-footer";
 
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-[var(--border)]">
+    <RuixenGradientFooter className="mt-24 border-t border-[var(--border)]">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 sm:px-8 md:grid-cols-4">
         <div className="sm:col-span-2 md:col-span-1">
           <Image
@@ -56,7 +57,7 @@ export function Footer() {
           </Link>
         </div>
       </div>
-    </footer>
+    </RuixenGradientFooter>
   );
 }
 
