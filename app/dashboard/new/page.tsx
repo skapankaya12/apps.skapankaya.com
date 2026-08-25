@@ -20,6 +20,8 @@ import {
 } from "@/lib/storage";
 import {
   RUNTIME_LABELS,
+  TAGLINE_MAX,
+  TITLE_MAX,
   type Category,
   type Runtime,
   type SetupMode,
@@ -27,8 +29,11 @@ import {
   type AppUser,
 } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
-import { Field, inputClass } from "@/components/ui/form";
+import { Field, FormSection, inputClass } from "@/components/ui/form";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
+import { ImportFromUrl } from "@/components/ImportFromUrl";
+import type { ImportResult, SourceKind } from "@/lib/importClient";
+import { SOURCE_LABELS } from "@/lib/importClient";
 import { MAX_PACKAGE_BYTES, captureVideoPoster, validateDemo } from "@/lib/media";
 import { safeHttpsUrl } from "@/lib/utils";
 
@@ -135,6 +140,24 @@ function ListingForm({
     editing?.screenshots ?? []
   );
 
+  /**
+   * Fields currently holding imported text, and where each came from.
+   *
+   * An entry lives exactly as long as the value is still the machine's: the
+   * seller types in the field and it goes. That's what makes the "check these"
+   * prompt actionable rather than decorative — the chips that remain are
+   * precisely the values nobody has looked at yet.
+   */
+  const [imported, setImported] = useState<Partial<Record<ImportedKey, SourceKind>>>({});
+  /**
+   * Dropdowns the seller has chosen for themselves.
+   *
+   * Text fields can be left alone when they're non-empty, but category and
+   * runtime always hold *something* — so "empty" can't be the test for whether
+   * import may write to them. Touching one is.
+   */
+  const [touched, setTouched] = useState<Set<ImportedKey>>(new Set());
+
   const [savedAt, setSavedAt] = useState<number | null>(
     start.fromDraft ? start.values.savedAt : null
   );
@@ -228,6 +251,75 @@ function ListingForm({
         <ButtonLink href="/dashboard" className="mt-8">Back to dashboard</ButtonLink>
       </Section>
     );
+  }
+
+  /**
+   * Pour an import into the form, and report how much of it landed.
+   *
+   * Empty fields only. A seller who has already written their own tagline
+   * doesn't want it replaced by a scraped one, and there is no undo on a form
+   * — so the rule is that import adds, never overwrites. The dropdowns go by
+   * `touched` instead of emptiness, because they always hold a default.
+   */
+  function applyImport(result: ImportResult): number {
+    const marks: Partial<Record<ImportedKey, SourceKind>> = {};
+    const fields = result.fields;
+
+    if (fields.title && !title.trim()) {
+      setTitle(fields.title.value);
+      marks.title = fields.title.from;
+    }
+    if (fields.tagline && !tagline.trim()) {
+      setTagline(fields.tagline.value);
+      marks.tagline = fields.tagline.from;
+    }
+    if (fields.description && !description.trim()) {
+      setDescription(fields.description.value);
+      marks.description = fields.description.from;
+    }
+    if (fields.category && !touched.has("category")) {
+      setCategory(fields.category.value);
+      marks.category = fields.category.from;
+    }
+    if (fields.runtime && !touched.has("runtime")) {
+      setRuntime(fields.runtime.value);
+      marks.runtime = fields.runtime.from;
+    }
+    if (fields.sellerWebsite && !sellerWebsite.trim()) {
+      setSellerWebsite(fields.sellerWebsite.value);
+      marks.sellerWebsite = fields.sellerWebsite.from;
+    }
+
+    setImported((prev) => ({ ...prev, ...marks }));
+    return Object.keys(marks).length;
+  }
+
+  /** The seller has made this field their own — drop the provenance chip. */
+  function clearMark(key: ImportedKey) {
+    setImported((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
+  /** A dropdown the seller has set deliberately; import must leave it alone. */
+  function markTouched(key: ImportedKey) {
+    setTouched((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+    clearMark(key);
+  }
+
+  /** The provenance label for a field, or undefined once it's been edited. */
+  function sourceOf(key: ImportedKey): string | undefined {
+    const from = imported[key];
+    return from ? SOURCE_LABELS[from] : undefined;
+  }
+
+  function addImportedScreenshot(file: File) {
+    const room = Math.max(0, 5 - existingShots.length - screenshotFiles.length);
+    if (room <= 0) return;
+    setScreenshotFiles((prev) => [...prev, file]);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -363,7 +455,21 @@ function ListingForm({
           : "Fill this in, upload your app package, and submit for review."}
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form onSubmit={handleSubmit} className="mt-8 space-y-10">
+        {/* Only when creating. Editing a listing means the fields are already
+            full, and import never overwrites — it would have nothing to do. */}
+        {!editId && (
+          <ImportFromUrl
+            onApply={applyImport}
+            onAddScreenshot={addImportedScreenshot}
+            screenshotRoom={Math.max(
+              0,
+              5 - existingShots.length - screenshotFiles.length
+            )}
+            disabled={uploading}
+          />
+        )}
+
         {/* Sits above the fields, where a seller can reach it at any point
             without scrolling to the bottom of a long form. */}
         <div className="flex flex-wrap items-center gap-3 border-b border-[var(--border)] pb-6">
@@ -377,249 +483,284 @@ function ListingForm({
           </Button>
           {savedAt !== null && !uploading && (
             <span className="text-xs text-[var(--muted)]">
-              Draft saved {savedAgo(savedAt)} — files still need choosing
+              Draft saved {savedAgo(savedAt)}. Files still need choosing.
             </span>
           )}
         </div>
 
-        <Field label="App name" hint="Short and clear. Up to 50 characters.">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={50}
-            placeholder="e.g. CSV Cleaner"
-            className={inputClass}
-          />
-        </Field>
-
-        <Field label="One-line tagline" hint="One sentence. Up to 90 characters.">
-          <input
-            value={tagline}
-            onChange={(e) => setTagline(e.target.value)}
-            maxLength={90}
-            placeholder="What it does, in one sentence."
-            className={inputClass}
-          />
-        </Field>
-
-        <Field
-          label="Description"
-          hint="What problem it solves, and how it runs locally. Use headings and lists — this is the main thing a buyer reads."
-        >
-          <MarkdownEditor
-            value={description}
-            onChange={setDescription}
-            rows={10}
-            placeholder="Describe the app…"
-          />
-        </Field>
-
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field label="What job does it do?">
-            <select
-              value={activeCategory}
-              onChange={(e) => setCategory(e.target.value)}
+        <FormSection title="Your tool">
+          <Field
+            label="App name"
+            hint="Short and clear."
+            counter={{ value: title, max: TITLE_MAX }}
+            source={sourceOf("title")}
+          >
+            <input
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                clearMark("title");
+              }}
+              maxLength={TITLE_MAX}
+              placeholder="e.g. CSV Cleaner"
               className={inputClass}
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
-              ))}
-            </select>
-            <p className="mt-1.5 text-xs text-[var(--muted)]">
-              {categories.find((c) => c.id === activeCategory)?.hint}
-            </p>
+            />
           </Field>
 
           <Field
-            label="Runtime"
-            hint="What a buyer needs to run it: Node.js or Python for scripts, Browser for web tools, Desktop app for a packaged program, Other if unsure."
+            label="One-line tagline"
+            hint="One sentence."
+            counter={{ value: tagline, max: TAGLINE_MAX }}
+            source={sourceOf("tagline")}
           >
-            <select
-              value={runtime}
-              onChange={(e) => setRuntime(e.target.value as Runtime)}
+            <input
+              value={tagline}
+              onChange={(e) => {
+                setTagline(e.target.value);
+                clearMark("tagline");
+              }}
+              maxLength={TAGLINE_MAX}
+              placeholder="What it does, in one sentence."
               className={inputClass}
-            >
-              {(Object.keys(RUNTIME_LABELS) as Runtime[]).map((r) => (
-                <option key={r} value={r}>{RUNTIME_LABELS[r]}</option>
-              ))}
-            </select>
+            />
           </Field>
-        </div>
 
-        <Field label="Setup method">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {(["one-command", "ai-assisted"] as SetupMode[]).map((mode) => (
-              <button
-                type="button"
-                key={mode}
-                onClick={() => setSetupMode(mode)}
-                className={`rounded-xl border p-4 text-left text-sm transition-colors ${
-                  setupMode === mode
-                    ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                    : "border-[var(--border-strong)] hover:bg-[var(--surface-muted)]"
-                }`}
-              >
-                <span className="font-medium">
-                  {mode === "one-command" ? "One command" : "AI-assisted"}
-                </span>
-                <span className="mt-1 block text-xs text-[var(--muted)]">
-                  {mode === "one-command"
-                    ? "Runs with a single terminal command."
-                    : "Buyer's AI assistant sets it up from SETUP.md."}
-                </span>
-              </button>
-            ))}
-          </div>
-        </Field>
-
-        <Field
-          label="Price (USD)"
-          hint="Between $15 and $250. Want to list higher? Contact us about premium listings."
-        >
-          <div className="relative max-w-[200px]">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]">
-              $
-            </span>
-            <input
-              type="number"
-              min="15"
-              max="250"
-              step="1"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className={`${inputClass} pl-7`}
-            />
-          </div>
-        </Field>
-
-        {/* App package upload */}
-        <Field
-          label="App package (.zip)"
-          hint="Must contain manifest.json, README.md, SETUP.md, LICENSE.md and src/. Up to 200MB."
-        >
-          <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-6 text-sm hover:border-[var(--accent)]">
-            <span className="text-[var(--muted)]">
-              {packageFile ? (
-                <span className="text-[var(--foreground)]">📦 {packageFile.name}</span>
-              ) : existingPackage ? (
-                <span className="text-[var(--foreground)]">
-                  📦 {existingPackage.split("/").pop()}{" "}
-                  <span className="text-[var(--muted)]">— current, click to replace</span>
-                </span>
-              ) : (
-                "Click to choose your .zip package"
-              )}
-            </span>
-            <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
-              Browse
-            </span>
-            <input
-              type="file"
-              accept=".zip"
-              className="hidden"
-              onChange={(e) => pickPackage(e.target.files?.[0] ?? null)}
-            />
-          </label>
-        </Field>
-
-        {/* Screenshots, up to 5 */}
-        <Field
-          label="Screenshots (up to 5)"
-          hint="Show the tool actually working. Buyers who see it are far likelier to buy."
-        >
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-            {existingShots.map((url, i) => (
-              <div
-                key={`existing-${i}`}
-                className="relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Screenshot ${i + 1}`} className="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setExistingShots((p) => p.filter((_, j) => j !== i))}
-                  className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
-                  aria-label="Remove screenshot"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-            {screenshotFiles.map((file, i) => (
-              <div
-                key={i}
-                className="relative flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center"
-              >
-                <span className="text-xl">🖼️</span>
-                <span className="line-clamp-2 text-[9px] leading-tight text-[var(--muted)]">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setScreenshotFiles((p) => p.filter((_, j) => j !== i))}
-                  className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
-                  aria-label="Remove screenshot"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-            {existingShots.length + screenshotFiles.length < 5 && (
-              <label className="grid aspect-square cursor-pointer place-items-center rounded-xl border border-dashed border-[var(--border-strong)] text-2xl text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
-                +
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => addScreenshots(e.target.files)}
-                />
-              </label>
-            )}
-          </div>
-        </Field>
-
-        {/* Demo video, required */}
-        <Field
-          label="Demo video (required)"
-          hint="A short screen recording of the tool in action — up to 40 seconds and 150MB. It's the single biggest thing that sells a small tool, so keep it tight. Export MP4 (H.264) — .mov won't play for buyers on Android. They watch this on a phone, so aim for under 25MB at 1080p."
-        >
-          <label
-            className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
-              demoFile || existingDemo
-                ? "border-[var(--success)] bg-[var(--success-soft)]"
-                : "border-[var(--border-strong)] bg-[var(--surface-muted)]"
-            }`}
+          <Field
+            label="Description"
+            hint="The main thing a buyer reads. What it solves, and how it runs."
+            source={sourceOf("description")}
           >
-            <span className={demoFile || existingDemo ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
-              {demoFile
-                ? `▶ ${demoFile.name}`
-                : existingDemo
-                  ? "▶ Current demo video — click to replace"
-                  : "Click to upload a demo video (mp4 or webm)"}
-            </span>
-            <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
-              Browse
-            </span>
-            <input
-              type="file"
-              accept="video/mp4,video/webm"
-              className="hidden"
-              onChange={(e) => pickDemo(e.target.files?.[0] ?? null)}
+            <MarkdownEditor
+              value={description}
+              onChange={(next) => {
+                setDescription(next);
+                clearMark("description");
+              }}
+              rows={10}
+              placeholder="Describe the app…"
             />
-          </label>
-          {demoError && (
-            <p className="mt-1.5 text-xs text-[var(--danger)]">{demoError}</p>
-          )}
-        </Field>
+          </Field>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Field label="What job does it do?" source={sourceOf("category")}>
+              <select
+                value={activeCategory}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  markTouched("category");
+                }}
+                className={inputClass}
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-[var(--muted)]">
+                {categories.find((c) => c.id === activeCategory)?.hint}
+              </p>
+            </Field>
+
+            <Field
+              label="Runtime"
+              hint="What a buyer needs installed to run it."
+              source={sourceOf("runtime")}
+            >
+              <select
+                value={runtime}
+                onChange={(e) => {
+                  setRuntime(e.target.value as Runtime);
+                  markTouched("runtime");
+                }}
+                className={inputClass}
+              >
+                {(Object.keys(RUNTIME_LABELS) as Runtime[]).map((r) => (
+                  <option key={r} value={r}>{RUNTIME_LABELS[r]}</option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </FormSection>
+
+
+        <FormSection title="Pricing">
+          <Field
+            label="Price (USD)"
+            hint="Between $15 and $250."
+          >
+            <div className="relative max-w-[200px]">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]">
+                $
+              </span>
+              <input
+                type="number"
+                min="15"
+                max="250"
+                step="1"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className={`${inputClass} pl-7`}
+              />
+            </div>
+          </Field>
+
+          <Field label="Setup method">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(["one-command", "ai-assisted"] as SetupMode[]).map((mode) => (
+                <button
+                  type="button"
+                  key={mode}
+                  onClick={() => setSetupMode(mode)}
+                  className={`rounded-xl border p-4 text-left text-sm transition-colors ${
+                    setupMode === mode
+                      ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                      : "border-[var(--border-strong)] hover:bg-[var(--surface-muted)]"
+                  }`}
+                >
+                  <span className="font-medium">
+                    {mode === "one-command" ? "One command" : "AI-assisted"}
+                  </span>
+                  <span className="mt-1 block text-xs text-[var(--muted)]">
+                    {mode === "one-command"
+                      ? "Runs with a single terminal command."
+                      : "Buyer's AI assistant sets it up from SETUP.md."}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Field>
+        </FormSection>
+
+        <FormSection title="Files">
+          {/* App package upload */}
+          <Field
+            label="App package (.zip)"
+            hint="Needs manifest.json, README.md, SETUP.md, LICENSE.md and src/. Max 200MB."
+          >
+            <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-6 text-sm hover:border-[var(--accent)]">
+              <span className="text-[var(--muted)]">
+                {packageFile ? (
+                  <span className="text-[var(--foreground)]">📦 {packageFile.name}</span>
+                ) : existingPackage ? (
+                  <span className="text-[var(--foreground)]">
+                    📦 {existingPackage.split("/").pop()}{" "}
+                    <span className="text-[var(--muted)]">current, click to replace</span>
+                  </span>
+                ) : (
+                  "Click to choose your .zip package"
+                )}
+              </span>
+              <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
+                Browse
+              </span>
+              <input
+                type="file"
+                accept=".zip"
+                className="hidden"
+                onChange={(e) => pickPackage(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          </Field>
+
+
+          {/* Demo video, required */}
+          <Field
+            label="Demo video (required)"
+            hint="Up to 40 seconds. Export MP4 (H.264); .mov won't play on Android. Aim under 25MB."
+          >
+            <label
+              className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
+                demoFile || existingDemo
+                  ? "border-[var(--success)] bg-[var(--success-soft)]"
+                  : "border-[var(--border-strong)] bg-[var(--surface-muted)]"
+              }`}
+            >
+              <span className={demoFile || existingDemo ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
+                {demoFile
+                  ? `▶ ${demoFile.name}`
+                  : existingDemo
+                    ? "▶ Current demo video, click to replace"
+                    : "Click to upload a demo video (mp4 or webm)"}
+              </span>
+              <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
+                Browse
+              </span>
+              <input
+                type="file"
+                accept="video/mp4,video/webm"
+                className="hidden"
+                onChange={(e) => pickDemo(e.target.files?.[0] ?? null)}
+              />
+            </label>
+            {demoError && (
+              <p className="mt-1.5 text-xs text-[var(--danger)]">{demoError}</p>
+            )}
+          </Field>
+
+
+          {/* Screenshots, up to 5 */}
+          <Field
+            label="Screenshots (up to 5)"
+            hint="Optional. Show the tool actually working."
+          >
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+              {existingShots.map((url, i) => (
+                <div
+                  key={`existing-${i}`}
+                  className="relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt={`Screenshot ${i + 1}`} className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setExistingShots((p) => p.filter((_, j) => j !== i))}
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
+                    aria-label="Remove screenshot"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {screenshotFiles.map((file, i) => (
+                <div
+                  key={i}
+                  className="relative flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center"
+                >
+                  <span className="text-xl">🖼️</span>
+                  <span className="line-clamp-2 text-[9px] leading-tight text-[var(--muted)]">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setScreenshotFiles((p) => p.filter((_, j) => j !== i))}
+                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
+                    aria-label="Remove screenshot"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {existingShots.length + screenshotFiles.length < 5 && (
+                <label className="grid aspect-square cursor-pointer place-items-center rounded-xl border border-dashed border-[var(--border-strong)] text-2xl text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
+                  +
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => addScreenshots(e.target.files)}
+                  />
+                </label>
+              )}
+            </div>
+          </Field>
+
+        </FormSection>
 
         {/* Seller / contact info, shown to buyers on the listing page */}
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5">
-          <h2 className="text-sm font-semibold">About you (shown to buyers)</h2>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">
-            Buyers trust a real person behind a tool. This appears in the
-            &ldquo;About the seller&rdquo; section of your listing.
-          </p>
-          <div className="mt-4 space-y-6">
-            <Field label="Short bio" hint="A sentence or two about who you are and what you build.">
+        <FormSection
+          title="About you"
+          hint="Shown to buyers in the &ldquo;About the seller&rdquo; section."
+        >
+          <div className="space-y-6">
+            <Field label="Short bio" hint="A sentence about who you are.">
               <textarea
                 value={sellerBio}
                 onChange={(e) => setSellerBio(e.target.value)}
@@ -629,7 +770,7 @@ function ListingForm({
               />
             </Field>
             <div className="grid gap-6 sm:grid-cols-2">
-              <Field label="Support email (required)" hint="Where buyers can reach you for help.">
+              <Field label="Support email (required)" hint="Where buyers reach you for help.">
                 <input
                   type="email"
                   required
@@ -639,18 +780,25 @@ function ListingForm({
                   className={inputClass}
                 />
               </Field>
-              <Field label="Website or profile" hint="Optional. A link buyers can check.">
+              <Field
+                label="Website or profile"
+                hint="Optional. A link buyers can check."
+                source={sourceOf("sellerWebsite")}
+              >
                 <input
                   type="url"
                   value={sellerWebsite}
-                  onChange={(e) => setSellerWebsite(e.target.value)}
+                  onChange={(e) => {
+                    setSellerWebsite(e.target.value);
+                    clearMark("sellerWebsite");
+                  }}
                   placeholder="https://your-site.com"
                   className={inputClass}
                 />
               </Field>
             </div>
           </div>
-        </div>
+        </FormSection>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]">
           <input
@@ -740,10 +888,10 @@ function LeaveWarning({
             <>
               {" "}
               <span className="text-[var(--foreground)]">
-                The files you chose can&apos;t be saved
+                The files you chose can&apos;t be saved.
               </span>{" "}
-              — you&apos;ll need to pick your package, demo video and
-              screenshots again.
+              You&apos;ll need to pick your package, demo video and screenshots
+              again.
             </>
           )}
         </p>
@@ -766,6 +914,15 @@ function LeaveWarning({
  * here and cannot be — the browser won't serialize a File — which is exactly
  * why leaving the page still warns.
  */
+/** The fields a URL import is able to write to. */
+type ImportedKey =
+  | "title"
+  | "tagline"
+  | "description"
+  | "category"
+  | "runtime"
+  | "sellerWebsite";
+
 type Draft = {
   title: string;
   tagline: string;

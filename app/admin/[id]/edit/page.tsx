@@ -10,7 +10,13 @@ import {
 } from "@/lib/store";
 import { uploadDemoVideo, uploadPoster, uploadScreenshots } from "@/lib/storage";
 import { captureVideoPoster, validateDemo } from "@/lib/media";
-import { RUNTIME_LABELS, type Runtime, type SetupMode } from "@/lib/types";
+import {
+  RUNTIME_LABELS,
+  TAGLINE_MAX,
+  TITLE_MAX,
+  type Runtime,
+  type SetupMode,
+} from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, StatusBadge } from "@/components/ui";
 import { Field, inputClass } from "@/components/ui/form";
@@ -215,11 +221,15 @@ function EditForm({
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-        <Field label="App name" hint="Short and clear. Up to 50 characters.">
+        <Field
+          label="App name"
+          hint="Short and clear."
+          counter={{ value: title, max: TITLE_MAX }}
+        >
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            maxLength={50}
+            maxLength={TITLE_MAX}
             className={inputClass}
           />
         </Field>
@@ -229,11 +239,15 @@ function EditForm({
           it's already in search results, link previews and buyers' bookmarks —
           renaming a tool shouldn't quietly 404 everyone who saved it.
         */}
-        <Field label="One-line tagline" hint="One sentence. Up to 90 characters.">
+        <Field
+          label="One-line tagline"
+          hint="One sentence."
+          counter={{ value: tagline, max: TAGLINE_MAX }}
+        >
           <input
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
-            maxLength={90}
+            maxLength={TAGLINE_MAX}
             className={inputClass}
           />
         </Field>

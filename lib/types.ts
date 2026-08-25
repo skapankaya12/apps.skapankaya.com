@@ -92,6 +92,19 @@ export interface Listing {
   updatedAt: number;
 }
 
+/* ---------------------------------------------------------------------------
+   How long the short fields may be.
+
+   These were typed as literal `maxLength` values in two places — the seller
+   form and the admin edit form — which is fine until something else needs to
+   respect them. URL import does: a fetched title is whatever the source wrote,
+   and a silent browser truncation at 50 would cut it mid-word. Trimming has to
+   happen where the text is produced, so the number has to be importable.
+--------------------------------------------------------------------------- */
+
+export const TITLE_MAX = 50;
+export const TAGLINE_MAX = 90;
+
 export interface Purchase {
   id: string;
   buyerId: string;
