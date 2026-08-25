@@ -1,14 +1,15 @@
-import Link from "next/link";
+import { brand } from "@/lib/brand";
 import { WaitlistForm } from "./WaitlistForm";
 
 /**
  * Pre-launch status card, shown beside the hero.
  *
- * The marketplace is open to sellers before it's open to buyers: listings are
- * being collected one maker at a time while the internal screens get finished.
- * Anyone who lands here early should know that immediately rather than judging
- * an empty catalogue — and a maker being personally invited should see the
- * invitation reflected on the page they were sent to.
+ * Written for a buyer. A maker who lands here already has three ways to /sell
+ * (the navbar button, the button above the listings, the footer), so the card
+ * used to spend its whole body repeating an invitation they had already
+ * accepted. What only this card can say is the thing a buyer would otherwise
+ * discover at checkout: the catalogue is thin because it is still being
+ * collected, and buying is not open yet.
  *
  * Keep the wording honest. If the launch date moves, move it here.
  */
@@ -24,31 +25,26 @@ export function PreLaunchNotice() {
           <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
         </span>
         <span className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
-          Pre-launch · open to solo builders
+          Pre-launch · opening soon
         </span>
       </div>
 
+      {/* A question, because the card is now addressed to one person rather
+          than announcing a status to the room. */}
       <h2 className="mt-3 text-base font-semibold tracking-tight">
-        We&apos;re collecting listings right now.
+        Looking to buy?
       </h2>
-      {/* Short on purpose. The badge already says pre-launch and open to solo
-          builders, and the heading already says listings are being collected —
-          the old paragraph said all three again. What was left to say is why
-          the catalogue looks thin, and when it opens. */}
       <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-        Still being built, so the catalogue is small for now. The public launch
-        is coming{" "}
-        <span className="font-medium text-[var(--foreground)]">soon</span>.
+        {brand.name} is collecting its best tools right now. Stay tuned: buying
+        opens at the{" "}
+        <span className="font-medium text-[var(--foreground)]">
+          public launch
+        </span>
+        .
       </p>
 
-      <Link
-        href="/sell"
-        className="mt-4 inline-flex items-center text-sm font-medium text-[var(--accent)] hover:underline"
-      >
-        List your tool
-      </Link>
-
-      {/* Only the form is interactive; the copy above stays server-rendered. */}
+      {/* Only the form is interactive; the copy above stays server-rendered.
+          It is the card's only call to action now, so it sits closer. */}
       <div className="mt-4 border-t border-[var(--border)] pt-1">
         <WaitlistForm />
       </div>
