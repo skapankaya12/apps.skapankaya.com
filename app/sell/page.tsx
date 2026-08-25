@@ -13,14 +13,14 @@ const CAN_SELL = [
   "Desktop or browser-based apps a buyer runs locally",
   "Automations, agents, converters, generators, scrapers, dashboards, utilities",
   "Your own original code (or code you're licensed to resell)",
-  "Self-contained tools with readable source and disclosed network calls",
+  "Self-contained tools that disclose their network calls, shipped as readable source or as a signed installer",
 ];
 const CANT_SELL = [
   "SaaS, subscriptions, or anything that runs on your servers",
   "Non-software goods like ebooks, courses, templates, presets, graphics, music",
   "Physical products or freelance services",
   "Code that isn't yours, or that breaks someone's license",
-  "Malware, data harvesters, or obfuscated / hidden-behavior tools",
+  "Malware, data harvesters, or anything that hides what it actually does",
   "Anything illegal, or that phishes buyers for credentials or keys",
 ];
 
@@ -141,9 +141,9 @@ export default function SellPage() {
           </p>
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
             {[
-              ["Runs in 5 minutes", "A buyer can go from download to running by following your SETUP file, either with one command or AI assisted."],
-              ["Readable source", "No obfuscated or minified-only code. Buyers (and their AI) can read what they run."],
-              ["Honest disclosure", "All network calls and dependencies declared in your manifest.json."],
+              ["Runs in 5 minutes", "A buyer can go from download to running with one command, with AI assistance, or by opening an installer. Whichever it is, it works first try."],
+              ["Readable source, or a signed app", "Source packages arrive unobfuscated, so buyers and their AI can read what they run. A native app ships signed and notarized instead, and we verify that signature before it goes live."],
+              ["Honest disclosure", "Every network call and dependency declared, in your manifest.json or on your listing."],
               ["Real screenshots", "Show the app actually working. No mockups or stock images."],
             ].map(([t, b]) => (
               <div key={t} className="flex gap-3">

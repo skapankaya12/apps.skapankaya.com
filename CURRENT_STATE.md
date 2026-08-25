@@ -206,12 +206,15 @@ Three roles: `buyer`, `seller`, `admin`.
   **Do not add a second claim like it.** Note this collides with the native-app
   work in §8: that copy promises source scanning, and a closed-source DMG has no
   source. Whatever is written for binaries has to be true of binaries.
-- **`/docs/app-package` claims zip contents are validated, and they are not.**
-  The callout says "The upload step verifies these files are present" and that a
-  zip missing `manifest.json`, `README.md`, `SETUP.md`, `LICENSE.md` or `src/`
-  is "rejected before it ever reaches review". Nothing in the codebase opens a
-  zip. The upload checks extension and size only. Same class of problem as the
-  security scan above, found 24 August, not yet fixed either way.
+- **Zip contents are checked by hand, not by code.** Sevval downloads every
+  package during review and confirms `manifest.json`, `README.md`, `SETUP.md`,
+  `LICENSE.md` and `src/` are present, so a package missing them really is
+  rejected. Nothing in the codebase opens a zip: the upload validates extension
+  and size only. `/docs/app-package` describes this as happening "at the upload
+  step" and "before it ever reaches review", which is the wrong mechanism for a
+  real check. Do not read that callout as a promise nobody keeps, and do not
+  build zip validation on the strength of it. **This is not the same as the
+  security scan above**, which nothing and nobody performs.
 - Legal pages are drafts. Need a lawyer and a real entity name, address and VAT
   number.
 - Cart is a placeholder. Only single-item Buy works.
