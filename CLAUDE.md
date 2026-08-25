@@ -1,1 +1,2 @@
 @AGENTS.md
+@CURRENT_STATE.md
