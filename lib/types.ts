@@ -81,6 +81,31 @@ export interface AppUser {
   createdAt: number;
 }
 
+/**
+ * One row of the admin console's users panel: the parts of an AppUser that the
+ * server hands the client, flattened. Not a Firestore shape.
+ */
+export interface AdminUserRow {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: Role;
+  createdAt: number;
+  /** Sellers only: whether Stripe has cleared them to take money. */
+  chargesEnabled?: boolean;
+}
+
+/**
+ * What /api/admin/users answers with. `users` can be capped; `total` and
+ * `counts` always describe the whole collection, so a capped list still says
+ * how many accounts there really are and what they are.
+ */
+export interface AdminUserList {
+  users: AdminUserRow[];
+  total: number;
+  counts: Record<Role, number>;
+}
+
 export interface Listing {
   id: string;
   slug: string;

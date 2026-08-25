@@ -1,16 +1,35 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useStoreValue, useUser } from "@/lib/hooks";
-import { getListings, getCategories, formatPrice } from "@/lib/store";
+import { getListings, getCategories, formatPrice, fetchUserCount } from "@/lib/store";
 import { categoryLabel } from "@/lib/types";
 import { Section, ButtonLink, Badge, StatusBadge } from "@/components/ui";
+import { AdminUsersPanel } from "@/components/AdminUsersPanel";
 import { Monogram } from "@/components/Monogram";
 
 export default function AdminPage() {
   const user = useUser();
   const all = useStoreValue(() => getListings());
   const categories = useStoreValue(getCategories);
+
+  // Registered users. Not part of the store's live caches: nothing else on the
+  // site needs the number, and counting accounts client-side would mean pulling
+  // every user doc down. Fetched once, when an admin lands here.
+  const [userCount, setUserCount] = useState<number | null>(null);
+  const [usersOpen, setUsersOpen] = useState(false);
+  const isAdmin = user?.role === "admin";
+  useEffect(() => {
+    if (!isAdmin) return;
+    let live = true;
+    fetchUserCount().then((n) => {
+      if (live) setUserCount(n);
+    });
+    return () => {
+      live = false;
+    };
+  }, [isAdmin]);
 
   if (!user || user.role !== "admin") {
     return (
@@ -43,9 +62,18 @@ export default function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Pending review" value={String(pending.length)} accent />
         <Stat label="Live listings" value={String(approved.length)} />
+        {/* The only stat that isn't already on the page below it, so it's the
+            only one worth opening: the panel lists who the accounts are. An
+            ellipsis rather than 0 until the count arrives, so a slow or failed
+            fetch never reads as an empty marketplace. */}
+        <Stat
+          label="Registered users"
+          value={userCount === null ? "\u2026" : String(userCount)}
+          onClick={() => setUsersOpen(true)}
+        />
         <Stat label="Total GMV" value={formatPrice(gmvCents)} />
         <Stat
           label="Platform revenue"
@@ -139,6 +167,8 @@ export default function AdminPage() {
           </div>
         </>
       )}
+
+      <AdminUsersPanel open={usersOpen} onClose={() => setUsersOpen(false)} />
     </Section>
   );
 }
@@ -147,23 +177,45 @@ function Stat({
   label,
   value,
   accent,
+  onClick,
 }: {
   label: string;
   value: string;
   accent?: boolean;
+  /** Present on stats that open something. Renders the tile as a button. */
+  onClick?: () => void;
 }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div
-      className={`rounded-2xl border p-5 ${
+    <Tag
+      onClick={onClick}
+      className={`rounded-2xl border p-5 text-left ${
         accent
           ? "border-[var(--accent)]/40 bg-[var(--accent-soft)]/40"
           : "border-[var(--border)] bg-[var(--surface)]"
+      } ${
+        onClick
+          ? "transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]"
+          : ""
       }`}
     >
-      <div className="text-sm text-[var(--muted)]">{label}</div>
+      <div className="flex items-center gap-1 text-sm text-[var(--muted)]">
+        {label}
+        {onClick && (
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden>
+            <path
+              d="M8 5l5 5-5 5"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
+      </div>
       <div className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
         {value}
       </div>
-    </div>
+    </Tag>
   );
 }

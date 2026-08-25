@@ -40,6 +40,7 @@ import {
   type ListingStatus,
   type Purchase,
   type AppUser,
+  type AdminUserList,
   type Role,
   type Category,
   type CategoryDef,
@@ -508,6 +509,51 @@ export async function notifyReviewDecision(
     },
     body: JSON.stringify({ listingId, decision, note }),
   }).catch(() => {});
+}
+
+/**
+ * Registered-user count for the admin console. Firestore holds every account in
+ * `users`, but counting them client-side would mean downloading all of them, so
+ * the server answers with an aggregation query. Returns null when the caller
+ * isn't an admin or the request fails, and the console shows a placeholder.
+ */
+export async function fetchUserCount(): Promise<number | null> {
+  const token = await getIdToken();
+  try {
+    const res = await fetch("/api/admin/stats", {
+      headers: { Authorization: `Bearer ${token ?? ""}` },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { userCount?: number };
+    return typeof data.userCount === "number" ? data.userCount : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Registered accounts, newest first, for the admin console's users panel.
+ * Admin-only on the server. Returns null rather than throwing when the call
+ * fails, and the panel says so. `total` can exceed `users.length` once the
+ * collection outgrows the server's cap.
+ */
+export async function fetchUsers(): Promise<AdminUserList | null> {
+  const token = await getIdToken();
+  try {
+    const res = await fetch("/api/admin/users", {
+      headers: { Authorization: `Bearer ${token ?? ""}` },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as Partial<AdminUserList>;
+    const users = data.users ?? [];
+    return {
+      users,
+      total: data.total ?? users.length,
+      counts: data.counts ?? { buyer: 0, seller: 0, admin: 0 },
+    };
+  } catch {
+    return null;
+  }
 }
 
 /* ------------------------------ listings ------------------------------ */
