@@ -212,8 +212,9 @@ Three roles: `buyer`, `seller`, `admin`.
   rejected. Nothing in the codebase opens a zip: the upload validates extension
   and size only. `/docs/app-package` describes this as happening "at the upload
   step" and "before it ever reaches review", which is the wrong mechanism for a
-  real check. Do not read that callout as a promise nobody keeps, and do not
-  build zip validation on the strength of it. **This is not the same as the
+  real check. **A rewording was drafted and Sevval reverted it on 24 August; she
+  will revisit the copy herself.** Do not re-edit that callout, do not read it as
+  a promise nobody keeps, and do not build zip validation on the strength of it. **This is not the same as the
   security scan above**, which nothing and nobody performs.
 - Legal pages are drafts. Need a lawyer and a real entity name, address and VAT
   number.
@@ -267,13 +268,30 @@ What shipped:
 - `/docs/app-package` gained a "Two kinds of package" fork and an Installers
   section with the three commands a seller can run themselves.
 
-**Still open on this.** The seller form says "We check the signature before it
-goes live", which is only true if the admin runs the script. The intended fix is
-a `macos-latest` GitHub Actions runner (free, the repo is public) triggered by
-`repository_dispatch` on submission, posting the verdict back to a callback
-route. **The dispatch payload must carry the listing id only, never a signed
-download URL:** workflow logs are public on a public repo. Needs two secrets,
-`GH_DISPATCH_TOKEN` and `NOTARIZE_CALLBACK_SECRET`.
+**Automate the signature check: WANTED, deferred (Sevval, 24 August).** The
+seller form says "We check the signature before it goes live", which today is
+true only while the admin remembers to run `scripts/verify-package.ts`. She was
+offered the cheap alternative of softening that copy to "during review" and
+**declined it: the copy stays as it is and the automation gets built instead.**
+Until it exists, running the script on every installer submission is not
+optional, and the admin review page going orange is the reminder.
+
+The design, agreed but not built:
+
+- A `macos-latest` GitHub Actions runner. Free, because this repo is public, and
+  it has to be macOS because `codesign`, `spctl` and `stapler` exist nowhere
+  else.
+- Triggered by `repository_dispatch` from the submit path, which already calls
+  `/api/notify/listing` and is the natural place to fan out from.
+- **The dispatch payload carries the listing id and nothing else. Never a signed
+  download URL:** workflow logs are public on a public repo, so a URL in the
+  payload hands an unreviewed seller package to anyone who looks. The runner
+  authenticates and fetches the URL itself.
+- The runner posts the verdict to a callback route, which writes
+  `packageVerification` exactly as the script does. Do not put Firebase Admin
+  credentials in Actions secrets; the callback route owns the write.
+- 🔑 Two secrets from Sevval: `GH_DISPATCH_TOKEN` (Vercel calls GitHub) and
+  `NOTARIZE_CALLBACK_SECRET` (shared, so a stranger cannot POST a fake pass).
 
 **Windows and Linux installers: wanted, not yet accepted.** `.dmg` is the only
 format `INSTALLER_EXTENSIONS` allows, because Apple notarization is the only
