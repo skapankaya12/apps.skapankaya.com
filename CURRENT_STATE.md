@@ -8,7 +8,7 @@ when it is time. If you notice something here that has gone stale, say so in
 chat and leave the file alone until she asks. A doc that rewrites itself every
 session is a doc nobody can trust.
 
-Last updated: 24 August 2026.
+Last updated: 24 August 2026 (native app packages built, see §8).
 
 ---
 
@@ -203,7 +203,15 @@ Three roles: `buyer`, `seller`, `admin`.
   and `/about` state as fact that every package gets an automated scan for
   network calls, obfuscation and exfiltration patterns. It has not been built.
   This is launch-gating and it is the single most important honesty issue open.
-  **Do not add a second claim like it.**
+  **Do not add a second claim like it.** Note this collides with the native-app
+  work in §8: that copy promises source scanning, and a closed-source DMG has no
+  source. Whatever is written for binaries has to be true of binaries.
+- **`/docs/app-package` claims zip contents are validated, and they are not.**
+  The callout says "The upload step verifies these files are present" and that a
+  zip missing `manifest.json`, `README.md`, `SETUP.md`, `LICENSE.md` or `src/`
+  is "rejected before it ever reaches review". Nothing in the codebase opens a
+  zip. The upload checks extension and size only. Same class of problem as the
+  security scan above, found 24 August, not yet fixed either way.
 - Legal pages are drafts. Need a lawyer and a real entity name, address and VAT
   number.
 - Cart is a placeholder. Only single-item Buy works.
@@ -218,12 +226,66 @@ Three roles: `buyer`, `seller`, `admin`.
 The full prioritised backlog lives in Claude's memory
 (`thesolomarket-next-tasks`), not here. These are the items raised most recently.
 
+### Next up, ahead of everything else
+
+**Native app packages (the DMG blocker). BUILT 24 August, not yet committed.**
+Raised by the TeraConvert maker: signed and notarized Mac DMG, closed source,
+drag to Applications, no terminal and no `SETUP.md`. The App Package contract
+assumed source-available software, so he could not list.
+
+What shipped:
+
+- `SetupMode` gained `"installer"`, and a `Platform` type was added
+  (`macos | windows | linux | cross`). **Setup-mode copy now lives in exhaustive
+  `Record<SetupMode, ...>` maps in `lib/types.ts`** rather than in ternaries. The
+  four `mode === "one-command" ? a : b` reads scattered across the seller form,
+  listing page and admin console would each have silently labelled installers as
+  "AI-assisted". A Record makes the next mode a compile error.
+- `platform` is asked for only when `runtime === "binary"`, and now drives
+  schema.org `operatingSystem`. Previously every desktop app published
+  "Windows, macOS, Linux", so a Mac-only DMG was advertised to Google, and to
+  buyers, as running on Windows.
+- `.dmg` uploads: `lib/media.ts` owns the rules (`validatePackage`,
+  `packageAccept`, `maxPackageBytes`), installers cap at 500MB against 200MB for
+  source, `storage.rules` raised to match, `uploadPackage` stores the real
+  extension, and `/api/download` names the file from the stored path instead of
+  hardcoding `.zip`. Switching setup method drops a package that no longer fits.
+- **`scripts/verify-package.ts`** is the source-review substitute for installers:
+  `codesign` + `spctl` + `xcrun stapler validate`, writing a
+  `packageVerification` verdict onto the listing. **It has to run on macOS**, so
+  it cannot run on Vercel or in a Linux container. The admin review page shows
+  the verdict and shouts when it is missing or stale (a re-upload changes
+  `packagePath`, which invalidates an older pass).
+
+  ```
+  npx tsx --env-file=.env.local scripts/verify-package.ts <listingId>
+  ```
+
+- `/docs/app-package` gained a "Two kinds of package" fork and an Installers
+  section with the three commands a seller can run themselves.
+
+**Still open on this.** The seller form says "We check the signature before it
+goes live", which is only true if the admin runs the script. The intended fix is
+a `macos-latest` GitHub Actions runner (free, the repo is public) triggered by
+`repository_dispatch` on submission, posting the verdict back to a callback
+route. **The dispatch payload must carry the listing id only, never a signed
+download URL:** workflow logs are public on a public repo. Needs two secrets,
+`GH_DISPATCH_TOKEN` and `NOTARIZE_CALLBACK_SECRET`.
+
+**Rejected, deliberately: "or provide a download link".** A link is reviewed once
+and mutable forever, which is the package-overwrite hole reintroduced through the
+front door. It also breaks delivery, "own forever" when a link dies, and the
+version tracking behind the Library's "update available" flag.
+
 ### In flight
 
 - **URL import for the listing form.** Paste a website or Product Hunt link and
-  the form fills itself. Built, not yet verified end to end by a signed-in
-  seller. `PRODUCTHUNT_TOKEN` is optional and worth having; `GITHUB_API_TOKEN` is
-  marginal because a repo that is for sale is usually private.
+  the form fills itself. Shipped to `staging` and `main` on 24 August
+  (`9e1a0f2`) and confirmed working by a real seller, who called the Product
+  Hunt import the best part of the flow. `PRODUCTHUNT_TOKEN` is set in Vercel
+  and worth having; `GITHUB_API_TOKEN` is marginal because a repo that is for
+  sale is usually private, and GitHub falls back to unauthenticated on a 401 so
+  an expired token degrades rather than breaks.
 
 ### Requested 24 August
 

@@ -298,6 +298,7 @@ function EditForm({
             >
               <option value="one-command">No setup needed (1 command)</option>
               <option value="ai-assisted">Guided setup (AI-assisted)</option>
+              <option value="installer">Installer (drag to Applications)</option>
             </select>
           </Field>
         </div>

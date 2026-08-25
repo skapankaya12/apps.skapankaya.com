@@ -119,7 +119,11 @@ export async function POST(req: Request) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  const filename = `${safeTitle}-${listing.version ?? "1.0.0"}.zip`;
+  // Take the extension from what was actually stored. Packages are no longer
+  // always zips, and handing a buyer a .dmg named .zip means macOS refuses to
+  // open the thing they just paid for.
+  const storedExt = /\.[a-z0-9]+$/i.exec(listing.packagePath)?.[0] ?? ".zip";
+  const filename = `${safeTitle}-${listing.version ?? "1.0.0"}${storedExt.toLowerCase()}`;
 
   const [url] = await getAdminBucket()
     .file(listing.packagePath)

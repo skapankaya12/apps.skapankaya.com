@@ -1,3 +1,5 @@
+import { INSTALLER_EXTENSIONS, type SetupMode } from "./types";
+
 /* ---------------------------------------------------------------------------
    Rules about the files a listing carries, in one place.
 
@@ -16,6 +18,54 @@
 export const MAX_DEMO_BYTES = 150 * 1024 * 1024;
 export const MAX_DEMO_SECONDS = 40;
 export const MAX_PACKAGE_BYTES = 200 * 1024 * 1024;
+
+/**
+ * Installers get more room than source packages.
+ *
+ * A zipped script is small because it is text. A native app carries frameworks,
+ * universal binaries and assets, and a signed Mac DMG routinely passes 200MB
+ * without anything being wrong with it. Keep the tighter limit where it still
+ * means something.
+ */
+export const MAX_INSTALLER_BYTES = 500 * 1024 * 1024;
+
+/** The cap that applies to a package, given how the tool is set up. */
+export function maxPackageBytes(setupMode: SetupMode): number {
+  return setupMode === "installer" ? MAX_INSTALLER_BYTES : MAX_PACKAGE_BYTES;
+}
+
+/** What the file picker should offer, given how the tool is set up. */
+export function packageAccept(setupMode: SetupMode): string {
+  return setupMode === "installer" ? INSTALLER_EXTENSIONS.join(",") : ".zip";
+}
+
+/**
+ * Check a chosen package before anyone waits on an upload. Returns the message
+ * to show, or null when the file is fine.
+ */
+export function validatePackage(file: File, setupMode: SetupMode): string | null {
+  const cap = maxPackageBytes(setupMode);
+  const capMb = Math.round(cap / (1024 * 1024));
+  const wantsInstaller = setupMode === "installer";
+  const name = file.name.toLowerCase();
+
+  if (wantsInstaller && !INSTALLER_EXTENSIONS.some((ext) => name.endsWith(ext))) {
+    return "Installers must be a .dmg right now. Mac is the only format we can verify, so it is the only one we accept.";
+  }
+  if (!wantsInstaller && !name.endsWith(".zip")) {
+    return "That needs to be a .zip. If you are selling a native app, pick Installer as the setup method.";
+  }
+  if (file.size > cap) {
+    return `That file is over the ${capMb}MB limit.`;
+  }
+  return null;
+}
+
+/** The extension a package is stored under, derived from the file itself. */
+export function packageExtension(file: File): string {
+  const match = /\.[a-z0-9]+$/i.exec(file.name);
+  return (match?.[0] ?? ".zip").toLowerCase();
+}
 
 /**
  * True for a QuickTime container. Checked by both MIME type and extension: a

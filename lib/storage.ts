@@ -2,6 +2,7 @@
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "./firebase";
+import { packageExtension } from "./media";
 
 /* ---------------------------------------------------------------------------
    Client-side uploads to Firebase Storage.
@@ -57,9 +58,15 @@ export async function uploadPackage(
   listingId: string,
   file: File
 ): Promise<string> {
-  const path = `submissions/${uid}/${listingId}.zip`;
+  // The extension comes from the file, because a .dmg and a .zip are both
+  // legitimate packages now and the stored path is what the download route
+  // hands back to a buyer. storage.rules matches on the folder, not the name,
+  // so widening this does not widen who can write there.
+  const ext = packageExtension(file);
+  const path = `submissions/${uid}/${listingId}${ext}`;
   await uploadBytes(ref(storage, path), file, {
-    contentType: file.type || "application/zip",
+    contentType:
+      file.type || (ext === ".dmg" ? "application/x-apple-diskimage" : "application/zip"),
   });
   return path;
 }

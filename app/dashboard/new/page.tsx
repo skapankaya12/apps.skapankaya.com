@@ -23,10 +23,14 @@ import {
   TAGLINE_MAX,
   TITLE_MAX,
   type Category,
+  type Platform,
   type Runtime,
   type SetupMode,
   type Listing,
   type AppUser,
+  PLATFORM_LABELS,
+  SETUP_MODE_LABELS,
+  SETUP_MODE_HINTS,
 } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 import { Field, FormSection, inputClass } from "@/components/ui/form";
@@ -34,7 +38,7 @@ import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { ImportFromUrl } from "@/components/ImportFromUrl";
 import type { ImportResult, SourceKind } from "@/lib/importClient";
 import { SOURCE_LABELS } from "@/lib/importClient";
-import { MAX_PACKAGE_BYTES, captureVideoPoster, validateDemo } from "@/lib/media";
+import { packageAccept, validatePackage, captureVideoPoster, validateDemo } from "@/lib/media";
 import { safeHttpsUrl } from "@/lib/utils";
 
 export default function NewListingPage() {
@@ -89,6 +93,8 @@ function NewListingForm() {
   return <ListingForm user={user} editId={editId} editing={editing} />;
 }
 
+const SETUP_MODES: SetupMode[] = ["one-command", "ai-assisted", "installer"];
+
 function ListingForm({
   user,
   editId,
@@ -116,6 +122,7 @@ function ListingForm({
   const categories = useStoreValue(getCategories);
   const [runtime, setRuntime] = useState<Runtime>(start.values.runtime);
   const [setupMode, setSetupMode] = useState<SetupMode>(start.values.setupMode);
+  const [platform, setPlatform] = useState<Platform>(start.values.platform);
   const [price, setPrice] = useState(start.values.price);
   const [packageFile, setPackageFile] = useState<File | null>(null);
   const [screenshotFiles, setScreenshotFiles] = useState<File[]>([]);
@@ -168,6 +175,8 @@ function ListingForm({
   // it's submitted. Fall back to the first live one, so a tool is never filed
   // under a category that no longer exists and nobody can browse to. Derived
   // rather than stored, so a filter reappearing restores the seller's choice.
+  const isInstaller = setupMode === "installer";
+
   const activeCategory =
     categories.some((c) => c.id === category)
       ? category
@@ -175,7 +184,7 @@ function ListingForm({
 
   const draft: Draft = {
     title, tagline, description, category: activeCategory, runtime, setupMode,
-    price, sellerBio, sellerEmail, sellerWebsite, savedAt: 0,
+    price, sellerBio, sellerEmail, sellerWebsite, platform, savedAt: 0,
   };
   const draftJson = JSON.stringify(draft);
 
@@ -364,6 +373,7 @@ function ListingForm({
         description: description.trim(),
         category: activeCategory,
         runtime,
+        platform: runtime === "binary" ? platform : undefined,
         setupMode,
         priceCents,
         screenshots,
@@ -400,11 +410,27 @@ function ListingForm({
     setScreenshotFiles((prev) => [...prev, ...Array.from(files)].slice(0, room));
   }
 
+  /**
+   * Switching setup method can invalidate a package already chosen: a .zip is
+   * not an installer and a .dmg is not a source package. Drop it here, where
+   * the seller is looking, rather than at submit when they've moved on.
+   */
+  function chooseSetupMode(mode: SetupMode) {
+    setSetupMode(mode);
+    if (packageFile && validatePackage(packageFile, mode)) {
+      setPackageFile(null);
+      setError("That package doesn't match the setup method you picked. Choose the file again.");
+    }
+  }
+
   function pickPackage(file: File | null) {
     setError("");
-    if (file && file.size > MAX_PACKAGE_BYTES) {
+    // What counts as a valid package depends on the setup method: source in a
+    // .zip, or a signed .dmg for a native app. lib/media owns both rules.
+    const problem = file && validatePackage(file, setupMode);
+    if (problem) {
       setPackageFile(null);
-      setError("Your package is over the 200MB limit. Please slim it down.");
+      setError(problem);
       return;
     }
     setPackageFile(file);
@@ -579,6 +605,26 @@ function ListingForm({
               </select>
             </Field>
           </div>
+
+          {/* Only a compiled app has a platform worth asking about. A script is
+              portable because its runtime is, so asking would be noise on every
+              listing to serve a minority of them. */}
+          {runtime === "binary" && (
+            <Field
+              label="Runs on"
+              hint="Buyers see this before they pay."
+            >
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value as Platform)}
+                className={inputClass}
+              >
+                {(Object.keys(PLATFORM_LABELS) as Platform[]).map((p) => (
+                  <option key={p} value={p}>{PLATFORM_LABELS[p]}</option>
+                ))}
+              </select>
+            </Field>
+          )}
         </FormSection>
 
 
@@ -604,25 +650,21 @@ function ListingForm({
           </Field>
 
           <Field label="Setup method">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(["one-command", "ai-assisted"] as SetupMode[]).map((mode) => (
+            <div className="grid gap-3 sm:grid-cols-3">
+              {SETUP_MODES.map((mode) => (
                 <button
                   type="button"
                   key={mode}
-                  onClick={() => setSetupMode(mode)}
+                  onClick={() => chooseSetupMode(mode)}
                   className={`rounded-xl border p-4 text-left text-sm transition-colors ${
                     setupMode === mode
                       ? "border-[var(--accent)] bg-[var(--accent-soft)]"
                       : "border-[var(--border-strong)] hover:bg-[var(--surface-muted)]"
                   }`}
                 >
-                  <span className="font-medium">
-                    {mode === "one-command" ? "One command" : "AI-assisted"}
-                  </span>
+                  <span className="font-medium">{SETUP_MODE_LABELS[mode]}</span>
                   <span className="mt-1 block text-xs text-[var(--muted)]">
-                    {mode === "one-command"
-                      ? "Runs with a single terminal command."
-                      : "Buyer's AI assistant sets it up from SETUP.md."}
+                    {SETUP_MODE_HINTS[mode]}
                   </span>
                 </button>
               ))}
@@ -633,8 +675,12 @@ function ListingForm({
         <FormSection title="Files">
           {/* App package upload */}
           <Field
-            label="App package (.zip)"
-            hint="Needs manifest.json, README.md, SETUP.md, LICENSE.md and src/. Max 200MB."
+            label={isInstaller ? "Installer (.dmg)" : "App package (.zip)"}
+            hint={
+              isInstaller
+                ? "Signed and notarized. We check the signature before it goes live. Max 500MB."
+                : "Needs manifest.json, README.md, SETUP.md, LICENSE.md and src/. Max 200MB."
+            }
           >
             <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-6 text-sm hover:border-[var(--accent)]">
               <span className="text-[var(--muted)]">
@@ -654,7 +700,7 @@ function ListingForm({
               </span>
               <input
                 type="file"
-                accept=".zip"
+                accept={packageAccept(setupMode)}
                 className="hidden"
                 onChange={(e) => pickPackage(e.target.files?.[0] ?? null)}
               />
@@ -930,6 +976,7 @@ type Draft = {
   category: Category;
   runtime: Runtime;
   setupMode: SetupMode;
+  platform: Platform;
   price: string;
   sellerBio: string;
   sellerEmail: string;
@@ -944,6 +991,7 @@ const EMPTY_DRAFT: Draft = {
   category: "productivity",
   runtime: "node",
   setupMode: "one-command",
+  platform: "macos",
   price: "15",
   sellerBio: "",
   sellerEmail: "",
@@ -989,6 +1037,9 @@ function draftFromListing(listing: Listing): Draft {
     category: listing.category,
     runtime: listing.runtime,
     setupMode: listing.setupMode,
+    // Listings predate the platform field; macOS is the only installer format
+    // accepted today, so it is the safe default rather than a guess.
+    platform: listing.platform ?? "macos",
     price: String(listing.priceCents / 100),
     sellerBio: listing.sellerBio ?? "",
     sellerEmail: listing.sellerEmail ?? "",

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
@@ -15,7 +16,12 @@ import {
   toggleBookmark,
   getCategories,
 } from "@/lib/store";
-import { RUNTIME_LABELS, categoryLabel, type Listing } from "@/lib/types";
+import {
+  RUNTIME_LABELS,
+  categoryLabel,
+  type Listing,
+  type SetupMode,
+} from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
@@ -28,6 +34,50 @@ import { RichText } from "./RichText";
  * rendered into the HTML (so crawlers and the first paint see the real tool,
  * not a spinner); the live client store takes over the moment it hydrates.
  */
+/**
+ * What "how you'll run it" says, per setup mode.
+ *
+ * A Record rather than a ternary chain: the union gained `installer` and a
+ * two-branch ternary would have shown every native app the AI-assistant copy,
+ * telling a buyer to open a .dmg in Cursor. Keyed by the union, so a fourth
+ * mode fails to compile until it has copy of its own.
+ */
+const SETUP_COPY: Record<SetupMode, ReactNode> = {
+  "one-command": (
+    <>
+      <Badge tone="accent" className="mb-3">No setup needed</Badge>
+      <p className="text-sm text-[var(--muted)]">
+        Download, open the folder, and start it with the single step in the
+        included guide. If you&apos;d rather not touch anything technical, an AI
+        assistant can do it for you too.
+      </p>
+    </>
+  ),
+  "ai-assisted": (
+    <>
+      <Badge tone="accent" className="mb-3">Guided setup</Badge>
+      <p className="text-sm text-[var(--muted)]">
+        No coding needed. Open the downloaded folder in a free AI assistant
+        (like Claude or Cursor) and say{" "}
+        <span className="rounded bg-[var(--foreground)] px-1.5 py-0.5 font-mono text-xs text-[var(--background)]">
+          set this up and run it
+        </span>
+        . It reads the included guide and does the rest.
+      </p>
+    </>
+  ),
+  installer: (
+    <>
+      <Badge tone="accent" className="mb-3">Installs like any app</Badge>
+      <p className="text-sm text-[var(--muted)]">
+        No terminal and no setup file. Open the download and drag the app where
+        it belongs, the same as anything else you install. Every native app sold
+        here is checked for a valid developer signature before it goes live.
+      </p>
+    </>
+  ),
+};
+
 export function ListingDetail({
   slug,
   initial,
@@ -132,28 +182,7 @@ export function ListingDetail({
           <div className="mt-8">
             <h2 className="text-lg font-semibold">How you&apos;ll run it</h2>
             <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-              {listing.setupMode === "one-command" ? (
-                <>
-                  <Badge tone="accent" className="mb-3">No setup needed</Badge>
-                  <p className="text-sm text-[var(--muted)]">
-                    Download, open the folder, and start it with the single step in
-                    the included guide. If you&apos;d rather not touch anything
-                    technical, an AI assistant can do it for you too.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <Badge tone="accent" className="mb-3">Guided setup</Badge>
-                  <p className="text-sm text-[var(--muted)]">
-                    No coding needed. Open the downloaded folder in a free AI
-                    assistant (like Claude or Cursor) and say{" "}
-                    <span className="rounded bg-[var(--foreground)] px-1.5 py-0.5 font-mono text-xs text-[var(--background)]">
-                      set this up and run it
-                    </span>
-                    . It reads the included guide and does the rest.
-                  </p>
-                </>
-              )}
+              {SETUP_COPY[listing.setupMode]}
               <Link href="/how-to-run" className="mt-4 inline-block text-sm font-medium text-[var(--accent)] hover:underline">
                 See the full how-to-run guide →
               </Link>

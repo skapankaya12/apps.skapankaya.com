@@ -11,6 +11,7 @@ import { getCategoryLabelServer } from "@/lib/categories.server";
 import { ListingDetail } from "@/components/ListingDetail";
 import { JsonLd } from "@/components/JsonLd";
 import { stripMarkdown } from "@/lib/markdown";
+import { PLATFORM_LABELS, type Listing } from "@/lib/types";
 
 /**
  * A listing page is the marketplace's long-tail search surface: someone types
@@ -75,6 +76,18 @@ const RUNTIME_OS: Record<string, string> = {
   other: "Windows, macOS, Linux",
 };
 
+/**
+ * What to publish as schema.org operatingSystem.
+ *
+ * A compiled app runs where it was compiled for, so its own `platform` wins.
+ * Without this a Mac-only DMG was advertised to Google, and read by every AI
+ * crawler, as running on Windows and Linux too.
+ */
+function operatingSystemFor(listing: Listing): string {
+  if (listing.platform) return PLATFORM_LABELS[listing.platform];
+  return RUNTIME_OS[listing.runtime] ?? RUNTIME_OS.other;
+}
+
 export default async function AppPage({
   params,
 }: {
@@ -101,7 +114,7 @@ export default async function AppPage({
     description: stripMarkdown(listing.description),
     url,
     applicationCategory: category,
-    operatingSystem: RUNTIME_OS[listing.runtime] ?? RUNTIME_OS.other,
+    operatingSystem: operatingSystemFor(listing),
     softwareVersion: listing.version,
     ...(listing.screenshots.some((s) => /^https?:\/\//.test(s))
       ? { screenshot: listing.screenshots.filter((s) => /^https?:\/\//.test(s)) }

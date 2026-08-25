@@ -12,6 +12,15 @@ const TREE = `my-tool.zip
 ├── LICENSE.md        # the licence the buyer owns it under
 └── src/              # your actual code`;
 
+const INSTALLER_CHECK = `# is it signed, and by whom?
+codesign -dv --verbose=4 YourApp.dmg
+
+# would Gatekeeper let someone open it?
+spctl -a -t open --context context:primary-signature -v YourApp.dmg
+
+# is Apple's notarization ticket stapled to this exact file?
+xcrun stapler validate YourApp.dmg`;
+
 const MANIFEST = `{
   "name": "CSV Cleaner",
   "version": "1.0.0",
@@ -54,8 +63,51 @@ export default function Page() {
         unattended. This page is the spec, with a worked example you can copy.
       </p>
 
+      <H2 id="two-kinds">Two kinds of package</H2>
+      <p>
+        Most tools here are source you hand over: a zip the buyer unpacks and
+        runs. If that is what you are selling, the structure below is the
+        contract and the rest of this page is for you.
+      </p>
+      <p>
+        A native app is different. There is no entry command and no setup file,
+        because opening it and dragging it where it belongs <em>is</em> the
+        setup. Pick <strong>Installer</strong> as the setup method and upload
+        the app itself.
+      </p>
+
+      <H2 id="installer">Installers</H2>
+      <p>
+        Today that means a <code>.dmg</code> for macOS, up to 500&nbsp;MB, and it
+        has to be <strong>signed with a Developer ID and notarized by Apple</strong>,
+        with the ticket stapled to the file. If you already ship it from your own
+        site without Gatekeeper warning people off, it is almost certainly
+        already both.
+      </p>
+      <p>You can check the exact file you are about to upload:</p>
+      <pre>
+        <code>{INSTALLER_CHECK}</code>
+      </pre>
+      <Callout tone="warn" title="Why only Mac, and only for now">
+        An installer is the one upload nobody can read, so we only accept
+        formats where the platform gives us something to check. Apple
+        notarization does that and we verify it on every submission. There is no
+        equivalent signal for a bare Windows <code>.exe</code>, so we would
+        rather not accept one than pretend it was checked. Windows and Linux
+        follow when we can say something true about them.
+      </Callout>
+      <p>
+        Notarization means Apple scanned the file and found no known malware. It
+        is not a judgement about whether the app is any good, so a human still
+        reviews every listing, and you still owe buyers a working tool, a real
+        support address and the refund policy.
+      </p>
+
       <H2 id="structure">The structure</H2>
-      <p>Your zip must contain exactly this, and stay under 200&nbsp;MB:</p>
+      <p>
+        For a source package, your zip must contain exactly this, and stay under
+        200&nbsp;MB:
+      </p>
       <pre>
         <code>{TREE}</code>
       </pre>

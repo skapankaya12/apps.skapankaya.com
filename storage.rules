@@ -24,7 +24,10 @@ service firebase.storage {
       allow read: if false;
       allow write: if request.auth != null
         && request.auth.uid == uid
-        && request.resource.size < 200 * 1024 * 1024; // 200MB cap
+        // 500MB: a native installer carries frameworks and universal binaries
+        // and routinely passes 200MB. The tighter 200MB limit on source
+        // packages is enforced where the two are told apart, in lib/media.
+        && request.resource.size < 500 * 1024 * 1024;
     }
 
     // Approved, purchasable packages: apps/{listingId}/{version}.zip

@@ -12,7 +12,7 @@ import {
   setListingCategory,
   getCategories,
 } from "@/lib/store";
-import { RUNTIME_LABELS } from "@/lib/types";
+import { RUNTIME_LABELS, SETUP_MODE_LABELS, type Listing } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 import { RichText } from "@/components/RichText";
@@ -25,6 +25,58 @@ const CHECKLIST = [
   "AI code scan shows no red flags (no exfiltration, no hidden shell-out)",
   "Listing is honest: real screenshots, accurate description",
 ];
+
+/**
+ * The Apple signature verdict for a native installer.
+ *
+ * Deliberately loud when it is missing. The seller form tells makers "we check
+ * the signature before it goes live", and that sentence is only true if this
+ * check actually ran, so an unchecked installer has to look wrong rather than
+ * look neutral. A verdict recorded against a different packagePath is treated
+ * as missing: the seller re-uploaded, and the old pass vouches for a file that
+ * is no longer there.
+ */
+function SignatureVerdict({ listing }: { listing: Listing }) {
+  const v = listing.packageVerification;
+  const stale = Boolean(v && listing.packagePath && v.packagePath !== listing.packagePath);
+  const state = !v || stale ? "missing" : v.status;
+
+  const tone =
+    state === "pass"
+      ? "border-[var(--success)] bg-[var(--success-soft)] text-[var(--success)]"
+      : state === "fail"
+        ? "border-[var(--danger)] bg-[var(--danger-soft)] text-[var(--danger)]"
+        : "border-[var(--warning)] bg-[var(--warning-soft)] text-[var(--warning)]";
+
+  return (
+    <div className={`mt-3 rounded-xl border p-4 text-sm ${tone}`}>
+      <p className="font-semibold">
+        {state === "pass"
+          ? "Apple signature verified"
+          : state === "fail"
+            ? "Apple signature check FAILED"
+            : stale
+              ? "Package changed since it was last checked"
+              : "Not checked yet"}
+      </p>
+      {state === "pass" && v ? (
+        <p className="mt-1 text-[var(--muted)]">
+          Notarized and signed{v.authority ? ` by ${v.authority}` : ""}
+          {v.teamId ? ` (team ${v.teamId})` : ""}. Apple found no known malware,
+          which is not the same as the app being good. Still your call.
+        </p>
+      ) : (
+        <p className="mt-1 text-[var(--muted)]">
+          {v?.detail ? `${v.detail}. ` : ""}Run this before approving:
+          <code className="ml-1 rounded bg-[var(--surface)] px-1.5 py-0.5 font-mono text-xs text-[var(--foreground)]">
+            npx tsx --env-file=.env.local scripts/verify-package.ts {listing.id}
+          </code>
+        </p>
+      )}
+    </div>
+  );
+}
+
 
 export default function AdminReviewPage() {
   const params = useParams<{ id: string }>();
@@ -113,7 +165,7 @@ export default function AdminReviewPage() {
             <Badge tone="neutral">{RUNTIME_LABELS[listing.runtime]}</Badge>
             <Badge tone="neutral">v{listing.version}</Badge>
             <Badge tone="accent">
-              {listing.setupMode === "one-command" ? "1-command" : "AI-assisted"}
+              {SETUP_MODE_LABELS[listing.setupMode]}
             </Badge>
             <Badge tone="neutral">{formatPrice(listing.priceCents)}</Badge>
           </div>
@@ -196,6 +248,13 @@ export default function AdminReviewPage() {
           </div>
           {downloadError && (
             <p className="mt-2 text-sm text-[var(--danger)]">{downloadError}</p>
+          )}
+
+          {/* An installer can't be read, so the Apple signature check stands in
+              for source review. Show it here, next to Approve, because that is
+              the moment it changes a decision. */}
+          {listing.setupMode === "installer" && (
+            <SignatureVerdict listing={listing} />
           )}
 
           {listing.status !== "pending" && listing.reviewNote && (
