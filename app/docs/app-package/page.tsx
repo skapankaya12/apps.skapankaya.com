@@ -111,11 +111,10 @@ export default function Page() {
       <pre>
         <code>{TREE}</code>
       </pre>
-      <Callout tone="warn" title="It's checked at upload">
-        The upload step verifies these files are present. A zip missing{" "}
+      <Callout tone="warn" title="It's checked by hand">
+        Every package is downloaded and opened during review. A zip missing{" "}
         <code>manifest.json</code>, <code>README.md</code>, <code>SETUP.md</code>,{" "}
-        <code>LICENSE.md</code>{" "}or <code>src/</code>{" "}is rejected before it ever
-        reaches review.
+        <code>LICENSE.md</code>{" "}or <code>src/</code>{" "}is sent back.
       </Callout>
 
       <H2 id="manifest">manifest.json</H2>

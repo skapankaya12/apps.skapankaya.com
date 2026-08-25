@@ -275,6 +275,17 @@ route. **The dispatch payload must carry the listing id only, never a signed
 download URL:** workflow logs are public on a public repo. Needs two secrets,
 `GH_DISPATCH_TOKEN` and `NOTARIZE_CALLBACK_SECRET`.
 
+**Windows and Linux installers: wanted, not yet accepted.** `.dmg` is the only
+format `INSTALLER_EXTENSIONS` allows, because Apple notarization is the only
+signal the platform can actually verify. Windows has Authenticode signing and
+SmartScreen reputation, Linux has detached GPG signatures on AppImage, and both
+are checkable in principle, but neither has a story as clean as `stapler
+validate` and neither can be checked from a Mac or a Linux runner as simply.
+Widening `INSTALLER_EXTENSIONS` without bringing a verification story is the
+thing not to do: `/sell` and `/docs/app-package` both now promise buyers that a
+native app is signed and verified. Revisit when a Windows or Linux maker
+actually asks.
+
 **Rejected, deliberately: "or provide a download link".** A link is reviewed once
 and mutable forever, which is the package-overwrite hole reintroduced through the
 front door. It also breaks delivery, "own forever" when a link dies, and the
