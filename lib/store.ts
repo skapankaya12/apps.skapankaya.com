@@ -10,6 +10,7 @@ import {
   deleteDoc,
   writeBatch,
   onSnapshot,
+  runTransaction,
   query,
   where,
   type Unsubscribe,
@@ -45,6 +46,7 @@ import {
   type Category,
   type CategoryDef,
 } from "./types";
+import { normalizeHandle, handleProblem } from "./handles";
 
 /* ---------------------------------------------------------------------------
    Data store, backed by Firestore + Firebase Auth.
@@ -457,6 +459,148 @@ export async function setRole(role: Role) {
     throw new Error("Admin access can't be self-assigned.");
   }
   await updateDoc(doc(db, "users", currentUser.uid), { role });
+}
+
+/* ---------------------------------------------------------------------------
+   Seller profile and handles.
+
+   The profile is just fields on the user's own doc, so writing it is an
+   ordinary update and the live user-doc listener re-renders whatever is on
+   screen. The handle is the hard part: Firestore has no unique constraint on a
+   field, so uniqueness is enforced by making the handle itself a document id in
+   a separate `handles` collection and claiming it in a transaction.
+
+   That collection is world-readable (see firestore.rules) for two reasons: the
+   account page has to answer "is this taken?" before submitting, and /users is
+   readable only by its owner, so nothing else could resolve a handle to a
+   seller.
+--------------------------------------------------------------------------- */
+
+/** How long a seller must wait between handle changes. */
+export const HANDLE_COOLDOWN_DAYS = 30;
+const HANDLE_COOLDOWN_MS = HANDLE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+
+/**
+ * Whether a handle is free for the signed-in user to take.
+ *
+ * A handle they already own reads as available, so re-submitting the account
+ * form without changing it is not an error.
+ */
+export async function isHandleAvailable(input: string): Promise<boolean> {
+  const handle = normalizeHandle(input);
+  if (handleProblem(handle)) return false;
+  const snap = await getDoc(doc(db, "handles", handle));
+  if (!snap.exists()) return true;
+  return snap.data().uid === currentUser?.uid;
+}
+
+/**
+ * Claim a handle for the signed-in user, releasing nothing.
+ *
+ * The previous handle is kept, pointed at the same uid, and marked inactive
+ * rather than deleted. That is the whole point: a buyer who bookmarked
+ * /seller/joana must never one day land on a different person's profile. An
+ * inactive handle redirects to the seller's current one (see the route), and
+ * only an admin can ever delete one.
+ *
+ * Throws with a message meant to be shown to the seller.
+ */
+export async function claimHandle(input: string): Promise<void> {
+  if (!currentUser) throw new Error("Sign in first.");
+  const uid = currentUser.uid;
+  const handle = normalizeHandle(input);
+  const problem = handleProblem(handle);
+  if (problem) throw new Error(problem);
+
+  try {
+    await claimHandleTransaction(uid, handle);
+  } catch (err) {
+    // Only the messages written below are fit to show a seller. Everything else
+    // is a Firestore failure, and its wording ("Missing or insufficient
+    // permissions") means nothing to the person reading it.
+    if (err instanceof HandleError) throw new Error(err.message);
+    console.error("[claimHandle]", err);
+    throw new Error("Couldn't save that handle. Please try again.");
+  }
+}
+
+/** A refusal whose message is already written for the seller to read. */
+class HandleError extends Error {}
+
+async function claimHandleTransaction(uid: string, handle: string) {
+  await runTransaction(db, async (tx) => {
+    // Every read has to happen before every write inside a transaction.
+    const userRef = doc(db, "users", uid);
+    const userSnap = await tx.get(userRef);
+    const previous: string | undefined = userSnap.data()?.handle;
+    if (previous === handle) return; // Nothing to do; not an error.
+
+    const targetRef = doc(db, "handles", handle);
+    const targetSnap = await tx.get(targetRef);
+    if (targetSnap.exists() && targetSnap.data().uid !== uid) {
+      throw new HandleError("That handle is taken.");
+    }
+
+    // The cooldown only applies to a seller who already had a handle. Picking
+    // one for the first time is never rate limited.
+    const lastChange: number | undefined = userSnap.data()?.handleUpdatedAt;
+    if (previous && lastChange) {
+      const waited = Date.now() - lastChange;
+      if (waited < HANDLE_COOLDOWN_MS) {
+        const days = Math.ceil((HANDLE_COOLDOWN_MS - waited) / 86400000);
+        throw new HandleError(
+          `You can change your handle again in ${days} ${days === 1 ? "day" : "days"}.`
+        );
+      }
+    }
+
+    const now = Date.now();
+    tx.set(
+      targetRef,
+      { uid, handle, active: true, createdAt: targetSnap.data()?.createdAt ?? now },
+      { merge: true }
+    );
+    if (previous) {
+      tx.set(doc(db, "handles", previous), { active: false }, { merge: true });
+    }
+    tx.update(userRef, { handle, handleUpdatedAt: now });
+  });
+}
+
+/** The parts of a seller's public identity they edit themselves. */
+export type SellerProfileEdit = {
+  bio: string;
+  supportEmail: string;
+  website: string;
+  avatarUrl?: string;
+};
+
+/**
+ * Write the signed-in user's public profile.
+ *
+ * Empty strings are stored rather than deleted so a seller can clear a bio they
+ * no longer want. `avatarUrl` is only touched when one was uploaded, so saving
+ * the form without picking a new image keeps the current one.
+ */
+export async function saveSellerProfile(edit: SellerProfileEdit): Promise<void> {
+  if (!currentUser) throw new Error("Sign in first.");
+  const patch: Record<string, unknown> = {
+    bio: edit.bio.trim(),
+    supportEmail: edit.supportEmail.trim(),
+    website: edit.website.trim(),
+  };
+  if (edit.avatarUrl) patch.avatarUrl = edit.avatarUrl;
+  await updateDoc(doc(db, "users", currentUser.uid), patch);
+}
+
+/**
+ * Whether this seller has filled in enough to list.
+ *
+ * A support email is the one field a buyer is promised, so the listing form
+ * checks this before it will submit rather than collecting it again per tool.
+ */
+export function sellerProfileReady(user: AppUser | null): boolean {
+  return Boolean(user?.supportEmail?.trim() && user?.handle);
 }
 
 /**

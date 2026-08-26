@@ -73,6 +73,32 @@ export interface AppUser {
   email: string;
   displayName: string;
   role: Role;
+
+  /* -------------------------------------------------------------------------
+     Public seller identity.
+
+     These used to live on every Listing, which meant a seller with three tools
+     typed their bio three times and could not change it without sending all
+     three back through review. They belong to the person, not the product.
+
+     The listing still carries the old fields (see Listing.sellerBio and
+     friends) and they are still read as a fallback, so listings written before
+     this keep working. New writes go here.
+  ------------------------------------------------------------------------- */
+
+  /** Lowercase, unique. The {handle} in /seller/{handle}. See lib/handles.ts. */
+  handle?: string;
+  /** Epoch ms of the last handle change, which enforces the rename cooldown. */
+  handleUpdatedAt?: number;
+  /** A sentence about who they are, shown on the profile and every listing. */
+  bio?: string;
+  /** Published: where buyers reach them for help with a tool they bought. */
+  supportEmail?: string;
+  /** Their own site or profile. https only, validated with safeHttpsUrl. */
+  website?: string;
+  /** Public download URL. Absent means render the Monogram fallback. */
+  avatarUrl?: string;
+
   /** Stripe Connect (Express) account id, set once the seller onboards. */
   stripeAccountId?: string;
   /** Synced from Stripe via webhook: whether payouts are set up and live. */
@@ -80,6 +106,34 @@ export interface AppUser {
   stripePayoutsEnabled?: boolean;
   createdAt: number;
 }
+
+/**
+ * The public half of a seller, as any visitor may see it.
+ *
+ * Deliberately spelled out rather than a Pick<AppUser, ...>: AppUser carries an
+ * account email, a role and Stripe payout state, and none of that may ever
+ * reach a listing page by accident. Writing the public shape by hand means
+ * adding a private field to AppUser cannot silently publish it.
+ *
+ * Assembled on the server (lib/profiles.server.ts) because the Firestore rules
+ * keep /users readable only by its owner and admins. Client components take it
+ * as a prop; they cannot fetch it themselves.
+ */
+export interface SellerProfile {
+  uid: string;
+  /** Absent on sellers who signed up before handles existed. */
+  handle?: string;
+  displayName: string;
+  bio?: string;
+  supportEmail?: string;
+  website?: string;
+  avatarUrl?: string;
+  /** Epoch ms of account creation, shown as "Selling since 2026". */
+  memberSince: number;
+}
+
+/** How long a seller bio may run. A sentence or two, not a homepage. */
+export const BIO_MAX = 280;
 
 /**
  * One row of the admin console's users panel: the parts of an AppUser that the
@@ -111,11 +165,23 @@ export interface Listing {
   slug: string;
   sellerId: string;
   sellerName: string;
-  /** Short "about the seller" blurb shown to buyers on the listing page. */
+
+  /* -------------------------------------------------------------------------
+     Superseded by the seller's profile on AppUser. Read-only fallback.
+
+     Every listing written before profiles existed carries its own copy of the
+     seller's bio, contact and link, so these are still read when the profile
+     has nothing to offer (see resolveSellerProfile in lib/profiles.server.ts).
+     Nothing writes them any more, and the seller form no longer asks. Do not
+     delete them: dropping the field would blank the About-the-seller block on
+     every listing created before 26 August 2026.
+  ------------------------------------------------------------------------- */
+
+  /** @deprecated Use the seller's AppUser.bio. */
   sellerBio?: string;
-  /** Public support/contact email buyers can reach the seller at. */
+  /** @deprecated Use the seller's AppUser.supportEmail. */
   sellerEmail?: string;
-  /** Seller's website or profile link (https URL). */
+  /** @deprecated Use the seller's AppUser.website. */
   sellerWebsite?: string;
   title: string;
   tagline: string;

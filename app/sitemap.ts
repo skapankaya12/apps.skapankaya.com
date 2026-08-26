@@ -3,6 +3,7 @@ import { brand } from "@/lib/brand";
 import { articles } from "@/lib/articles";
 import { DOCS, docPath } from "@/components/Docs";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
+import { getSellerHandlesFor } from "@/lib/profiles.server";
 
 /** Revalidated with the catalogue, so new listings show up within minutes. */
 export const revalidate = 300;
@@ -69,5 +70,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-  return [...staticRoutes, ...docRoutes, ...listingRoutes, ...articleRoutes];
+  // One page per seller who has something on sale. "Who made this" is a real
+  // search, and it is the page a maker links to from their own site, so it is
+  // worth crawling even though it mostly repeats what the listings say.
+  const sellerRoutes = (await getSellerHandlesFor(listings)).map((handle) => ({
+    url: `${base}/seller/${handle}`,
+    lastModified: STATIC_LAST_MODIFIED,
+    changeFrequency: "weekly" as const,
+    priority: 0.5,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...docRoutes,
+    ...listingRoutes,
+    ...sellerRoutes,
+    ...articleRoutes,
+  ];
 }

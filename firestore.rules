@@ -35,6 +35,45 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /* -----------------------------------------------------------------------
+       Seller handles: the {handle} in /seller/{handle}.
+
+       This collection exists because Firestore cannot enforce that a field is
+       unique. A document id is unique by construction, so the handle IS the
+       document id and claiming one is a create that can only succeed while it
+       is free.
+
+       It is also the ONLY public map from a handle to a seller, since /users
+       below is readable by its owner alone. Resolution must always go through
+       here and never through a field on the user document: this collection is
+       the record of who owns a handle.
+    ----------------------------------------------------------------------- */
+    match /handles/{handle} {
+      // Public: the account page checks availability before submitting, and
+      // every visitor loading a profile needs to resolve the handle.
+      allow read: if true;
+
+      // First come, first served. The format is re-checked here rather than
+      // trusted from lib/handles.ts, because a handle is public identity and
+      // the client asserting its own validity is not a control.
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.handle == handle
+        && handle.matches('^[a-z0-9]([a-z0-9-]{1,28})[a-z0-9]$');
+
+      // Only the owner touches an existing handle, and only to flip `active`
+      // when renaming. Rewriting uid is refused, so a handle can never be
+      // handed to, or blamed on, another account.
+      allow update: if isSignedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid;
+
+      // Never released back into the pool. A retired handle keeps pointing at
+      // its original owner so a bookmarked profile URL cannot one day resolve
+      // to a different person.
+      allow delete: if isAdmin();
+    }
+
     match /listings/{id} {
       // Anyone may read approved listings; sellers read their own; admins read all.
       allow read: if resource.data.status == 'approved'

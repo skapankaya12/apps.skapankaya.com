@@ -29,6 +29,31 @@ export const MAX_PACKAGE_BYTES = 200 * 1024 * 1024;
  */
 export const MAX_INSTALLER_BYTES = 500 * 1024 * 1024;
 
+/**
+ * Avatars are small on purpose.
+ *
+ * This is rendered at 80px at its largest, so anything past a couple of
+ * megabytes is a photo straight off a phone that every visitor then downloads.
+ * Mirrored in storage.rules.
+ */
+export const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+
+/** What the avatar picker offers. GIF is excluded: an animated face is a lot. */
+export const AVATAR_ACCEPT = "image/png,image/jpeg,image/webp";
+
+/**
+ * Check a chosen avatar. Returns the message to show, or null when it is fine.
+ */
+export function validateAvatar(file: File): string | null {
+  if (!AVATAR_ACCEPT.split(",").includes(file.type)) {
+    return "Use a PNG, JPEG or WebP image.";
+  }
+  if (file.size > MAX_AVATAR_BYTES) {
+    return `That image is ${(file.size / 1024 / 1024).toFixed(1)}MB. The limit is 2MB.`;
+  }
+  return null;
+}
+
 /** The cap that applies to a package, given how the tool is set up. */
 export function maxPackageBytes(setupMode: SetupMode): number {
   return setupMode === "installer" ? MAX_INSTALLER_BYTES : MAX_PACKAGE_BYTES;

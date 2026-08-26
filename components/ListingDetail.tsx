@@ -21,12 +21,14 @@ import {
   categoryLabel,
   type Listing,
   type SetupMode,
+  type SellerProfile,
 } from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
 import { Expandable } from "./Expandable";
 import { ListingGallery } from "./ListingGallery";
+import { SellerAvatar } from "./SellerAvatar";
 import { RichText } from "./RichText";
 
 /**
@@ -81,9 +83,18 @@ const SETUP_COPY: Record<SetupMode, ReactNode> = {
 export function ListingDetail({
   slug,
   initial,
+  seller,
 }: {
   slug: string;
   initial?: Listing;
+  /**
+   * The seller's public profile, read on the server (see lib/profiles.server).
+   * Passed in rather than fetched because the Firestore rules keep /users
+   * readable by its owner alone, so this component cannot look it up. Absent
+   * only where a caller hasn't been updated, which falls back to the copy of
+   * the seller's details stored on the listing itself.
+   */
+  seller?: SellerProfile;
 }) {
   const router = useRouter();
   const user = useUser();
@@ -192,46 +203,7 @@ export function ListingDetail({
           {/* About / contact the seller */}
           <div className="mt-8">
             <h2 className="text-lg font-semibold">About the seller</h2>
-            <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-              <div className="flex items-start gap-3">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-base font-semibold text-[var(--accent)]">
-                  {listing.sellerName.trim().charAt(0).toUpperCase() || "?"}
-                </div>
-                <div className="min-w-0">
-                  {/* break-words: a name or bio can carry a long URL or an
-                      unspaced run, which otherwise pushes straight out of the
-                      card on a phone instead of wrapping. */}
-                  <div className="break-words font-medium">{listing.sellerName}</div>
-                  <p className="mt-1 break-words text-sm text-[var(--muted)]">
-                    {listing.sellerBio?.trim() ||
-                      "An independent maker selling small, local-first tools on the marketplace."}
-                  </p>
-                </div>
-              </div>
-
-              {(listing.sellerEmail || safeHttpsUrl(listing.sellerWebsite)) && (
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
-                  {listing.sellerEmail && (
-                    <a
-                      href={`mailto:${listing.sellerEmail}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"
-                    >
-                      <MailIcon /> Contact
-                    </a>
-                  )}
-                  {safeHttpsUrl(listing.sellerWebsite) && (
-                    <a
-                      href={safeHttpsUrl(listing.sellerWebsite)}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"
-                    >
-                      <GlobeIcon /> Website
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
+            <SellerCard listing={listing} seller={seller} />
           </div>
 
           <div className="mt-8">
@@ -328,6 +300,92 @@ function Spinner() {
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
     </svg>
+  );
+}
+
+/**
+ * Who made this, and how to reach them.
+ *
+ * Reads the seller's profile, falling back per field to the copy of their
+ * details stored on the listing. Per field rather than per seller on purpose:
+ * a seller who has written a bio on their profile but never filled in a website
+ * should still show the website their older listing carried.
+ *
+ * The name links to the full profile only when the seller has a handle. Sellers
+ * who signed up before handles existed have no page to link to, and a dead link
+ * is worse than plain text.
+ */
+function SellerCard({
+  listing,
+  seller,
+}: {
+  listing: Listing;
+  seller?: SellerProfile;
+}) {
+  const name = seller?.displayName || listing.sellerName;
+  const bio = seller?.bio?.trim() || listing.sellerBio?.trim();
+  const email = seller?.supportEmail || listing.sellerEmail;
+  const website = safeHttpsUrl(seller?.website || listing.sellerWebsite);
+  const handle = seller?.handle;
+
+  return (
+    <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+      <div className="flex items-start gap-3">
+        <SellerAvatar
+          seller={{ displayName: name, avatarUrl: seller?.avatarUrl }}
+        />
+        <div className="min-w-0">
+          {/* break-words: a name or bio can carry a long URL or an unspaced
+              run, which otherwise pushes straight out of the card on a phone
+              instead of wrapping. */}
+          {handle ? (
+            <Link
+              href={`/seller/${handle}`}
+              className="break-words font-medium hover:text-[var(--accent)]"
+            >
+              {name}
+            </Link>
+          ) : (
+            <div className="break-words font-medium">{name}</div>
+          )}
+          <p className="mt-1 break-words text-sm text-[var(--muted)]">
+            {bio ||
+              "An independent maker selling small, local-first tools on the marketplace."}
+          </p>
+        </div>
+      </div>
+
+      {(email || website) && (
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
+          {email && (
+            <a
+              href={`mailto:${email}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"
+            >
+              <MailIcon /> Contact
+            </a>
+          )}
+          {website && (
+            <a
+              href={website}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"
+            >
+              <GlobeIcon /> Website
+            </a>
+          )}
+          {handle && (
+            <Link
+              href={`/seller/${handle}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] hover:border-[var(--accent)]"
+            >
+              More from {name}
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

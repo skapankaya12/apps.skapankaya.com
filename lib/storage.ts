@@ -139,3 +139,21 @@ export async function uploadScreenshots(
     })
   );
 }
+
+/**
+ * Upload a seller's avatar. Returns the public URL to store on their user doc.
+ *
+ * Timestamped like the screenshots, and for the same reason: the public assets
+ * carry an immutable cache header, so replacing a face has to produce a new URL
+ * rather than new bytes at the old one. Otherwise a seller changes their photo
+ * and keeps seeing the old one for a year.
+ */
+export async function uploadAvatar(uid: string, file: File): Promise<string> {
+  const path = `public/avatars/${uid}/${Date.now()}${ext(file.name) || ".png"}`;
+  const r = ref(storage, path);
+  await uploadBytes(r, file, {
+    contentType: file.type || "image/png",
+    cacheControl: PUBLIC_ASSET_CACHE,
+  });
+  return getDownloadURL(r);
+}

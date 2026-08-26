@@ -1,0 +1,171 @@
+import type { Metadata } from "next";
+import { notFound, redirect } from "next/navigation";
+import { brand } from "@/lib/brand";
+import {
+  resolveHandle,
+  getSellerProfile,
+  getListingsBySeller,
+} from "@/lib/profiles.server";
+import { safeHttpsUrl } from "@/lib/utils";
+import { Section } from "@/components/ui";
+import { SellerAvatar } from "@/components/SellerAvatar";
+import { ListingCard } from "@/components/ListingCard";
+import type { SellerProfile } from "@/lib/types";
+
+/**
+ * A seller's public page.
+ *
+ * The marketplace sells "a real person made this", and until now there was
+ * nowhere that person existed as anything other than a name repeated on each of
+ * their listings. This is also the page a maker can link to from their own
+ * site, which during a seller-first launch is most of the distribution.
+ *
+ * Server-rendered like the listing pages, and for the same reason: the user
+ * document is not readable from the client, and a crawler does not run JS.
+ */
+export const revalidate = 300;
+
+/** Shared by the page and its metadata, so both agree on who this is. */
+async function load(handleParam: string) {
+  const handle = handleParam.toLowerCase();
+  const owner = await resolveHandle(handle);
+  if (!owner) return null;
+  const profile = await getSellerProfile(owner.uid);
+  if (!profile) return null;
+  return { owner, profile, handle };
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}): Promise<Metadata> {
+  const { handle } = await params;
+  const found = await load(handle);
+  if (!found) return { title: "Seller not found" };
+
+  const { profile } = found;
+  const description =
+    profile.bio?.trim() ||
+    `Tools by ${profile.displayName} on ${brand.name}. Buy once, own forever.`;
+
+  return {
+    title: profile.displayName,
+    description,
+    alternates: { canonical: `/seller/${profile.handle ?? found.handle}` },
+    openGraph: {
+      type: "profile",
+      title: `${profile.displayName} · ${brand.name}`,
+      description,
+      url: `${brand.url}/seller/${profile.handle ?? found.handle}`,
+    },
+  };
+}
+
+export default async function SellerPage({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}) {
+  const { handle } = await params;
+  const found = await load(handle);
+  if (!found) notFound();
+
+  const { owner, profile } = found;
+
+  // A retired handle still belongs to its owner, so an old bookmark lands on
+  // the seller it always pointed at rather than a 404. Handles are never freed,
+  // which is what makes this safe to follow.
+  if (!owner.active && profile.handle && profile.handle !== handle.toLowerCase()) {
+    redirect(`/seller/${profile.handle}`);
+  }
+
+  const listings = await getListingsBySeller(owner.uid);
+  const website = safeHttpsUrl(profile.website);
+
+  return (
+    <Section className="py-12">
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        <SellerAvatar seller={profile} size={80} />
+        <div className="min-w-0">
+          <h1 className="text-3xl font-semibold tracking-tight">
+            {profile.displayName}
+          </h1>
+          {profile.handle && (
+            <p className="mt-0.5 text-sm text-[var(--muted)]">
+              @{profile.handle}
+            </p>
+          )}
+          {profile.bio?.trim() && (
+            <p className="mt-3 max-w-prose break-words text-[var(--muted)]">
+              {profile.bio}
+            </p>
+          )}
+          <SellerMeta profile={profile} toolCount={listings.length} />
+          {(website || profile.supportEmail) && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {website && (
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm hover:border-[var(--accent)]"
+                >
+                  Website
+                </a>
+              )}
+              {profile.supportEmail && (
+                <a
+                  href={`mailto:${profile.supportEmail}`}
+                  className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm hover:border-[var(--accent)]"
+                >
+                  Contact
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </header>
+
+      <h2 className="mt-12 text-lg font-semibold">
+        {listings.length === 1 ? "1 tool" : `${listings.length} tools`}
+      </h2>
+
+      {listings.length === 0 ? (
+        <div className="mt-4 rounded-2xl border border-dashed border-[var(--border-strong)] py-14 text-center">
+          <p className="text-[var(--muted)]">Nothing on sale here yet.</p>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-col gap-4">
+          {listings.map((l) => (
+            <ListingCard key={l.id} listing={l} />
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+/**
+ * The one-line "who is this" strip.
+ *
+ * Deliberately thin: a join year and a tool count are facts the marketplace
+ * already holds. Anything richer (ratings, follower counts, response times) is
+ * a number somebody has to earn and somebody has to moderate.
+ */
+function SellerMeta({
+  profile,
+  toolCount,
+}: {
+  profile: SellerProfile;
+  toolCount: number;
+}) {
+  const parts: string[] = [];
+  if (profile.memberSince) {
+    parts.push(`Selling since ${new Date(profile.memberSince).getFullYear()}`);
+  }
+  parts.push(toolCount === 1 ? "1 tool" : `${toolCount} tools`);
+  return (
+    <p className="mt-3 text-sm text-[var(--muted)]">{parts.join(" · ")}</p>
+  );
+}

@@ -9,6 +9,7 @@ import {
 } from "@/lib/listings.server";
 import { getCategoryLabelServer } from "@/lib/categories.server";
 import { ListingDetail } from "@/components/ListingDetail";
+import { resolveSellerProfile } from "@/lib/profiles.server";
 import { JsonLd } from "@/components/JsonLd";
 import { stripMarkdown } from "@/lib/markdown";
 import { PLATFORM_LABELS, type Listing } from "@/lib/types";
@@ -99,6 +100,10 @@ export default async function AppPage({
 
   const url = `${brand.url}/app/${listing.slug}`;
   const category = await getCategoryLabelServer(listing.category);
+  // The seller's own profile, falling back to the details this listing was
+  // written with. ListingDetail is a client component and the rules keep /users
+  // private, so it has to arrive as a prop.
+  const seller = await resolveSellerProfile(listing);
 
   // SoftwareApplication rather than plain Product: these are programs, and it
   // lets us state the runtime and category in terms Google already understands.
@@ -119,7 +124,14 @@ export default async function AppPage({
     ...(listing.screenshots.some((s) => /^https?:\/\//.test(s))
       ? { screenshot: listing.screenshots.filter((s) => /^https?:\/\//.test(s)) }
       : {}),
-    author: { "@type": "Person", name: listing.sellerName },
+    // `url` only when the seller has a profile page: a Person with a URL is a
+    // resolvable entity to a search engine, and one pointing at a 404 is worse
+    // than no URL at all.
+    author: {
+      "@type": "Person",
+      name: seller.displayName,
+      ...(seller.handle ? { url: `${brand.url}/seller/${seller.handle}` } : {}),
+    },
     offers: {
       "@type": "Offer",
       price: (listing.priceCents / 100).toFixed(2),
@@ -155,7 +167,7 @@ export default async function AppPage({
         real title, description and price into that HTML instead of a spinner —
         which is the whole point of fetching here.
       */}
-      <ListingDetail slug={slug} initial={listing} />
+      <ListingDetail slug={slug} initial={listing} seller={seller} />
     </>
   );
 }
