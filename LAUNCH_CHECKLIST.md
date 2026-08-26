@@ -101,6 +101,42 @@ public launch · **P2** = soon after launch.
 
 ---
 
+### Pre-launch copy and markup to remove on launch day
+
+Everything here says, in one form or another, "you cannot buy yet." All of it is
+wrong the moment checkout works, and the machine-readable half is the half
+nobody remembers, because nothing on screen looks broken when it is stale.
+
+- [ ] **Restore `offers` on the listing pages.** `app/app/[slug]/page.tsx` has
+      no `offers` on its `SoftwareApplication` node, deliberately: an `Offer`
+      with `availability: InStock` is a machine-readable claim that the tool can
+      be bought now. The full block to restore is written out in the comment
+      that replaced it. **This is the one that matters most:** it is the only
+      item here that a search engine reads as a commitment, and until it is back
+      no listing advertises a price to Google at all.
+- [ ] **Put `offers` back inside the `/browse` ItemList** at the same time, for
+      the same reason. See the comment in `app/browse/page.tsx`.
+- [ ] **Delete `STATUS_NOTE` in `lib/brand.ts`** and the three places that read
+      `brand.statusNote`: the JSON-LD `Organization` and `WebSite` nodes in
+      `app/layout.tsx`, and the sub-line under the `/browse` heading. Deleting
+      the constant makes the other two a compile error, which is the point.
+- [ ] **Requalify `/llms.txt` back to present tense.** `app/llms.txt/route.ts`
+      carries a `**Status: pre-launch.**` paragraph and three sentences written
+      as "at launch, a buyer will…". This file exists to be quoted verbatim by
+      AI assistants, so a stale status here is repeated by them for as long as
+      it sits there.
+- [ ] **Remove the "Can I buy a tool today?" FAQ** from `FAQS` in
+      `app/about/page.tsx`. It feeds both the visible list and the `FAQPage`
+      markup, so one deletion clears both.
+- [ ] **Remove `components/PreLaunchNotice.tsx`** and its use on the home page.
+- [ ] **Edit the pre-launch PS out of the seeded listing descriptions** in the
+      admin console. This one is Firestore data, not code, so no build will ever
+      warn you about it.
+- [ ] **Bump `STATIC_LAST_MODIFIED`** in `app/sitemap.ts` on the day the
+      marketing copy actually changes.
+
+---
+
 ## P2 — Right after launch
 
 - [ ] Analytics (Plausible or GA) + error monitoring (Sentry).

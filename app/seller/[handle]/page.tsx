@@ -10,6 +10,7 @@ import { safeHttpsUrl } from "@/lib/utils";
 import { xProfileUrl } from "@/lib/xhandle";
 import { Section } from "@/components/ui";
 import { SellerAvatar } from "@/components/SellerAvatar";
+import { JsonLd } from "@/components/JsonLd";
 import { ListingCard } from "@/components/ListingCard";
 import type { SellerProfile } from "@/lib/types";
 
@@ -85,6 +86,60 @@ export default async function SellerPage({
   const website = safeHttpsUrl(profile.website);
   const xUrl = xProfileUrl(profile.xHandle);
 
+  /*
+   * Who this page is about, in machine-readable form.
+   *
+   * Every listing already publishes `author` as a Person whose url points here,
+   * so this page was the one end of that edge that declared nothing at all. The
+   * shared @id closes the loop: the author on a listing and the subject of this
+   * page resolve to one entity rather than to two strangers with the same name.
+   *
+   * That edge is the marketplace's whole argument, stated in the only form a
+   * search engine can follow: this tool was made by this identifiable person.
+   *
+   * `sameAs` carries only profiles the seller entered themselves, which is what
+   * the property is for. Nothing here is inferred, and a seller who filled in
+   * neither field simply has no sameAs.
+   *
+   * Anything on our own host is dropped. `sameAs` asserts that two URLs are the
+   * same entity, so a seller who types thesolomarket.com into their website
+   * field would otherwise have us publish that they and the marketplace are one
+   * and the same. Their profile page is already `url`, which is the correct
+   * property for it.
+   */
+  const canonicalHandle = profile.handle ?? handle.toLowerCase();
+  const pageUrl = `${brand.url}/seller/${canonicalHandle}`;
+  const ownHost = new URL(brand.url).host.replace(/^www\./, "");
+  const sameAs = [website, xUrl].filter((u): u is string => {
+    if (!u) return false;
+    try {
+      return new URL(u).host.replace(/^www\./, "") !== ownHost;
+    } catch {
+      return false;
+    }
+  });
+
+  const personLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${pageUrl}#person`,
+    name: profile.displayName?.trim() || canonicalHandle,
+    url: pageUrl,
+    ...(profile.bio?.trim() ? { description: profile.bio.trim() } : {}),
+    ...(profile.avatarUrl ? { image: profile.avatarUrl } : {}),
+    ...(sameAs.length ? { sameAs } : {}),
+  };
+
+  const profilePageLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "@id": `${pageUrl}#page`,
+    url: pageUrl,
+    name: `${profile.displayName?.trim() || canonicalHandle} on ${brand.name}`,
+    mainEntity: { "@id": `${pageUrl}#person` },
+    isPartOf: { "@id": `${brand.url}/#website` },
+  };
+
   return (
     <Section className="py-12">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
@@ -156,6 +211,9 @@ export default async function SellerPage({
           ))}
         </div>
       )}
+
+      <JsonLd data={personLd} />
+      <JsonLd data={profilePageLd} />
     </Section>
   );
 }

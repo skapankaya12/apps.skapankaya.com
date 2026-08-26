@@ -118,27 +118,47 @@ export const getListingsBySeller = cache(
 );
 
 /**
- * Handles worth putting in the sitemap.
+ * Seller pages worth putting in the sitemap, with a real last-modified date.
  *
  * Derived from who actually has something on sale rather than from the handles
  * collection, so a claimed handle with an empty profile behind it never gets
  * submitted to Google as a page worth crawling. Takes the approved listings the
  * caller has already loaded, because the sitemap has them in hand.
+ *
+ * `lastModified` is the most recent update among that seller's own listings.
+ * The profile document has no timestamp we expose, and this is the better
+ * signal anyway: a seller page is mostly their tools, so it genuinely changes
+ * when one of them does. These pages used to carry the static build date, which
+ * said every seller page changed on the day the marketing copy did.
  */
-export async function getSellerHandlesFor(
+export async function getSellerRoutesFor(
   listings: Listing[]
-): Promise<string[]> {
-  const uids = [...new Set(listings.map((l) => l.sellerId))];
+): Promise<{ handle: string; lastModified: Date }[]> {
+  const latestByUid = new Map<string, number>();
+  for (const l of listings) {
+    const prev = latestByUid.get(l.sellerId) ?? 0;
+    if (l.updatedAt > prev) latestByUid.set(l.sellerId, l.updatedAt);
+  }
+
+  const uids = [...latestByUid.keys()];
   const profiles = await Promise.all(uids.map((uid) => getSellerProfile(uid)));
-  return profiles
-    .map((p) => p?.handle)
-    .filter((h): h is string => Boolean(h));
+
+  return profiles.flatMap((p, i) => {
+    if (!p?.handle) return [];
+    const ts = latestByUid.get(uids[i]) ?? 0;
+    return [
+      {
+        handle: p.handle,
+        lastModified: new Date(Number.isFinite(ts) && ts > 0 ? ts : Date.now()),
+      },
+    ];
+  });
 }
 
 /**
  * The sellers to draw in the sphere on /sell.
  *
- * Derived from approved listings for the same reason getSellerHandlesFor is:
+ * Derived from approved listings for the same reason getSellerRoutesFor is:
  * signing up does not make somebody a seller, shipping something does. An
  * account that upgraded its role and then never listed anything would otherwise
  * appear on the recruiting page as evidence of a marketplace it never joined.

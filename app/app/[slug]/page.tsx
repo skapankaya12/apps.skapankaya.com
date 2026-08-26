@@ -116,6 +116,7 @@ export default async function AppPage({
   const softwareLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
+    "@id": `${url}#app`,
     name: listing.title,
     // Stripped: JSON-LD takes a bare string, so a description with headings and
     // bold would publish raw ## and ** to every search engine and AI crawler
@@ -125,25 +126,47 @@ export default async function AppPage({
     applicationCategory: category,
     operatingSystem: operatingSystemFor(listing),
     softwareVersion: listing.version,
+    // The same values the sitemap publishes for this page. Guarded because the
+    // oldest rows predate these fields, and a missing date beats a wrong one.
+    ...(Number.isFinite(listing.createdAt)
+      ? { datePublished: new Date(listing.createdAt).toISOString() }
+      : {}),
+    ...(Number.isFinite(listing.updatedAt)
+      ? { dateModified: new Date(listing.updatedAt).toISOString() }
+      : {}),
     ...(listing.screenshots.some((s) => /^https?:\/\//.test(s))
       ? { screenshot: listing.screenshots.filter((s) => /^https?:\/\//.test(s)) }
       : {}),
-    // `url` only when the seller has a profile page: a Person with a URL is a
-    // resolvable entity to a search engine, and one pointing at a 404 is worse
-    // than no URL at all.
+    // `url` and `@id` only when the seller has a profile page: a Person with a
+    // URL is a resolvable entity to a search engine, and one pointing at a 404
+    // is worse than no URL at all.
+    //
+    // The @id is the same one /seller/[handle] publishes for its Person, so the
+    // author of this tool and the subject of that page are one entity in the
+    // graph rather than two people who happen to share a name.
     author: {
       "@type": "Person",
+      ...(seller.handle
+        ? {
+            "@id": `${brand.url}/seller/${seller.handle}#person`,
+            url: `${brand.url}/seller/${seller.handle}`,
+          }
+        : {}),
       name: seller.displayName,
-      ...(seller.handle ? { url: `${brand.url}/seller/${seller.handle}` } : {}),
     },
-    offers: {
-      "@type": "Offer",
-      price: (listing.priceCents / 100).toFixed(2),
-      priceCurrency: brand.currency,
-      availability: "https://schema.org/InStock",
-      url,
-      seller: { "@type": "Organization", name: brand.name },
-    },
+    // Deliberately no `offers` until checkout is live.
+    //
+    // An Offer with availability InStock is a machine-readable claim that this
+    // can be bought right now, and it was the one claim on the page that the
+    // page itself contradicts. PreOrder would be no better: the button is a
+    // notify-me form, and a notify list is not an order.
+    //
+    // Everything of value in this node survives without it — name, category,
+    // operating system, version, screenshots and a named author — and none of
+    // it promises a transaction.
+    //
+    // RESTORE ON LAUNCH DAY, with `price`, `priceCurrency`, `availability:
+    // "https://schema.org/InStock"`, `url` and `seller`. See LAUNCH_CHECKLIST.md.
   };
 
   const breadcrumbLd = {

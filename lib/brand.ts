@@ -12,6 +12,21 @@ const PITCH =
   "A marketplace for small software tools made by solo builders. Pay once, run it yourself, keep it for good. No subscriptions.";
 
 /**
+ * Where the marketplace is in its life, in one sentence.
+ *
+ * This is the fact that qualifies every other claim the site makes, and it used
+ * to live only in the home page hero, as prose. Nothing machine-readable said
+ * it, so the structured data described a marketplace that was open for
+ * business. Shared by the JSON-LD Organization and WebSite nodes and by the
+ * /browse heading, so those three cannot drift apart.
+ *
+ * On launch day this constant and every reference to it come out together. See
+ * LAUNCH_CHECKLIST.md for the full list of pre-launch copy to remove.
+ */
+const STATUS_NOTE =
+  "Pre-launch: the marketplace is collecting listings from solo builders, and tools cannot be bought until the public launch.";
+
+/**
  * Single source of truth for brand identity.
  * Change the name or domain here and it updates across the whole site.
  */
@@ -35,6 +50,8 @@ export const brand = {
   tagline: "Encouraging anyone to build, everyone to own.",
   /** Meta description, og/twitter:description, manifest and JSON-LD. See PITCH. */
   description: PITCH,
+  /** Launch status. See STATUS_NOTE. Remove at launch. */
+  statusNote: STATUS_NOTE,
   // Commission the platform keeps per sale (all-inclusive; see BUSINESS_MODEL.md)
   commissionRate: 0.15,
   supportEmail: "noreply@thesolomarket.com",

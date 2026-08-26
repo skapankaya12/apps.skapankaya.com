@@ -3,7 +3,7 @@ import { brand } from "@/lib/brand";
 import { articles } from "@/lib/articles";
 import { DOCS, docPath } from "@/components/Docs";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
-import { getSellerHandlesFor } from "@/lib/profiles.server";
+import { getSellerRoutesFor } from "@/lib/profiles.server";
 
 /** Revalidated with the catalogue, so new listings show up within minutes. */
 export const revalidate = 300;
@@ -14,7 +14,7 @@ export const revalidate = 300;
  * fetched the sitemap, which is exactly how a site teaches Google to ignore
  * its lastmod values. Bump this by hand when the marketing pages change.
  */
-const STATIC_LAST_MODIFIED = new Date("2026-08-01");
+const STATIC_LAST_MODIFIED = new Date("2026-08-26");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = brand.url;
@@ -73,9 +73,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // One page per seller who has something on sale. "Who made this" is a real
   // search, and it is the page a maker links to from their own site, so it is
   // worth crawling even though it mostly repeats what the listings say.
-  const sellerRoutes = (await getSellerHandlesFor(listings)).map((handle) => ({
-    url: `${base}/seller/${handle}`,
-    lastModified: STATIC_LAST_MODIFIED,
+  const sellerRoutes = (await getSellerRoutesFor(listings)).map((s) => ({
+    url: `${base}/seller/${s.handle}`,
+    lastModified: s.lastModified,
     changeFrequency: "weekly" as const,
     priority: 0.5,
   }));

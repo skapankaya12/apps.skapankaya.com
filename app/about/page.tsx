@@ -18,6 +18,13 @@ const FAQS: { q: string; a: string }[] = [
     a: "A finished, small piece of software that does one specific job. You pay once, download it, and it's yours forever, with no subscription, no account and no expiry. It runs on your own computer rather than in the cloud.",
   },
   {
+    // The one fact that qualifies every other answer here, and until this
+    // question existed it lived only in the home page hero. Second rather than
+    // first so the answer above it has established what a tool is.
+    q: "Can I buy a tool today?",
+    a: `Not yet. ${brand.name} is pre-launch and is collecting listings from solo builders right now. You can browse everything that has been listed and join the notify list on the home page. Buying opens at the public launch.`,
+  },
+  {
     q: "Do I need to be technical?",
     a: "No. Every tool ships with a setup guide, and tools marked “Guided setup” are designed so a free AI assistant (like Claude or Cursor) can install and start them for you. You open the folder and say “set this up and run it.”",
   },

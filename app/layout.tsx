@@ -69,6 +69,9 @@ const organizationLd = {
   url: SITE,
   logo: `${SITE}/logo.png`,
   description: brand.description,
+  // `description` says what the marketplace is and stays correct. This says
+  // where it is in its life, which is the part a machine was never told.
+  disambiguatingDescription: brand.statusNote,
   slogan: brand.tagline,
 };
 
@@ -79,6 +82,7 @@ const websiteLd = {
   name: brand.name,
   url: SITE,
   description: brand.description,
+  disambiguatingDescription: brand.statusNote,
   publisher: { "@id": `${SITE}/#organization` },
   inLanguage: "en",
   // Lets Google offer a search box for the site directly in results, and

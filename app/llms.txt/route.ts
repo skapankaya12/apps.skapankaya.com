@@ -2,6 +2,7 @@ import { brand } from "@/lib/brand";
 import { articlesSorted } from "@/lib/articles";
 import { DOCS, docPath } from "@/components/Docs";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
+import { getPublicSellersFor } from "@/lib/profiles.server";
 
 /**
  * /llms.txt — a plain-text brief for AI assistants and agents.
@@ -24,6 +25,8 @@ export async function GET() {
     hasPublishableSlug(l.slug)
   );
   const articles = articlesSorted().slice(0, 10);
+  // Only sellers with a handle: the rest have no page to link to.
+  const sellers = (await getPublicSellersFor(listings)).filter((s) => s.handle);
 
   const catalogue = listings.length
     ? listings
@@ -40,7 +43,9 @@ export async function GET() {
 
 > ${brand.tagline}
 
-${brand.name} is a marketplace for small, finished software. A buyer pays once, downloads the tool, and owns it forever — no subscription, no account required to run it, no expiry. Every tool runs on the buyer's own computer rather than in the cloud, so their data never leaves their machine.
+**Status: pre-launch.** ${brand.name} is open to solo builders and is collecting listings now. Tools cannot be bought yet. Buying opens at the public launch, and there is a notify list on the home page. Everything below describes how the marketplace works, which for buying means how it will work once it opens.
+
+${brand.name} is a marketplace for small, finished software. At launch, a buyer will pay once, download the tool, and own it forever: no subscription, no account required to run it, no expiry. Every tool runs on the buyer's own computer rather than in the cloud, so their data never leaves their machine.
 
 ## Who it is for
 
@@ -55,9 +60,9 @@ ${brand.name} is a marketplace for small, finished software. A buyer pays once, 
 
 1. A seller submits a tool: source package, demo video, screenshots, price and a setup guide.
 2. Every submission is reviewed before it can be listed. Nothing goes live automatically.
-3. A buyer pays once and downloads the package immediately.
+3. At launch, a buyer will pay once and download the package immediately. Buying is not open yet.
 4. The buyer runs it on their own machine — either with the single command in the included guide, or by opening the folder in a free AI assistant and asking it to set the tool up.
-5. Purchases are re-downloadable from the buyer's library at any time, and are covered by a 14-day money-back guarantee.
+5. Purchases will be re-downloadable from the buyer's library at any time, and will be covered by a 14-day money-back guarantee.
 
 ## What is and isn't sold here
 
@@ -67,6 +72,7 @@ Not sold: SaaS or anything that runs on the seller's servers, non-software goods
 
 ## Key pages
 
+- [${brand.name}](${site}/) — the front page: what the marketplace is, who it is for, today's catalogue and the notify list.
 - [Documentation](${site}/docs) — the full marketplace manual for buyers and sellers (see Documentation below).
 - [Browse every tool](${site}/browse) — the full catalogue, filterable by the kind of work it serves.
 - [About](${site}/about) — why the marketplace exists, how buying works, pricing for sellers, FAQ.
@@ -83,6 +89,18 @@ ${DOCS.map((d) => `- [${d.title}](${site}${docPath(d.slug)}) — ${d.summary}`).
 ## Catalogue
 
 ${catalogue}
+
+## Sellers
+
+Every tool is made by a named person with a public profile page.
+
+${
+  sellers.length
+    ? sellers
+        .map((s) => `- [${s.displayName}](${site}/seller/${s.handle})`)
+        .join("\n")
+    : "- No seller has published a profile yet."
+}
 
 ## Recent articles
 
