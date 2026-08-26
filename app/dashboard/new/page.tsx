@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
 import {
@@ -18,8 +18,16 @@ import {
   uploadPackage,
   uploadDemoVideo,
   uploadPoster,
-  uploadScreenshots,
+  uploadScreenshot,
 } from "@/lib/storage";
+import {
+  useUploadSlot,
+  doneSlot,
+  isReady,
+  isBusy,
+  nextSlotId,
+  type Slot,
+} from "@/lib/uploads";
 import {
   RUNTIME_LABELS,
   TAGLINE_MAX,
@@ -99,6 +107,17 @@ function NewListingForm() {
 
 const SETUP_MODES: SetupMode[] = ["one-command", "ai-assisted", "installer"];
 
+/**
+ * Whether an already-uploaded package suits the chosen setup method.
+ *
+ * Format only. Used for a package restored from a draft, where the File is long
+ * gone and the stored path is all there is to go on.
+ */
+function packagePathSuits(path: string, mode: SetupMode): boolean {
+  const isInstaller = path.toLowerCase().endsWith(".dmg");
+  return mode === "installer" ? isInstaller : !isInstaller;
+}
+
 function ListingForm({
   user,
   editId,
@@ -129,9 +148,43 @@ function ListingForm({
   const [platform, setPlatform] = useState<Platform>(start.values.platform);
   const [price, setPrice] = useState(start.values.price);
   const [version, setVersion] = useState(start.values.version);
-  const [packageFile, setPackageFile] = useState<File | null>(null);
-  const [screenshotFiles, setScreenshotFiles] = useState<File[]>([]);
-  const [demoFile, setDemoFile] = useState<File | null>(null);
+  /*
+    Where this listing's files go, fixed for the life of the form.
+
+    Files upload as they are chosen now, which means the id they are keyed by
+    has to exist before submit rather than being minted inside it. Reserving one
+    is free: reserveListingId only generates a document id, it writes nothing.
+    It is kept in the draft so coming back tomorrow keeps pointing at the
+    uploads already made rather than orphaning them under a fresh id.
+  */
+  const [listingId] = useState(
+    () => editId ?? (start.values.listingId || reserveListingId())
+  );
+
+  // Named rather than left to derive from the path: a seller who picked
+  // "my-tool.zip" and comes back tomorrow should not be shown the document id
+  // it was stored under.
+  const pkg = useUploadSlot(
+    start.values.packagePath
+      ? doneSlot(start.values.packagePath, "Your uploaded package")
+      : null
+  );
+  const demo = useUploadSlot(
+    start.values.demoVideo ? doneSlot(start.values.demoVideo, "Current demo video") : null
+  );
+  const [shots, setShots] = useState<Slot[]>(() =>
+    start.values.screenshots.map((url) => doneSlot(url))
+  );
+  const [posterUrl, setPosterUrl] = useState<string | undefined>(
+    start.values.posterImage || undefined
+  );
+  /**
+   * The package File, kept only so switching setup method can re-check it.
+   * Not state: nothing renders from it, and it is deliberately not what the
+   * form submits, which is the uploaded path in pkg.slot.
+   */
+  const pkgFile = useRef<File | null>(null);
+
   const [submitted, setSubmitted] = useState(false);
   // Where the listing landed after an edit. A presentation change keeps a live
   // tool live, so the confirmation must not claim it went off for review.
@@ -139,18 +192,14 @@ function ListingForm({
   // Never restored from a draft: an acknowledgment you didn't tick this time
   // isn't an acknowledgment. It is kept when resuming your own live listing.
   const [agreed, setAgreed] = useState(Boolean(editing));
-  const [uploading, setUploading] = useState(false);
+  // Submitting is now only the Firestore write, so this is brief. Waiting on
+  // the files happens while the seller is still filling the form in.
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [demoError, setDemoError] = useState("");
 
-  // Fixed for the life of the form: replacing either means picking a new file,
-  // which is tracked by packageFile / demoFile above.
-  const existingPackage = editing?.packagePath ?? null;
-  const existingDemo = editing?.demoVideo ?? null;
-  // Screenshots are the exception — individual ones can be removed.
-  const [existingShots, setExistingShots] = useState<string[]>(
-    editing?.screenshots ?? []
-  );
+  /** True while any file is still going up, which blocks submit. */
+  const filesBusy =
+    isBusy(pkg.slot) || isBusy(demo.slot) || shots.some((s) => isBusy(s));
 
   /**
    * Fields currently holding imported text, and where each came from.
@@ -189,9 +238,24 @@ function ListingForm({
 
   const draft: Draft = {
     title, tagline, description, category: activeCategory, runtime, setupMode,
-    price, version, platform, savedAt: 0,
+    price, version, platform,
+    listingId,
+    packagePath: pkg.slot?.value ?? "",
+    demoVideo: demo.slot?.value ?? "",
+    posterImage: posterUrl ?? "",
+    screenshots: shots.map((s) => s.value).filter((v): v is string => Boolean(v)),
+    savedAt: 0,
   };
   const draftJson = JSON.stringify(draft);
+  /*
+    Whether the seller has actually done anything.
+
+    listingId is left out of the comparison because it is reserved the moment
+    the form mounts, so including it would make an untouched form look like work
+    in progress: it would autosave an empty draft and warn about losing nothing
+    on the way out.
+  */
+  const untouched = draftContent(draft) === EMPTY_DRAFT_CONTENT;
 
   function saveDraft() {
     const now = Date.now();
@@ -202,22 +266,25 @@ function ListingForm({
   // Autosave shortly after typing stops, so the explicit button below is a
   // reassurance rather than a requirement.
   useEffect(() => {
-    if (submitted) return;
-    if (draftJson === EMPTY_DRAFT_JSON) return;
+    if (submitted || untouched) return;
     const t = setTimeout(() => {
       const now = Date.now();
       writeDraft(draftKey, { ...JSON.parse(draftJson), savedAt: now });
       setSavedAt(now);
     }, 800);
     return () => clearTimeout(t);
-  }, [draftJson, draftKey, submitted]);
+  }, [draftJson, draftKey, submitted, untouched]);
 
-  // Files can't go in localStorage, so they're the one thing a reload really
-  // does destroy. That's what these two guards are protecting.
-  const hasPickedFiles =
-    Boolean(packageFile) || Boolean(demoFile) || screenshotFiles.length > 0;
-  const hasWork = hasPickedFiles || draftJson !== EMPTY_DRAFT_JSON;
-  const guard = hasWork && !submitted && !uploading;
+  /*
+    What leaving now would actually cost.
+
+    It used to be the files: they lived in memory, so a reload destroyed them
+    and the warning existed mostly to say so. They upload on pick now and the
+    draft holds their references, so the only thing genuinely at risk is an
+    upload still in flight, which navigating away does cancel.
+  */
+  const hasWork = !untouched;
+  const guard = (hasWork || filesBusy) && !submitted && !saving;
 
   useEffect(() => {
     if (!guard) return;
@@ -340,48 +407,27 @@ function ListingForm({
   }
 
   function addImportedScreenshot(file: File) {
-    const room = Math.max(0, 5 - existingShots.length - screenshotFiles.length);
-    if (room <= 0) return;
-    setScreenshotFiles((prev) => [...prev, file]);
+    if (shots.length >= 5) return;
+    startShot(file);
   }
 
+  /**
+   * Write the listing. Nothing is uploaded here any more.
+   *
+   * Every file went up as it was chosen, so this is one Firestore write and
+   * returns in a moment. It used to be a Promise.all of every upload, which for
+   * a 500MB installer meant minutes of a disabled button and, on any failure,
+   * the loss of the uploads that had already succeeded.
+   */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const hasPackage = Boolean(packageFile || existingPackage);
-    const hasDemo = Boolean(demoFile || existingDemo);
-    if (!hasPackage || !hasDemo || uploading) return;
+    if (!valid || saving) return;
     setError("");
-    setUploading(true);
+    setSaving(true);
     try {
-      // In edit mode reuse the listing id; otherwise reserve a fresh one. Only
-      // upload files the seller actually changed — keep the rest as-is.
-      const listingId = editId ?? reserveListingId();
-      // Storage paths are scoped by uid — see storage.rules; a seller may only
-      // write inside their own folder.
-      const uid = user!.uid;
-      const [packagePath, demoUrl, newShotUrls, posterUrl] = await Promise.all([
-        packageFile
-          ? uploadPackage(uid, listingId, packageFile)
-          : Promise.resolve(existingPackage!),
-        demoFile
-          ? uploadDemoVideo(uid, listingId, demoFile)
-          : Promise.resolve(existingDemo!),
-        screenshotFiles.length
-          ? uploadScreenshots(uid, listingId, screenshotFiles)
-          : Promise.resolve<string[]>([]),
-        // A still cut from this exact video, so the card can never show a frame
-        // of a demo that's been replaced. Best-effort: a file we can't decode
-        // falls back to the first screenshot at render time.
-        demoFile
-          ? capturePoster(uid, listingId, demoFile)
-          : Promise.resolve(editing?.posterImage),
-      ]);
-      const screenshots = [...existingShots, ...newShotUrls].slice(0, 5);
-
-      const priceCents = Math.round(parseFloat(price || "0") * 100);
       const data = {
-        sellerId: user!.uid,
-        sellerName: user!.displayName,
+        sellerId: user.uid,
+        sellerName: user.displayName,
         title: title.trim(),
         tagline: tagline.trim(),
         description: description.trim(),
@@ -389,12 +435,15 @@ function ListingForm({
         runtime,
         platform: runtime === "binary" ? platform : undefined,
         setupMode,
-        priceCents,
-        screenshots,
-        demoVideo: demoUrl,
+        priceCents: Math.round(parseFloat(price || "0") * 100),
+        screenshots: shots
+          .map((s) => s.value)
+          .filter((v): v is string => Boolean(v))
+          .slice(0, 5),
+        demoVideo: demo.slot!.value!,
         posterImage: posterUrl,
         version: version.trim(),
-        packagePath,
+        packagePath: pkg.slot!.value!,
       };
 
       let landedIn: ListingStatus = "pending";
@@ -415,61 +464,109 @@ function ListingForm({
       setSubmitted(true);
     } catch (err) {
       console.error("[new listing] submit failed:", err);
-      setError(
-        "Something went wrong uploading your files. Please check your connection and try again."
-      );
-      setUploading(false);
+      setError("Couldn't save your listing. Please try again.");
+      setSaving(false);
     }
   }
 
+  /**
+   * Take screenshots and start sending them straight away.
+   *
+   * Each gets its own slot, so one failing does not take the others with it and
+   * the seller can see which landed.
+   */
   function addScreenshots(files: FileList | null) {
     if (!files) return;
-    const room = Math.max(0, 5 - existingShots.length);
-    setScreenshotFiles((prev) => [...prev, ...Array.from(files)].slice(0, room));
+    const room = Math.max(0, 5 - shots.length);
+    for (const file of Array.from(files).slice(0, room)) startShot(file);
+  }
+
+  function startShot(file: File) {
+    const id = nextSlotId();
+    setShots((prev) => [...prev, { id, name: file.name, progress: 0 }]);
+    const patch = (fn: (s: Slot) => Slot) =>
+      setShots((prev) => prev.map((s) => (s.id === id ? fn(s) : s)));
+
+    uploadScreenshot(user.uid, listingId, file, (progress) =>
+      patch((s) => ({ ...s, progress }))
+    )
+      .then((url) => patch((s) => ({ ...s, progress: 1, value: url })))
+      .catch((err) => {
+        console.error("[screenshot]", err);
+        patch((s) => ({ ...s, error: "Upload failed. Remove it and try again." }));
+      });
+  }
+
+  function removeShot(id: number) {
+    setShots((prev) => prev.filter((s) => s.id !== id));
   }
 
   /**
-   * Switching setup method can invalidate a package already chosen: a .zip is
+   * Switching setup method can invalidate a package already uploaded: a .zip is
    * not an installer and a .dmg is not a source package. Drop it here, where
    * the seller is looking, rather than at submit when they've moved on.
    */
   function chooseSetupMode(mode: SetupMode) {
     setSetupMode(mode);
-    if (packageFile && validatePackage(packageFile, mode)) {
-      setPackageFile(null);
-      setError("That package doesn't match the setup method you picked. Choose the file again.");
+    if (!pkg.slot) return;
+    // The File itself when this session chose it, because that also catches the
+    // size limit changing: installers get 500MB and source packages 200MB, so
+    // switching away from installer can make an accepted file too big. A
+    // package restored from a draft is only known by its path, which still
+    // settles the format question.
+    const stillFits = pkgFile.current
+      ? !validatePackage(pkgFile.current, mode)
+      : !pkg.slot.value || packagePathSuits(pkg.slot.value, mode);
+    if (!stillFits) {
+      pkg.clear();
+      pkgFile.current = null;
+      setError(
+        "That package doesn't match the setup method you picked. Choose the file again."
+      );
     }
   }
 
+  /**
+   * Accept a package and start uploading it immediately.
+   *
+   * What counts as valid depends on the setup method: source in a .zip, or a
+   * signed .dmg for a native app. lib/media owns both rules.
+   */
   function pickPackage(file: File | null) {
     setError("");
-    // What counts as a valid package depends on the setup method: source in a
-    // .zip, or a signed .dmg for a native app. lib/media owns both rules.
-    const problem = file && validatePackage(file, setupMode);
+    if (!file) return;
+    const problem = validatePackage(file, setupMode);
     if (problem) {
-      setPackageFile(null);
-      setError(problem);
+      pkg.reject(file.name, problem);
+      pkgFile.current = null;
       return;
     }
-    setPackageFile(file);
+    pkgFile.current = file;
+    void pkg.begin(file.name, (onProgress) =>
+      uploadPackage(user.uid, listingId, file, onProgress)
+    );
   }
 
-  // Validate the demo before accepting it: public Storage caps at 50MB, and we
-  // only want short clips (max 30s). Reject with a clear message rather than
-  // letting the upload fail with a raw 403 later.
+  /**
+   * Accept a demo and start uploading it, with the poster cut from it.
+   *
+   * Validated before anything is sent: the public bucket caps size and we only
+   * want short clips, and a clear message here beats a raw 403 later.
+   */
   async function pickDemo(file: File | null) {
-    setDemoError("");
-    if (!file) {
-      setDemoFile(null);
-      return;
-    }
+    if (!file) return;
     const problem = await validateDemo(file);
     if (problem) {
-      setDemoFile(null);
-      setDemoError(problem);
+      demo.reject(file.name, problem);
       return;
     }
-    setDemoFile(file);
+    const url = await demo.begin(file.name, (onProgress) =>
+      uploadDemoVideo(user.uid, listingId, file, onProgress)
+    );
+    // Only worth cutting a poster once the demo it belongs to is actually
+    // stored. Best effort: a video we cannot decode falls back to the first
+    // screenshot at render time.
+    if (url) setPosterUrl(await capturePoster(user.uid, listingId, file));
   }
 
   // The seller's public details are on their profile now, so this form checks
@@ -489,9 +586,8 @@ function ListingForm({
   const returnsToReview =
     !editing ||
     !wasLive ||
-    Boolean(packageFile) ||
     requiresReReview(editing, {
-      packagePath: editing.packagePath,
+      packagePath: pkg.slot?.value,
       runtime,
       setupMode,
       platform: runtime === "binary" ? platform : undefined,
@@ -508,8 +604,13 @@ function ListingForm({
   if (!(priceNum >= 15 && priceNum <= 250)) missing.push("a price between $15 and $250");
   if (!/^\d+\.\d+(\.\d+)?$/.test(version.trim()))
     missing.push("a version like 1.0.0");
-  if (!packageFile && !existingPackage) missing.push("a .zip package");
-  if (!demoFile && !existingDemo) missing.push("a demo video");
+  if (!isReady(pkg.slot))
+    missing.push(isBusy(pkg.slot) ? "the package to finish uploading" : "a package");
+  if (!isReady(demo.slot))
+    missing.push(
+      isBusy(demo.slot) ? "the demo to finish uploading" : "a demo video"
+    );
+  if (shots.some((sh) => isBusy(sh))) missing.push("screenshots to finish uploading");
   if (!profileReady) missing.push("your seller profile");
   if (!agreed) missing.push("the acknowledgment");
   const valid = missing.length === 0;
@@ -535,11 +636,8 @@ function ListingForm({
           <ImportFromUrl
             onApply={applyImport}
             onAddScreenshot={addImportedScreenshot}
-            screenshotRoom={Math.max(
-              0,
-              5 - existingShots.length - screenshotFiles.length
-            )}
-            disabled={uploading}
+            screenshotRoom={Math.max(0, 5 - shots.length)}
+            disabled={saving}
           />
         )}
 
@@ -550,13 +648,15 @@ function ListingForm({
             type="button"
             variant="secondary"
             onClick={saveDraft}
-            disabled={uploading}
+            disabled={saving}
           >
             Save draft
           </Button>
-          {savedAt !== null && !uploading && (
+          {savedAt !== null && !saving && (
             <span className="text-xs text-[var(--muted)]">
-              Draft saved {savedAgo(savedAt)}. Files still need choosing.
+              {/* Files are in the draft now, so this no longer has to warn
+                  that they are the one thing it cannot keep. */}
+              Draft saved {savedAgo(savedAt)}.
             </span>
           )}
         </div>
@@ -737,7 +837,7 @@ function ListingForm({
             />
           </Field>
 
-          {/* App package upload */}
+          {/* App package. Uploads as soon as it is chosen. */}
           <Field
             label={isInstaller ? "Installer (.dmg)" : "App package (.zip)"}
             hint={
@@ -746,66 +846,32 @@ function ListingForm({
                 : "Needs manifest.json, README.md, SETUP.md, LICENSE.md and src/. Max 200MB."
             }
           >
-            <label className="flex cursor-pointer items-center justify-between rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-6 text-sm hover:border-[var(--accent)]">
-              <span className="text-[var(--muted)]">
-                {packageFile ? (
-                  <span className="text-[var(--foreground)]">📦 {packageFile.name}</span>
-                ) : existingPackage ? (
-                  <span className="text-[var(--foreground)]">
-                    📦 {existingPackage.split("/").pop()}{" "}
-                    <span className="text-[var(--muted)]">current, click to replace</span>
-                  </span>
-                ) : (
-                  "Click to choose your .zip package"
-                )}
-              </span>
-              <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
-                Browse
-              </span>
-              <input
-                type="file"
-                accept={packageAccept(setupMode)}
-                className="hidden"
-                onChange={(e) => pickPackage(e.target.files?.[0] ?? null)}
-              />
-            </label>
+            <FilePicker
+              slot={pkg.slot}
+              icon="📦"
+              empty={
+                isInstaller
+                  ? "Click to choose your .dmg installer"
+                  : "Click to choose your .zip package"
+              }
+              accept={packageAccept(setupMode)}
+              onPick={(f) => pickPackage(f)}
+            />
           </Field>
-
 
           {/* Demo video, required */}
           <Field
             label="Demo video (required)"
             hint="Up to 40 seconds. Export MP4 (H.264); .mov won't play on Android. Aim under 25MB."
           >
-            <label
-              className={`flex cursor-pointer items-center justify-between rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
-                demoFile || existingDemo
-                  ? "border-[var(--success)] bg-[var(--success-soft)]"
-                  : "border-[var(--border-strong)] bg-[var(--surface-muted)]"
-              }`}
-            >
-              <span className={demoFile || existingDemo ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
-                {demoFile
-                  ? `▶ ${demoFile.name}`
-                  : existingDemo
-                    ? "▶ Current demo video, click to replace"
-                    : "Click to upload a demo video (mp4 or webm)"}
-              </span>
-              <span className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
-                Browse
-              </span>
-              <input
-                type="file"
-                accept="video/mp4,video/webm"
-                className="hidden"
-                onChange={(e) => pickDemo(e.target.files?.[0] ?? null)}
-              />
-            </label>
-            {demoError && (
-              <p className="mt-1.5 text-xs text-[var(--danger)]">{demoError}</p>
-            )}
+            <FilePicker
+              slot={demo.slot}
+              icon="▶"
+              empty="Click to upload a demo video (mp4 or webm)"
+              accept="video/mp4,video/webm"
+              onPick={(f) => void pickDemo(f)}
+            />
           </Field>
-
 
           {/* Screenshots, up to 5 */}
           <Field
@@ -813,16 +879,32 @@ function ListingForm({
             hint="Optional. Show the tool actually working."
           >
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-              {existingShots.map((url, i) => (
+              {shots.map((shot, i) => (
                 <div
-                  key={`existing-${i}`}
+                  key={shot.id}
                   className="relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={`Screenshot ${i + 1}`} className="h-full w-full object-cover" />
+                  {shot.value ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={shot.value}
+                      alt={`Screenshot ${i + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center gap-1.5 p-2 text-center">
+                      <span className="text-xl">{shot.error ? "⚠️" : "🖼️"}</span>
+                      <span className="line-clamp-2 text-[9px] leading-tight text-[var(--muted)]">
+                        {shot.error ?? shot.name}
+                      </span>
+                      {!shot.error && (
+                        <ProgressBar fraction={shot.progress} className="w-4/5" />
+                      )}
+                    </div>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setExistingShots((p) => p.filter((_, j) => j !== i))}
+                    onClick={() => removeShot(shot.id)}
                     className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
                     aria-label="Remove screenshot"
                   >
@@ -830,24 +912,7 @@ function ListingForm({
                   </button>
                 </div>
               ))}
-              {screenshotFiles.map((file, i) => (
-                <div
-                  key={i}
-                  className="relative flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-2 text-center"
-                >
-                  <span className="text-xl">🖼️</span>
-                  <span className="line-clamp-2 text-[9px] leading-tight text-[var(--muted)]">{file.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setScreenshotFiles((p) => p.filter((_, j) => j !== i))}
-                    className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--danger)] text-xs text-white"
-                    aria-label="Remove screenshot"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              {existingShots.length + screenshotFiles.length < 5 && (
+              {shots.length < 5 && (
                 <label className="grid aspect-square cursor-pointer place-items-center rounded-xl border border-dashed border-[var(--border-strong)] text-2xl text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
                   +
                   <input
@@ -908,16 +973,16 @@ function ListingForm({
         )}
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" size="lg" disabled={!valid || uploading}>
-            {uploading
-              ? "Uploading…"
+          <Button type="submit" size="lg" disabled={!valid || saving}>
+            {saving
+              ? "Saving…"
               : !editId
                 ? "Submit for review"
                 : returnsToReview
                   ? "Resubmit for review"
                   : "Save changes"}
           </Button>
-          {!valid && !uploading && (
+          {!valid && !saving && (
             <Badge tone="neutral">Still needed: {missing.join(", ")}</Badge>
           )}
         </div>
@@ -931,7 +996,7 @@ function ListingForm({
 
       {leavingTo && (
         <LeaveWarning
-          hasPickedFiles={hasPickedFiles}
+          uploadInFlight={filesBusy}
           onStay={() => setLeavingTo(null)}
           onLeave={() => {
             saveDraft();
@@ -945,18 +1010,117 @@ function ListingForm({
   );
 }
 
+/** A thin bar, 0 to 1. The only feedback a long upload used to have was none. */
+function ProgressBar({
+  fraction,
+  className = "",
+}: {
+  fraction: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`block h-1 overflow-hidden rounded-full bg-[var(--border)] ${className}`}
+    >
+      <span
+        className="block h-full rounded-full bg-[var(--accent)] transition-[width] duration-200"
+        style={{ width: `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%` }}
+      />
+    </span>
+  );
+}
+
+/**
+ * A drop target for one file, which starts uploading the moment it is chosen.
+ *
+ * Four states worth telling apart: nothing chosen, going up, landed, and
+ * failed. The old field had one, and a seller waiting on a 500MB installer had
+ * no way to tell a slow connection from a stalled one.
+ */
+function FilePicker({
+  slot,
+  icon,
+  empty,
+  accept,
+  onPick,
+}: {
+  slot: Slot | null;
+  icon: string;
+  empty: string;
+  accept: string;
+  onPick: (file: File | null) => void;
+}) {
+  const done = isReady(slot);
+  const busy = isBusy(slot);
+  const failed = Boolean(slot?.error);
+
+  return (
+    <div>
+      <label
+        className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-6 text-sm hover:border-[var(--accent)] ${
+          failed
+            ? "border-[var(--danger)] bg-[var(--surface-muted)]"
+            : done
+              ? "border-[var(--success)] bg-[var(--success-soft)]"
+              : "border-[var(--border-strong)] bg-[var(--surface-muted)]"
+        }`}
+      >
+        <span className="min-w-0 flex-1">
+          {slot ? (
+            <>
+              <span className="block truncate text-[var(--foreground)]">
+                {icon} {slot.name}
+              </span>
+              {busy && (
+                <span className="mt-2 flex items-center gap-2">
+                  <ProgressBar fraction={slot.progress} className="w-40" />
+                  <span className="text-xs tabular-nums text-[var(--muted)]">
+                    {Math.round(slot.progress * 100)}%
+                  </span>
+                </span>
+              )}
+              {done && (
+                <span className="mt-0.5 block text-xs text-[var(--muted)]">
+                  Uploaded. Click to replace.
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-[var(--muted)]">{empty}</span>
+          )}
+        </span>
+        <span className="shrink-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs">
+          Browse
+        </span>
+        <input
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+        />
+      </label>
+      {slot?.error && (
+        <p className="mt-1.5 text-xs text-[var(--danger)]">{slot.error}</p>
+      )}
+    </div>
+  );
+}
+
 /**
  * Shown when the seller clicks away mid-listing. It's deliberately specific
- * about what survives: the typed fields are already in a draft, the chosen
- * files are not, and a vague "you have unsaved changes" wouldn't tell them
- * which one they're about to lose.
+ * about what survives, rather than a vague "you have unsaved changes".
+ *
+ * It used to warn that the chosen files would be lost, which was true when they
+ * sat in memory until submit. They upload as they are picked now and the draft
+ * keeps their references, so the only thing still at risk is an upload that has
+ * not finished, which leaving really does cancel.
  */
 function LeaveWarning({
-  hasPickedFiles,
+  uploadInFlight,
   onStay,
   onLeave,
 }: {
-  hasPickedFiles: boolean;
+  uploadInFlight: boolean;
   onStay: () => void;
   onLeave: () => void;
 }) {
@@ -976,15 +1140,16 @@ function LeaveWarning({
           Leave this listing?
         </h2>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Everything you&apos;ve typed is saved as a draft and will be waiting
-          when you come back.
-          {hasPickedFiles && (
+          Everything you&apos;ve typed is saved as a draft, and the files
+          you&apos;ve uploaded are saved with it, so it will all be waiting when
+          you come back.
+          {uploadInFlight && (
             <>
               {" "}
               <span className="text-[var(--foreground)]">
-                The files you chose can&apos;t be saved.
+                One of your files is still uploading.
               </span>{" "}
-              You&apos;ll need to pick your package, demo video and screenshots
+              Leaving now cancels it, and you&apos;ll need to choose that file
               again.
             </>
           )}
@@ -1074,6 +1239,23 @@ type Draft = {
   platform: Platform;
   price: string;
   version: string;
+  /*
+    The uploaded files, as the references they became.
+
+    A File cannot be serialized, so the old draft held only the typed fields and
+    told the seller so: "Draft saved. Files still need choosing." Now that the
+    bytes go up on pick, what is left is a handful of strings, and coming back
+    tomorrow no longer costs a 500MB re-upload.
+
+    listingId comes with them because the uploads are stored under it. Losing it
+    would leave the files orphaned in the bucket and the draft pointing at
+    nothing.
+  */
+  listingId: string;
+  packagePath: string;
+  demoVideo: string;
+  posterImage: string;
+  screenshots: string[];
   savedAt: number;
 };
 
@@ -1087,10 +1269,35 @@ const EMPTY_DRAFT: Draft = {
   platform: "macos",
   price: "15",
   version: "1.0.0",
+  listingId: "",
+  packagePath: "",
+  demoVideo: "",
+  posterImage: "",
+  screenshots: [],
   savedAt: 0,
 };
 
-const EMPTY_DRAFT_JSON = JSON.stringify(EMPTY_DRAFT);
+/**
+ * A draft reduced to what the seller actually filled in, in a stable key order.
+ *
+ * Drops the two fields that carry no intent: listingId, which is reserved on
+ * mount, and savedAt, which is a clock reading.
+ *
+ * The sort matters more than it looks. This comparison used to stringify the
+ * live draft against EMPTY_DRAFT directly, and the two literals happened to
+ * list `platform` in different places. JSON.stringify follows insertion order,
+ * so the strings never matched however empty the form was, and every visit to
+ * this page autosaved a blank draft and armed the "are you sure you want to
+ * leave" dialog over nothing.
+ */
+function draftContent(d: Draft): string {
+  const rest: Partial<Draft> = { ...d };
+  delete rest.listingId;
+  delete rest.savedAt;
+  return JSON.stringify(rest, Object.keys(rest).sort());
+}
+
+const EMPTY_DRAFT_CONTENT = draftContent(EMPTY_DRAFT);
 
 /** Scoped per seller and per listing, so drafts never leak between them. */
 /**
@@ -1133,6 +1340,11 @@ function draftFromListing(listing: Listing): Draft {
     platform: listing.platform ?? "macos",
     price: String(listing.priceCents / 100),
     version: listing.version,
+    listingId: listing.id,
+    packagePath: listing.packagePath ?? "",
+    demoVideo: listing.demoVideo ?? "",
+    posterImage: listing.posterImage ?? "",
+    screenshots: listing.screenshots ?? [],
     savedAt: 0,
   };
 }

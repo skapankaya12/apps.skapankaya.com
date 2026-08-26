@@ -1,6 +1,14 @@
 "use client";
 
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  uploadBytesResumable,
+  getDownloadURL,
+  type StorageReference,
+  type UploadMetadata,
+} from "firebase/storage";
 import { app } from "./firebase";
 import { packageExtension } from "./media";
 
@@ -43,6 +51,46 @@ const storage = getStorage(app);
  */
 const PUBLIC_ASSET_CACHE = "public, max-age=31536000, immutable";
 
+/**
+ * How far along an upload is, from 0 to 1.
+ *
+ * Passed in by the seller form, which shows a bar per file. A package can be
+ * 500MB, which on a home connection is minutes of waiting, and the form used to
+ * spend that time on a button that said "Uploading…" and nothing else.
+ */
+export type ProgressFn = (fraction: number) => void;
+
+/**
+ * Write bytes, reporting progress when anyone is listening.
+ *
+ * Falls back to the plain one-shot upload without a callback, because
+ * uploadBytesResumable negotiates a session before it sends anything and there
+ * is no reason to pay for that on a 40KB screenshot nobody is watching.
+ */
+async function put(
+  r: StorageReference,
+  data: Blob | File,
+  metadata: UploadMetadata,
+  onProgress?: ProgressFn
+): Promise<void> {
+  if (!onProgress) {
+    await uploadBytes(r, data, metadata);
+    return;
+  }
+  const task = uploadBytesResumable(r, data, metadata);
+  await new Promise<void>((resolve, reject) => {
+    task.on(
+      "state_changed",
+      (snap) =>
+        onProgress(
+          snap.totalBytes ? snap.bytesTransferred / snap.totalBytes : 0
+        ),
+      reject,
+      resolve
+    );
+  });
+}
+
 /** Lowercase file extension including the dot, or "" if none. */
 function ext(name: string): string {
   const i = name.lastIndexOf(".");
@@ -56,7 +104,8 @@ function ext(name: string): string {
 export async function uploadPackage(
   uid: string,
   listingId: string,
-  file: File
+  file: File,
+  onProgress?: ProgressFn
 ): Promise<string> {
   // The extension comes from the file, because a .dmg and a .zip are both
   // legitimate packages now and the stored path is what the download route
@@ -64,10 +113,16 @@ export async function uploadPackage(
   // so widening this does not widen who can write there.
   const ext = packageExtension(file);
   const path = `submissions/${uid}/${listingId}${ext}`;
-  await uploadBytes(ref(storage, path), file, {
-    contentType:
-      file.type || (ext === ".dmg" ? "application/x-apple-diskimage" : "application/zip"),
-  });
+  await put(
+    ref(storage, path),
+    file,
+    {
+      contentType:
+        file.type ||
+        (ext === ".dmg" ? "application/x-apple-diskimage" : "application/zip"),
+    },
+    onProgress
+  );
   return path;
 }
 
@@ -82,16 +137,19 @@ export async function uploadPackage(
 export async function uploadDemoVideo(
   uid: string,
   listingId: string,
-  file: File
+  file: File,
+  onProgress?: ProgressFn
 ): Promise<string> {
   const path = `public/demos/${uid}/${listingId}-${Date.now()}${
     ext(file.name) || ".mp4"
   }`;
   const r = ref(storage, path);
-  await uploadBytes(r, file, {
-    contentType: file.type || "video/mp4",
-    cacheControl: PUBLIC_ASSET_CACHE,
-  });
+  await put(
+    r,
+    file,
+    { contentType: file.type || "video/mp4", cacheControl: PUBLIC_ASSET_CACHE },
+    onProgress
+  );
   return getDownloadURL(r);
 }
 
@@ -116,29 +174,45 @@ export async function uploadPoster(
   return getDownloadURL(r);
 }
 
+/**
+ * Upload one screenshot to the public bucket; returns its public URL.
+ *
+ * Single-file because the seller form now sends each shot the moment it is
+ * chosen, so it can show which ones have landed rather than blocking on the
+ * whole set. `stamp` keeps the old guarantee: a unique filename per upload, so
+ * re-submitting never overwrites a screenshot the seller chose to keep.
+ */
+export async function uploadScreenshot(
+  uid: string,
+  listingId: string,
+  file: File,
+  onProgress?: ProgressFn
+): Promise<string> {
+  const path = `public/shots/${uid}/${listingId}/${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}${ext(file.name) || ".png"}`;
+  const r = ref(storage, path);
+  await put(
+    r,
+    file,
+    {
+      contentType: file.type || "image/png",
+      cacheControl: PUBLIC_ASSET_CACHE,
+    },
+    onProgress
+  );
+  return getDownloadURL(r);
+}
+
 /** Upload screenshots to the public bucket; returns their public URLs in order. */
 export async function uploadScreenshots(
   uid: string,
   listingId: string,
   files: File[]
 ): Promise<string[]> {
-  // Unique filename per upload so re-submissions never overwrite screenshots the
-  // seller chose to keep from a previous version.
-  const stamp = Date.now();
-  return Promise.all(
-    files.map(async (file, i) => {
-      const path = `public/shots/${uid}/${listingId}/${stamp}-${i}${
-        ext(file.name) || ".png"
-      }`;
-      const r = ref(storage, path);
-      await uploadBytes(r, file, {
-        contentType: file.type || "image/png",
-        cacheControl: PUBLIC_ASSET_CACHE,
-      });
-      return getDownloadURL(r);
-    })
-  );
+  return Promise.all(files.map((file) => uploadScreenshot(uid, listingId, file)));
 }
+
 
 /**
  * Upload a seller's avatar. Returns the public URL to store on their user doc.
