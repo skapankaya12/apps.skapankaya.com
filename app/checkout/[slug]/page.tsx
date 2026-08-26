@@ -83,7 +83,8 @@ export default function CheckoutPage() {
       if (data.error === "not-configured") {
         // toggleBookmark flips, so only call it when it isn't already saved —
         // otherwise trying to buy something you'd saved would un-save it.
-        if (!isBookmarked(listing.id)) toggleBookmark(listing.id);
+        // Always signed in here: checkout redirects to /login when not.
+        if (!isBookmarked(listing.id)) await toggleBookmark(listing.id);
         setSavedForLater(true);
       } else {
         setError(checkoutError(data.error));

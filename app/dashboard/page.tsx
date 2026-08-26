@@ -20,6 +20,10 @@ export default function DashboardPage() {
   const listings = useStoreValue(() =>
     user ? getListings({ sellerId: user.uid }) : []
   );
+  // Above the early return below, because a hook cannot be called
+  // conditionally. The flag is what stops a buyer landing here from firing a
+  // request for a seller's numbers they do not have.
+  const saves = useSaveCounts(user?.role === "seller" || user?.role === "admin");
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (
@@ -80,12 +84,13 @@ export default function DashboardPage() {
         // longer fits a phone, and the choice is between scrolling it and
         // crushing the columns until the actions are unreadable.
         <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--border)]">
-          <table className="w-full min-w-[640px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-[var(--surface-muted)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
               <tr>
                 <th className="px-5 py-3 font-medium">App</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Price</th>
+                <th className="px-5 py-3 font-medium">Saves</th>
                 <th className="px-5 py-3 font-medium">Sales</th>
                 {/* A real label, not an sr-only span: absolutely positioned
                     sr-only text inside a horizontally scrolled table escapes
@@ -112,6 +117,12 @@ export default function DashboardPage() {
                   </td>
                   <td className="px-5 py-4"><StatusBadge status={l.status} /></td>
                   <td className="px-5 py-4 tabular-nums">{formatPrice(l.priceCents)}</td>
+                  {/* The true count, not the public one: a seller should see
+                      that forty people saved a tool and none bought it, which
+                      is the most useful thing this number can tell them. */}
+                  <td className="px-5 py-4 tabular-nums text-[var(--muted)]">
+                    {saves ? (saves[l.id] ?? 0) : "…"}
+                  </td>
                   <td className="px-5 py-4 tabular-nums">{l.salesCount}</td>
                   <td className="px-5 py-4">
                     <RowActions listing={l} />
@@ -197,6 +208,41 @@ function RowActions({ listing }: { listing: Listing }) {
       {error && <span className="text-xs text-[var(--danger)]">{error}</span>}
     </div>
   );
+}
+
+/**
+ * Save counts for the signed-in seller's listings, keyed by listing id.
+ *
+ * Fetched rather than read from the store because saves are private in the
+ * Firestore rules: only the person who made one can read it, so the totals only
+ * exist server-side. Null while in flight, so the column can say so instead of
+ * showing a zero that is really "not known yet".
+ */
+function useSaveCounts(enabled: boolean): Record<string, number> | null {
+  const [counts, setCounts] = useState<Record<string, number> | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let alive = true;
+    (async () => {
+      try {
+        const token = await getIdToken();
+        if (!token) return;
+        const res = await fetch("/api/seller/saves", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (alive && res.ok) setCounts(data.counts ?? {});
+      } catch {
+        // A missing count is not worth an error state on the dashboard.
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [enabled]);
+
+  return counts;
 }
 
 function PayoutsCard({ user }: { user: AppUser }) {

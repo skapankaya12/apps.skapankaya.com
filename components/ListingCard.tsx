@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Listing } from "@/lib/types";
+import { useRouter } from "next/navigation";
 import { formatPrice, isBookmarked, toggleBookmark } from "@/lib/store";
 import { useStoreValue } from "@/lib/hooks";
 import { stripMarkdown } from "@/lib/markdown";
@@ -26,6 +27,7 @@ import { ListingMedia } from "./ListingMedia";
  */
 export function ListingCard({ listing }: { listing: Listing }) {
   const saved = useStoreValue(() => isBookmarked(listing.id));
+  const router = useRouter();
   const href = `/app/${listing.slug}`;
   /*
     The row, not the media panel, is the hover target — and it has to be. The
@@ -56,7 +58,15 @@ export function ListingCard({ listing }: { listing: Listing }) {
 
       <button
         aria-label={saved ? "Remove bookmark" : "Save for later"}
-        onClick={() => toggleBookmark(listing.id)}
+        // Saving now needs an account, because a save has to belong to a person
+        // rather than to a browser. Someone signed out is sent to the login
+        // page and back to the tool they were trying to keep, rather than
+        // clicking a heart that quietly does nothing.
+        onClick={async () => {
+          if (!(await toggleBookmark(listing.id))) {
+            router.push(`/login?next=${encodeURIComponent(href)}`);
+          }
+        }}
         className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg bg-[var(--surface)]/85 text-[var(--muted)] backdrop-blur-sm transition-colors hover:text-[var(--foreground)]"
       >
         <HeartIcon filled={saved} />

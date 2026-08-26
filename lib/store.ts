@@ -82,6 +82,14 @@ let currentEmailVerified = false;
 let currentProviders: string[] = [];
 /** True once the public approved-listings listener has responded at least once. */
 let listingsLoaded = false;
+/**
+ * Whether Firebase has told us who, if anyone, is signed in.
+ *
+ * Distinct from `currentUser === null`, which means both "signed out" and "we
+ * have not heard yet". A page that treats those the same shows its signed-out
+ * state for a moment to someone who is signed in.
+ */
+let authResolved = false;
 let approvedListings: Listing[] = []; // public: every approved listing
 let contextListings: Listing[] = []; // seller's own, or all listings for an admin
 let purchases: Purchase[] = [];
@@ -91,6 +99,7 @@ let categories: CategoryDef[] = [];
 let unsubContext: Unsubscribe | undefined;
 let unsubPurchases: Unsubscribe | undefined;
 let unsubUserDoc: Unsubscribe | undefined;
+let unsubBookmarks: Unsubscribe | undefined;
 
 function toListing(d: { id: string; data: () => unknown }): Listing {
   return { id: d.id, ...(d.data() as Omit<Listing, "id">) };
@@ -183,14 +192,19 @@ export function markClientReady() {
     unsubContext?.();
     unsubPurchases?.();
     unsubUserDoc?.();
-    unsubContext = unsubPurchases = unsubUserDoc = undefined;
+    unsubBookmarks?.();
+    unsubContext = unsubPurchases = unsubUserDoc = unsubBookmarks = undefined;
 
     if (!fbUser) {
+      authResolved = true;
       currentUser = null;
       currentEmailVerified = false;
       currentProviders = [];
       contextListings = [];
       purchases = [];
+      // Signing out has to clear these, or the next person at this browser
+      // sees the last person's saved tools until their own listener replies.
+      bookmarkIds = [];
       emit();
       return;
     }
@@ -213,12 +227,29 @@ export function markClientReady() {
 
     // Live user doc so role changes take effect immediately.
     unsubUserDoc = onSnapshot(uref, (s) => {
+      // Only now is the answer actually known: signed in, and this is who.
+      authResolved = true;
       currentUser = s.exists()
         ? { uid: s.id, ...(s.data() as Omit<AppUser, "uid">) }
         : null;
       setupContextListeners();
       emit();
     });
+
+    // Saves made before bookmarks reached Firestore, attached to this account
+    // the first time they sign in. Deliberately awaited before the listener
+    // below, so the adopted rows arrive in its first snapshot.
+    await adoptLocalBookmarks(fbUser.uid);
+
+    // This buyer's saved listings.
+    unsubBookmarks = onSnapshot(
+      query(collection(db, "bookmarks"), where("uid", "==", fbUser.uid)),
+      (snap) => {
+        bookmarkIds = snap.docs.map((d) => d.data().listingId as string);
+        emit();
+      },
+      (err) => console.error("[store] bookmarks listener:", err.message)
+    );
 
     // This buyer's purchases.
     unsubPurchases = onSnapshot(
@@ -236,6 +267,15 @@ export function markClientReady() {
 }
 
 /* ------------------------------ auth ------------------------------ */
+
+/**
+ * Whether the signed-in user is known yet. False until Firebase answers, so a
+ * page can hold off rather than rendering its signed-out view at someone who
+ * is about to turn out to be signed in.
+ */
+export function getAuthResolved(): boolean {
+  return clientReady ? authResolved : false;
+}
 
 export function getUser(): AppUser | null {
   return clientReady ? currentUser : null;
@@ -1228,26 +1268,92 @@ export function clearCart() {
   writeLocal(CART_KEY, []);
 }
 
-/* ------------------------------ bookmarks (localStorage) ------------------------------ */
+/* ---------------------------------------------------------------------------
+   Bookmarks.
+
+   These used to be a list of ids in localStorage, which meant a save was tied
+   to one browser: it did not follow the person to their phone, it vanished with
+   cleared site data, and because nothing ever reached the server, nobody could
+   count them. A seller had no way to know that forty people had saved their
+   tool and none had bought it.
+
+   One document per person per listing, and the document id binds the two
+   together (`{uid}_{listingId}`) so the same person cannot save the same tool
+   twice and inflate the number. The rules keep each save readable only by the
+   person who made it: the count shown on a listing is worked out server-side
+   with the Admin SDK, so the marketplace can publish a number without
+   publishing a list of who is interested in what.
+
+   Signing in is now required, which is deliberate. Saving is the first thing
+   worth having an account for before you have spent any money.
+--------------------------------------------------------------------------- */
+
+/** Listing ids the signed-in user has saved. Empty while signed out. */
+let bookmarkIds: string[] = [];
+
+function bookmarkDocId(uid: string, listingId: string): string {
+  return `${uid}_${listingId}`;
+}
 
 export function getBookmarks(): string[] {
-  return readLocal<string[]>(BOOKMARKS_KEY, []);
+  return bookmarkIds;
 }
+
 export function getBookmarkedListings(): Listing[] {
-  const ids = new Set(getBookmarks());
+  const ids = new Set(bookmarkIds);
   return mergedListings().filter((l) => ids.has(l.id));
 }
+
 export function isBookmarked(listingId: string): boolean {
-  return getBookmarks().includes(listingId);
+  return bookmarkIds.includes(listingId);
 }
-export function toggleBookmark(listingId: string) {
-  const saved = getBookmarks();
-  writeLocal(
-    BOOKMARKS_KEY,
-    saved.includes(listingId)
-      ? saved.filter((id) => id !== listingId)
-      : [...saved, listingId]
-  );
+
+/**
+ * Save or unsave a listing.
+ *
+ * Answers false when nobody is signed in, so the caller can send them to the
+ * login page instead of silently doing nothing. The listener below updates the
+ * UI; Firestore answers from its local cache first, so the heart fills
+ * immediately rather than after a round trip.
+ */
+export async function toggleBookmark(listingId: string): Promise<boolean> {
+  const uid = currentUser?.uid;
+  if (!uid) return false;
+  const ref = doc(db, "bookmarks", bookmarkDocId(uid, listingId));
+  if (bookmarkIds.includes(listingId)) {
+    await deleteDoc(ref);
+  } else {
+    await setDoc(ref, { uid, listingId, createdAt: Date.now() });
+  }
+  return true;
+}
+
+/**
+ * Carry saves made before this change into the account being signed into.
+ *
+ * Best effort and once only: the old list was anonymous, so this is the single
+ * moment it can be attached to a person. Failing is not worth interrupting a
+ * sign-in for, and the local list is only cleared once the write has landed.
+ */
+async function adoptLocalBookmarks(uid: string): Promise<void> {
+  const legacy = readLocal<string[]>(BOOKMARKS_KEY, []);
+  if (!legacy.length) return;
+  try {
+    const batch = writeBatch(db);
+    const now = Date.now();
+    // Capped so a hand-edited localStorage entry cannot fire off a huge write.
+    for (const listingId of legacy.slice(0, 200)) {
+      batch.set(doc(db, "bookmarks", bookmarkDocId(uid, listingId)), {
+        uid,
+        listingId,
+        createdAt: now,
+      });
+    }
+    await batch.commit();
+    window.localStorage.removeItem(BOOKMARKS_KEY);
+  } catch (err) {
+    console.error("[store] adopting local bookmarks:", err);
+  }
 }
 
 /* ------------------------------ helpers ------------------------------ */

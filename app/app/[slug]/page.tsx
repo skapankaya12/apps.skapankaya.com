@@ -10,6 +10,7 @@ import {
 import { getCategoryLabelServer } from "@/lib/categories.server";
 import { ListingDetail } from "@/components/ListingDetail";
 import { resolveSellerProfile } from "@/lib/profiles.server";
+import { getSaveCount } from "@/lib/saves.server";
 import { JsonLd } from "@/components/JsonLd";
 import { stripMarkdown } from "@/lib/markdown";
 import { PLATFORM_LABELS, type Listing } from "@/lib/types";
@@ -104,6 +105,9 @@ export default async function AppPage({
   // written with. ListingDetail is a client component and the rules keep /users
   // private, so it has to arrive as a prop.
   const seller = await resolveSellerProfile(listing);
+  // Counted here because a save is private in the rules, so the client cannot
+  // add them up. Revalidates with the page, every five minutes.
+  const saveCount = await getSaveCount(listing.id);
 
   // SoftwareApplication rather than plain Product: these are programs, and it
   // lets us state the runtime and category in terms Google already understands.
@@ -167,7 +171,12 @@ export default async function AppPage({
         real title, description and price into that HTML instead of a spinner —
         which is the whole point of fetching here.
       */}
-      <ListingDetail slug={slug} initial={listing} seller={seller} />
+      <ListingDetail
+        slug={slug}
+        initial={listing}
+        seller={seller}
+        saveCount={saveCount}
+      />
     </>
   );
 }

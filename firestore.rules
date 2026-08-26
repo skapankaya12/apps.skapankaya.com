@@ -183,6 +183,37 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /* -----------------------------------------------------------------------
+       Saved listings, one document per person per listing.
+
+       The document id is `{uid}_{listingId}` and the create rule checks that it
+       matches, which is what stops one person saving the same tool repeatedly
+       to inflate the number on it. A document id is the only uniqueness
+       Firestore offers.
+
+       A save is private. Nobody, including the seller, may read whose saves
+       these are: the count published on a listing is worked out server-side
+       with the Admin SDK (lib/saves.server.ts), so the marketplace can show a
+       number without showing a list of who is interested in what.
+    ----------------------------------------------------------------------- */
+    match /bookmarks/{id} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.listingId is string
+        && id == request.auth.uid + '_' + request.resource.data.listingId;
+
+      // Only reachable by the one-off adoption of saves made before these were
+      // stored server-side, which rewrites a row it already owns.
+      allow update: if isSignedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.listingId == resource.data.listingId;
+
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
     match /purchases/{id} {
       // A buyer reads their own purchases; admins read all.
       allow read: if isSignedIn()

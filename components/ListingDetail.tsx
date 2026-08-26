@@ -24,6 +24,7 @@ import {
   type SellerProfile,
 } from "@/lib/types";
 import { safeHttpsUrl } from "@/lib/utils";
+import { PUBLIC_SAVE_THRESHOLD } from "@/lib/saves";
 import { Section, Button, ButtonLink, Badge, VerifiedBadge } from "./ui";
 import { ScanDisclaimer } from "./Disclaimer";
 import { Expandable } from "./Expandable";
@@ -84,6 +85,7 @@ export function ListingDetail({
   slug,
   initial,
   seller,
+  saveCount,
 }: {
   slug: string;
   initial?: Listing;
@@ -95,6 +97,12 @@ export function ListingDetail({
    * the seller's details stored on the listing itself.
    */
   seller?: SellerProfile;
+  /**
+   * How many people have saved this, counted on the server. Shown only past
+   * PUBLIC_SAVE_THRESHOLD: printing "0 saves" under a tool on a marketplace
+   * that has not opened yet reads as nobody wanting it.
+   */
+  saveCount?: number;
 }) {
   const router = useRouter();
   const user = useUser();
@@ -105,6 +113,12 @@ export function ListingDetail({
   );
   const inCart = useStoreValue(() => (listing ? isInCart(listing.id) : false));
   const saved = useStoreValue(() => (listing ? isBookmarked(listing.id) : false));
+  // Server-counted, so it does not move as this person saves and unsaves. That
+  // is fine: it is a signal about other people, not a live tally.
+  const shownSaves =
+    saveCount !== undefined && saveCount >= PUBLIC_SAVE_THRESHOLD
+      ? saveCount
+      : null;
   const categories = useStoreValue(getCategories);
 
   if (!listing) {
@@ -221,13 +235,26 @@ export function ListingDetail({
                 </div>
                 <p className="mt-1 text-sm text-[var(--muted)]">One-time · yours forever</p>
               </div>
-              <button
-                aria-label={saved ? "Remove bookmark" : "Save for later"}
-                onClick={() => toggleBookmark(listing.id)}
-                className="grid h-10 w-10 place-items-center rounded-xl border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface-muted)]"
-              >
-                <HeartIcon filled={saved} />
-              </button>
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  aria-label={saved ? "Remove bookmark" : "Save for later"}
+                  onClick={async () => {
+                    if (!(await toggleBookmark(listing.id))) {
+                      router.push(
+                        `/login?next=${encodeURIComponent(`/app/${listing.slug}`)}`
+                      );
+                    }
+                  }}
+                  className="grid h-10 w-10 place-items-center rounded-xl border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface-muted)]"
+                >
+                  <HeartIcon filled={saved} />
+                </button>
+                {shownSaves !== null && (
+                  <span className="text-xs tabular-nums text-[var(--muted)]">
+                    {shownSaves}
+                  </span>
+                )}
+              </div>
             </div>
 
             {owned ? (
