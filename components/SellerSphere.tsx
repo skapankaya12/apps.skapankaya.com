@@ -18,7 +18,8 @@ import type { SellerFace } from "@/lib/types";
  *
  * Tier 2 matters more than it looks. It means the sphere reads as people from
  * the first seller onwards, and every photo that gets added upgrades a node
- * without anybody deploying anything. Tier 3 is scenery: dimmed and weighted
+ * without anybody deploying anything. Where the real ones sit is not cosmetic
+ * either: see the stride below. Tier 3 is scenery: dimmed and weighted
  * smaller so it never competes with a real face, because a sphere of identical
  * logos pretending to be a crowd is exactly what a maker would see through.
  */
@@ -118,23 +119,45 @@ export function SellerSphere({
   sellers: SellerFace[];
   className?: string;
 }) {
-  const real: SphereNode[] = sellers.map((seller, i) => ({
-    id: `seller-${seller.handle ?? i}`,
-    weight: seller.avatarUrl ? WEIGHT_PHOTO : WEIGHT_INITIAL,
-    node: <Face seller={seller} />,
-  }));
+  const total = Math.max(TARGET_NODES, sellers.length);
 
-  const fillers: SphereNode[] = Array.from(
-    { length: Math.max(0, TARGET_NODES - real.length) },
-    (_, i) => ({
-      id: `spot-${i}`,
+  /*
+   * Real sellers go in at an even stride, not at the front.
+   *
+   * Putting them first looked right and was wrong. The lattice walks from one
+   * pole to the other, and near a pole the ring it is walking around has almost
+   * no radius, so consecutive indices are physically next to each other. Two
+   * sellers therefore landed side by side, both drawn at full size, and at
+   * roughly 63 degrees of yaw they closed to under a fifth of the distance at
+   * which they touch. They visibly sat on top of one another.
+   *
+   * Striding across the whole lattice puts them on opposite faces of the sphere
+   * instead. Two nodes can still line up, since anything on the front can
+   * eclipse something on the back, but then one of them is at the far side:
+   * small, dim, and reading as depth rather than as a collision.
+   */
+  const nodes: (SphereNode | undefined)[] = new Array(total);
+  const stride = total / Math.max(1, sellers.length);
+  sellers.forEach((seller, i) => {
+    nodes[Math.floor(i * stride)] = {
+      id: `seller-${seller.handle ?? i}`,
+      weight: seller.avatarUrl ? WEIGHT_PHOTO : WEIGHT_INITIAL,
+      node: <Face seller={seller} />,
+    };
+  });
+
+  let spot = 0;
+  for (let i = 0; i < total; i++) {
+    if (nodes[i]) continue;
+    nodes[i] = {
+      id: `spot-${spot}`,
       weight: WEIGHT_PLACEHOLDER,
-      node: <PlaceholderFace index={i} />,
-    })
-  );
+      node: <PlaceholderFace index={spot} />,
+    };
+    spot++;
+  }
 
-  // Real sellers first: the sphere gives its early indices the larger weights
-  // and the lattice spreads them apart, so faces end up distributed through the
-  // placeholders rather than clustered on one side.
-  return <ImgSphere nodes={[...real, ...fillers]} className={className} />;
+  return (
+    <ImgSphere nodes={nodes as SphereNode[]} className={className} />
+  );
 }
