@@ -82,9 +82,6 @@ export function WaitlistForm() {
           {state === "busy" ? "…" : "Notify me"}
         </LiquidMetalButton>
       </div>
-      <p className="mt-1.5 text-xs text-[var(--muted)]">
-        One email, at launch. Nothing else, and we never pass it on.
-      </p>
       {state === "error" && (
         <p className="mt-2 text-xs text-[var(--danger)]">{message}</p>
       )}

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { WaitlistForm } from "./WaitlistForm";
 
@@ -10,6 +11,11 @@ import { WaitlistForm } from "./WaitlistForm";
  * accepted. What only this card can say is the thing a buyer would otherwise
  * discover at checkout: the catalogue is thin because it is still being
  * collected, and buying is not open yet.
+ *
+ * The seller line at the bottom stays one quiet sentence for that reason. It is
+ * the only place on the page that says listing costs nothing, which the three
+ * buttons do not, but it sits after the waitlist so it cannot take the card
+ * back off a buyer.
  *
  * Keep the wording honest. If the launch date moves, move it here.
  */
@@ -44,10 +50,24 @@ export function PreLaunchNotice() {
       </p>
 
       {/* Only the form is interactive; the copy above stays server-rendered.
-          It is the card's only call to action now, so it sits closer. */}
+          It is the card's main call to action now, so it sits closer. */}
       <div className="mt-4 border-t border-[var(--border)] pt-1">
         <WaitlistForm />
       </div>
+
+      {/* Its own rule, so the card reads as three plain zones: who it is for,
+          the buyer action, then this. Without one the sentence reads as a
+          caption on the email field it sits under. */}
+      <p className="mt-3 border-t border-[var(--border)] pt-3 text-xs text-[var(--muted)]">
+        If you&apos;re a seller,{" "}
+        <Link
+          href="/sell"
+          className="font-medium text-[var(--accent)] hover:underline"
+        >
+          create an account and list your tool for free
+        </Link>
+        .
+      </p>
     </aside>
   );
 }
