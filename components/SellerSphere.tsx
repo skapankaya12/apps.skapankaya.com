@@ -105,7 +105,6 @@ function Face({ seller }: { seller: SellerFace }) {
       href={`/seller/${seller.handle}`}
       // Rounded so the focus ring traces the face rather than boxing it.
       className="block h-full w-full rounded-full outline-offset-4 focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-      title={seller.displayName}
     >
       {face}
     </Link>
@@ -142,6 +141,7 @@ export function SellerSphere({
     nodes[Math.floor(i * stride)] = {
       id: `seller-${seller.handle ?? i}`,
       weight: seller.avatarUrl ? WEIGHT_PHOTO : WEIGHT_INITIAL,
+      label: seller.displayName,
       node: <Face seller={seller} />,
     };
   });

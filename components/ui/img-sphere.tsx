@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 /**
  * A drift of round nodes arranged on a sphere, draggable and slowly rotating.
@@ -44,6 +50,11 @@ export interface SphereNode {
    * through every rotation is what keeps the sphere reading as people.
    */
   weight?: number;
+  /**
+   * Shown on hover and on keyboard focus. A node without one is scenery: it
+   * gets no label, and hovering it does not stop the sphere.
+   */
+  label?: string;
   node: ReactNode;
 }
 
@@ -84,6 +95,10 @@ const MAX_PITCH = 38;
  */
 const START_PITCH = -10;
 const START_YAW = 0;
+
+/** Breathing room between a face and its name, and the name's own height. */
+const LABEL_GAP = 8;
+const LABEL_HEIGHT = 24;
 
 interface UnitPosition {
   x: number;
@@ -159,6 +174,14 @@ export function ImgSphere({
 }: ImgSphereProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const labelRef = useRef<HTMLDivElement>(null);
+
+  // Which node is being pointed at, held twice on purpose. The state renders
+  // the label's text, which happens once per hover; the ref is what the
+  // animation loop reads sixty times a second, because reading state there
+  // would mean rebuilding the loop on every hover.
+  const [hovered, setHovered] = useState<number | null>(null);
+  const hoveredRef = useRef<number | null>(null);
 
   // Everything the animation loop mutates lives in refs. None of it is state:
   // a re-render per frame is the cost this component exists to avoid.
@@ -221,6 +244,26 @@ export function ImgSphere({
         el.style.transform = `translate3d(calc(-50% + ${p.x}px), calc(-50% + ${p.y}px), 0) scale(${p.scale})`;
         el.style.opacity = String(p.opacity);
         el.style.zIndex = String(p.zIndex);
+
+        // The label rides along with its node but is deliberately not inside
+        // it: everything in that wrapper inherits the wrapper's scale, so a
+        // name on a node at the back of the sphere would be rendered at half
+        // size. Positioned here instead, it stays the same size wherever the
+        // face it belongs to happens to be.
+        if (i === hoveredRef.current && labelRef.current) {
+          const half = (nodeSize * p.scale) / 2;
+          // Below the face normally, above it near the foot of the sphere.
+          // Without the flip a name on a low node lands on whatever caption
+          // the page has put underneath, and covers it.
+          const below = p.y + half + LABEL_GAP;
+          const flip = below + LABEL_HEIGHT > measured.current / 2;
+          const y = flip ? p.y - half - LABEL_GAP - LABEL_HEIGHT : below;
+          labelRef.current.style.transform = `translate3d(calc(-50% + ${p.x}px), ${y}px, 0)`;
+          // It mounts at opacity 0, because React paints it before this loop
+          // gets to place it and the untouched position is the middle of the
+          // sphere. Revealed here, once it is where it belongs.
+          labelRef.current.style.opacity = "1";
+        }
       }
     }
 
@@ -236,7 +279,13 @@ export function ImgSphere({
         // The drift is the only thing reduced motion turns off. A sphere that
         // still answers a drag is a control; one that spins on its own is an
         // animation, and that is the distinction the setting is asking about.
-        if (!reduceMotion) angles.current.yaw += autoRotateSpeed;
+        //
+        // Pointing at a face holds it still too. Reading a name off a target
+        // that is sliding out from under the cursor is a small fight, and the
+        // hover ends the moment it drifts away.
+        if (!reduceMotion && hoveredRef.current === null) {
+          angles.current.yaw += autoRotateSpeed;
+        }
       }
 
       angles.current.pitch = Math.max(
@@ -308,6 +357,8 @@ export function ImgSphere({
 
   if (!nodes.length) return null;
 
+  const hoveredLabel = hovered === null ? null : (nodes[hovered]?.label ?? null);
+
   return (
     <div
       ref={containerRef}
@@ -340,6 +391,29 @@ export function ImgSphere({
           opacity: initial.opacity,
           zIndex: initial.zIndex,
         };
+        const track = item.label
+          ? {
+              onPointerEnter: () => {
+                hoveredRef.current = i;
+                setHovered(i);
+              },
+              onPointerLeave: () => {
+                hoveredRef.current = null;
+                setHovered(null);
+              },
+              // Focus as well as hover, so tabbing through the faces says who
+              // they are rather than moving a silent ring around the sphere.
+              onFocus: () => {
+                hoveredRef.current = i;
+                setHovered(i);
+              },
+              onBlur: () => {
+                hoveredRef.current = null;
+                setHovered(null);
+              },
+            }
+          : null;
+
         return (
           <div
             key={item.id}
@@ -348,11 +422,27 @@ export function ImgSphere({
             }}
             style={style}
             className="absolute left-1/2 top-1/2 will-change-transform"
+            {...track}
           >
             {item.node}
           </div>
         );
       })}
+
+      {/* One label, moved to whichever node is being pointed at. Rendering it
+          only while something is hovered keeps it out of the document the rest
+          of the time; aria-hidden because the name is already the accessible
+          name of the link it belongs to, and announcing it twice is noise. */}
+      {hoveredLabel && (
+        <div
+          ref={labelRef}
+          aria-hidden
+          style={{ opacity: 0 }}
+          className="pointer-events-none absolute left-1/2 top-1/2 z-[2000] whitespace-nowrap rounded-lg bg-[var(--foreground)] px-2.5 py-1 text-xs font-medium text-[var(--background)] shadow-[var(--shadow-md)]"
+        >
+          {hoveredLabel}
+        </div>
+      )}
     </div>
   );
 }
