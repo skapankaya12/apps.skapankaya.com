@@ -112,17 +112,22 @@ service cloud.firestore {
       // having passed Apple's checks.
       function reviewedPartsIntact() {
         return !changed().hasAny([
-          'packagePath', 'runtime', 'setupMode', 'platform', 'version',
-          'packageVerification'
+          'packagePath', 'priceCents', 'runtime', 'setupMode', 'platform',
+          'version', 'packageVerification'
         ]);
       }
       /*
-        Price is the seller's to set, including on a live listing: repricing is
-        an ordinary thing to do and sending a tool offline for it would be
-        absurd. What stops "get approved at $15, then charge $250" is the band
-        itself, which until now lived only in the submit form and so was not a
-        control at all. Mirrors the $15 to $250 the form enforces. Note
-        BUSINESS_MODEL.md still quotes an older $10 to $29 band.
+        The price band, which holds on every seller write whatever the status.
+
+        Two different controls, and both are wanted. priceCents is in the list
+        above, so changing the price of a live listing sends it back to the
+        queue and a human sees the new number: every listing here is approved by
+        hand, and a price that could move afterwards would mean the number
+        reviewed was not the number charged. The band is the cheaper backstop
+        underneath that, and it matters most on the paths where no second review
+        happens at all. It lived only in the submit form until now, which is to
+        say it was not a control. Mirrors the $15 to $250 the form enforces.
+        Note BUSINESS_MODEL.md still quotes an older $10 to $29 band.
       */
       function priceInBand() {
         return request.resource.data.priceCents is int

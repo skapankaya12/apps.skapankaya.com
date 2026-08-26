@@ -630,6 +630,7 @@ function ListingForm({
     !wasLive ||
     requiresReReview(editing, {
       packagePath: pkg.slot?.value,
+      priceCents: Math.round(parseFloat(price || "0") * 100),
       runtime,
       setupMode,
       platform: runtime === "binary" ? platform : undefined,
@@ -1020,7 +1021,7 @@ function ListingForm({
             }`}
           >
             {returnsToReview
-              ? "You changed the package or how the tool runs, so this goes back for review. It comes off sale until that's done."
+              ? "You changed the price, the package or how the tool runs, so this goes back for review. It comes off sale until that's done."
               : "These are presentation changes, so your listing stays exactly as it is on the marketplace while they save."}
           </p>
         )}

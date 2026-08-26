@@ -226,11 +226,16 @@ Three roles: `buyer`, `seller`, `admin`.
 2b. **Seller edits.** A seller can edit a live listing. Whether that costs them
    their place on the marketplace depends on what changed: presentation (title,
    description, price, screenshots, demo) saves in place and stays live, while
-   anything in `REVIEW_CRITICAL_FIELDS` (package, runtime, setup mode, platform,
-   version) goes back to the queue. The form says which before they press the
-   button, and the admin is only emailed when something actually entered the
-   queue. **firestore.rules is the control here, not the client.** Price is
-   editable on a live listing, with the $15 to $250 band enforced in the rules.
+   anything in `REVIEW_CRITICAL_FIELDS` (package, **price**, runtime, setup
+   mode, platform, version) goes back to the queue. The form says which before
+   they press the button, and the admin is only emailed when something actually
+   entered the queue. **firestore.rules is the control here, not the client.**
+
+   Price is in that list deliberately (Sevval, 26 August): every listing is
+   approved by hand, so a price that could move afterwards would mean the number
+   reviewed was not the number charged. Separately, the $15 to $250 band is now
+   enforced in the rules on every seller write, which it never was before, and
+   is a lower backstop rather than a substitute for the review.
 2c. **Takedown.** A seller takes a tool off sale from the dashboard. Status only:
    the rules refuse a visibility change that moves any other field.
 3. **Buying.** `/api/stripe/checkout` reads `priceCents` from Firestore, never

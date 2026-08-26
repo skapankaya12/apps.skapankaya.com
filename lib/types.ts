@@ -21,10 +21,16 @@ export type ListingStatus =
  * What a seller cannot change on a live listing without going back through
  * review.
  *
- * The dividing line is whether the change alters what the buyer receives.
- * A better description, a clearer screenshot or a different price are the
- * seller's to make, and forcing a live tool offline to fix a typo is how you
- * teach sellers not to fix typos. A different package is a different product.
+ * The dividing line is whether the change alters the deal a buyer was offered.
+ * Rewording a description or swapping a screenshot does not, and forcing a live
+ * tool offline to fix a typo is how you teach sellers not to fix typos. A
+ * different package is a different product, and a different price is a
+ * different deal: every listing here is approved by hand, and a price that
+ * could move afterwards would mean the number reviewed was not the number
+ * charged.
+ *
+ * The $15 to $250 band in firestore.rules is a separate, lower control that
+ * holds on every write. This list is about what a human looks at again.
  *
  * Enforced in firestore.rules, which is the control; requiresReReview() in
  * lib/store.ts reads the same list so the form can say which one is about to
@@ -32,6 +38,7 @@ export type ListingStatus =
  */
 export const REVIEW_CRITICAL_FIELDS = [
   "packagePath",
+  "priceCents",
   "runtime",
   "setupMode",
   "platform",
