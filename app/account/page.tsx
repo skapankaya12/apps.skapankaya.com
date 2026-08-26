@@ -13,10 +13,12 @@ import {
   claimHandle,
   isHandleAvailable,
   saveSellerProfile,
+  getIdToken,
 } from "@/lib/store";
 import { uploadAvatar } from "@/lib/storage";
 import { validateAvatar, AVATAR_ACCEPT } from "@/lib/media";
 import { handleProblem, suggestHandle } from "@/lib/handles";
+import { normalizeXHandle, xHandleProblem } from "@/lib/xhandle";
 import { safeHttpsUrl } from "@/lib/utils";
 import { BIO_MAX, type AppUser } from "@/lib/types";
 import { SellerAvatar } from "@/components/SellerAvatar";
@@ -277,6 +279,10 @@ function PublicProfileSection({ user }: { user: AppUser }) {
   const [bio, setBio] = useState(user.bio ?? "");
   const [supportEmail, setSupportEmail] = useState(user.supportEmail ?? "");
   const [website, setWebsite] = useState(user.website ?? "");
+  const [xHandle, setXHandle] = useState(user.xHandle ?? "");
+  // Separate from `busy`: pulling a photo is a side errand, and it must not
+  // make the Save button look like it is mid-save.
+  const [xBusy, setXBusy] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   // Set when they ask to go back to the monogram, so Save knows to clear rather
   // than to leave the existing photo alone.
@@ -321,11 +327,53 @@ function PublicProfileSection({ user }: { user: AppUser }) {
     setPreviewFor(file);
   }
 
+  /**
+   * Pull the photo off their X profile and drop it into the picker.
+   *
+   * Deliberately ends at pickAvatar rather than at an upload: the photo is
+   * previewed, size-checked and only written when they press Save, exactly like
+   * one chosen from disk. So a wrong handle costs nothing, and there is still
+   * only one path by which an avatar reaches Storage.
+   */
+  async function pullXPhoto() {
+    setAvatarError("");
+    setXBusy(true);
+    try {
+      const token = await getIdToken();
+      const res = await fetch("/api/profile/x-avatar", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token ?? ""}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ handle: xHandle }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setAvatarError(body.error ?? "Couldn't fetch that photo.");
+        return;
+      }
+      const blob = await res.blob();
+      const ext =
+        blob.type === "image/png"
+          ? "png"
+          : blob.type === "image/webp"
+            ? "webp"
+            : "jpg";
+      pickAvatar(new File([blob], `x-avatar.${ext}`, { type: blob.type }));
+    } catch {
+      setAvatarError("Couldn't fetch that photo. Try uploading one instead.");
+    } finally {
+      setXBusy(false);
+    }
+  }
+
   // What the avatar slot is showing right now, which is not the same as what
   // is saved: a pending pick counts, and a pending removal does not.
   const hasPhoto = Boolean(avatarFile) || (Boolean(user.avatarUrl) && !avatarCleared);
   const emailBad = Boolean(supportEmail.trim()) && !supportEmail.includes("@");
   const websiteBad = Boolean(website.trim()) && !safeHttpsUrl(website);
+  const xBad = Boolean(xHandle.trim()) && Boolean(xHandleProblem(xHandle));
 
   async function save() {
     setBusy(true);
@@ -342,6 +390,9 @@ function PublicProfileSection({ user }: { user: AppUser }) {
         bio,
         supportEmail,
         website: safeHttpsUrl(website) ?? "",
+        // Stored bare, so every reader builds the link the same way rather than
+        // each one stripping an @ or a hostname of its own.
+        xHandle: xBad ? "" : normalizeXHandle(xHandle),
         avatarUrl,
       });
       setAvatarFile(null);
@@ -452,11 +503,40 @@ function PublicProfileSection({ user }: { user: AppUser }) {
             </span>
           )}
         </label>
+
+        <div>
+          <label className="block">
+            <span className="text-sm font-medium">X handle</span>
+            <span className="ml-2 text-xs text-[var(--muted)]">
+              Optional. Shown on your seller page.
+            </span>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              <input
+                value={xHandle}
+                onChange={(e) => setXHandle(e.target.value)}
+                placeholder="@yourhandle"
+                className={`${inputClass} sm:flex-1`}
+              />
+              <Button
+                variant="secondary"
+                onClick={pullXPhoto}
+                disabled={xBusy || xBad || !xHandle.trim()}
+              >
+                {xBusy ? "Fetching…" : "Use my X photo"}
+              </Button>
+            </div>
+          </label>
+          {xBad && (
+            <span className="mt-1 block text-xs text-[var(--danger)]">
+              {xHandleProblem(xHandle)}
+            </span>
+          )}
+        </div>
       </div>
 
       <Button
         onClick={save}
-        disabled={busy || emailBad || websiteBad}
+        disabled={busy || emailBad || websiteBad || xBad}
         className="mt-5"
       >
         {busy ? "Saving…" : "Save profile"}

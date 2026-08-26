@@ -7,6 +7,7 @@ import {
   getListingsBySeller,
 } from "@/lib/profiles.server";
 import { safeHttpsUrl } from "@/lib/utils";
+import { xProfileUrl } from "@/lib/xhandle";
 import { Section } from "@/components/ui";
 import { SellerAvatar } from "@/components/SellerAvatar";
 import { ListingCard } from "@/components/ListingCard";
@@ -82,6 +83,7 @@ export default async function SellerPage({
 
   const listings = await getListingsBySeller(owner.uid);
   const website = safeHttpsUrl(profile.website);
+  const xUrl = xProfileUrl(profile.xHandle);
 
   return (
     <Section className="py-12">
@@ -102,7 +104,7 @@ export default async function SellerPage({
             </p>
           )}
           <SellerMeta profile={profile} toolCount={listings.length} />
-          {(website || profile.supportEmail) && (
+          {(website || xUrl || profile.supportEmail) && (
             <div className="mt-4 flex flex-wrap gap-2">
               {website && (
                 <a
@@ -112,6 +114,18 @@ export default async function SellerPage({
                   className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm hover:border-[var(--accent)]"
                 >
                   Website
+                </a>
+              )}
+              {xUrl && (
+                <a
+                  href={xUrl}
+                  target="_blank"
+                  // nofollow like the website link beside it: an outbound link a
+                  // seller types is theirs to choose, not ours to vouch for.
+                  rel="noopener noreferrer nofollow"
+                  className="rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm hover:border-[var(--accent)]"
+                >
+                  @{profile.xHandle}
                 </a>
               )}
               {profile.supportEmail && (

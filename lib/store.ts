@@ -613,6 +613,8 @@ export type SellerProfileEdit = {
   bio: string;
   supportEmail: string;
   website: string;
+  /** Bare handle, already normalized by the caller. "" clears it. */
+  xHandle: string;
   /**
    * A URL sets a new photo, null takes the current one away, and leaving it out
    * keeps whatever is there. Three states because saving the form without
@@ -635,6 +637,7 @@ export async function saveSellerProfile(edit: SellerProfileEdit): Promise<void> 
     bio: edit.bio.trim(),
     supportEmail: edit.supportEmail.trim(),
     website: edit.website.trim(),
+    xHandle: edit.xHandle.trim(),
   };
   // Stored as "" rather than deleted: every reader treats it as absent and
   // falls back to the monogram, and an empty string is one less shape for the

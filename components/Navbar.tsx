@@ -49,16 +49,16 @@ export function Navbar() {
   // hero bleeds back up behind it.
   return (
     <header className="absolute inset-x-0 top-0 z-40 py-2.5">
-      <div className="mx-auto flex h-14 w-[calc(100%-1.5rem)] max-w-5xl items-center justify-between gap-4 rounded-2xl border border-white/60 bg-[var(--background)]/55 px-4 shadow-[var(--shadow-lg)] backdrop-blur-xl">
+      <div className="mx-auto flex h-14 w-[calc(100%-1.5rem)] max-w-5xl items-center justify-between gap-2 rounded-2xl sm:gap-4 border border-white/60 bg-[var(--background)]/55 px-4 shadow-[var(--shadow-lg)] backdrop-blur-xl">
         <div className="flex items-center gap-7">
-          <Link href="/" className="flex items-center" aria-label={brand.name}>
+          <Link href="/" className="flex shrink-0 items-center" aria-label={brand.name}>
             <Image
               src="/logo.png"
               alt={brand.name}
               width={1160}
               height={620}
               priority
-              className="h-10 w-auto"
+              className="h-8 w-auto sm:h-10"
             />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
@@ -95,12 +95,12 @@ export function Navbar() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {/* Saved */}
           <Link
             href="/saved"
             aria-label="Saved"
-            className="relative grid h-9 w-9 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+            className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
           >
             <HeartIcon />
             {savedCount > 0 && <Dot>{savedCount}</Dot>}
@@ -110,7 +110,7 @@ export function Navbar() {
           <Link
             href="/cart"
             aria-label="Cart"
-            className="relative grid h-9 w-9 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+            className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
           >
             <CartIcon />
             {cartCount > 0 && <Dot>{cartCount}</Dot>}
@@ -119,9 +119,35 @@ export function Navbar() {
           {user ? (
             <ProfileMenu user={user} />
           ) : (
-            <ButtonLink href="/login" variant="primary" size="sm" className="ml-1">
-              Sign in
-            </ButtonLink>
+            <>
+              {/* Below md the nav is behind the hamburger, so the one thing
+                  this phase is recruiting for would be two taps deep while a
+                  sign-in nobody has asked for yet holds the only button. On a
+                  phone the CTA takes the slot and Sign in moves into the menu
+                  panel, which is the reverse of the desktop arrangement, where
+                  /sell already has the shader button in the nav itself. */}
+              {/* The breakpoint class goes on a wrapper, not on the button.
+                  buttonClass() concatenates raw strings, so a `hidden` handed
+                  to it competes with the `inline-flex` already in buttonBase
+                  and loses on stylesheet order: both buttons render. */}
+              <span className="shrink-0 sm:ml-1 md:hidden">
+                <ButtonLink href="/sell" variant="primary" size="sm">
+                  {/* Below 360px the full label cannot coexist with the logo,
+                      both icons and the menu button, and something has to give.
+                      Shortening the label is the one option that keeps every
+                      control reachable; the destination is the same either way.
+                      Only one span is ever displayed, so the button's own gap-2
+                      never applies between them. */}
+                  <span className="sm:hidden">Sell</span>
+                  <span className="hidden sm:inline">Sell your tool</span>
+                </ButtonLink>
+              </span>
+              <span className="ml-1 hidden shrink-0 md:block">
+                <ButtonLink href="/login" variant="primary" size="sm">
+                  Sign in
+                </ButtonLink>
+              </span>
+            </>
           )}
 
           {/* Below md the nav links are hidden, so this is the only way to
@@ -132,7 +158,7 @@ export function Navbar() {
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
-            className="ml-1 grid h-9 w-9 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] md:hidden"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:ml-1 md:hidden"
           >
             {menuOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
@@ -161,6 +187,15 @@ export function Navbar() {
               </Link>
             );
           })}
+          {!user && (
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              className="block border-t border-[var(--border)] px-3 py-3 text-sm font-medium text-[var(--foreground)]"
+            >
+              Sign in
+            </Link>
+          )}
         </nav>
       )}
     </header>

@@ -139,6 +139,8 @@ export interface AppUser {
   supportEmail?: string;
   /** Their own site or profile. https only, validated with safeHttpsUrl. */
   website?: string;
+  /** Bare X handle, no @ and no URL. Normalized by lib/xhandle.ts. */
+  xHandle?: string;
   /** Public download URL. Absent means render the Monogram fallback. */
   avatarUrl?: string;
 
@@ -170,9 +172,26 @@ export interface SellerProfile {
   bio?: string;
   supportEmail?: string;
   website?: string;
+  xHandle?: string;
   avatarUrl?: string;
   /** Epoch ms of account creation, shown as "Selling since 2026". */
   memberSince: number;
+}
+
+/**
+ * One face in the seller sphere on /sell.
+ *
+ * The smallest shape that can draw an avatar and link to whoever it belongs to,
+ * written out by hand for the same reason SellerProfile is: this one is handed
+ * to a client component that renders on a marketing page, so every field in it
+ * ends up in the RSC payload of a page anybody can view. A bio or a support
+ * email has no business being there.
+ */
+export interface SellerFace {
+  /** Absent on a seller who never claimed one. Those faces don't link. */
+  handle?: string;
+  displayName: string;
+  avatarUrl?: string;
 }
 
 /** How long a seller bio may run. A sentence or two, not a homepage. */

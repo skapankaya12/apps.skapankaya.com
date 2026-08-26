@@ -1,10 +1,27 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import type { Metadata } from "next";
 import { brand } from "@/lib/brand";
-import { useUser } from "@/lib/hooks";
-import { setRole } from "@/lib/store";
-import { Section, Button, Badge } from "@/components/ui";
+import { getApprovedListings } from "@/lib/listings.server";
+import { getPublicSellersFor } from "@/lib/profiles.server";
+import { SellerSphere } from "@/components/SellerSphere";
+import { StartSellingButton } from "@/components/StartSellingButton";
+import { Section, ButtonLink, Badge } from "@/components/ui";
+
+const KEEP_PCT = Math.round((1 - brand.commissionRate) * 100);
+
+/**
+ * One of the two pages we actually want to rank for: "where can I sell the
+ * small tool I built". It used to be a client component in its entirety, which
+ * meant this metadata had to live in a layout beside it; now only the CTA runs
+ * in the browser, so it belongs here with the page it describes.
+ */
+export const metadata: Metadata = {
+  title: "Sell the tool you built",
+  description: `Sell small software you already built to people who need it. List it once, keep ${KEEP_PCT}% of every sale, no subscription and no store fees. For solo builders, indie makers and anyone who fixed their own problem with code.`,
+  alternates: { canonical: "/sell" },
+};
+
+/** Matches the homepage, so a new seller joins the sphere within minutes. */
+export const revalidate = 300;
 
 // The marketplace is software-only: self-contained tools a buyer downloads and
 // runs on their own machine. This spells out the boundary for makers.
@@ -24,40 +41,52 @@ const CANT_SELL = [
   "Anything illegal, or that phishes buyers for credentials or keys",
 ];
 
-export default function SellPage() {
-  const router = useRouter();
-  const user = useUser();
-  const keepPct = Math.round((1 - brand.commissionRate) * 100);
-
-  async function startSelling() {
-    if (!user) {
-      router.push("/login?next=/sell");
-      return;
-    }
-    // Anyone can become a seller: promote a buyer's account, then continue.
-    if (user.role === "buyer") await setRole("seller");
-    router.push("/dashboard/new");
-  }
+export default async function SellPage() {
+  // The sphere is drawn from whoever actually has something on sale, so the
+  // listings are read here and handed on rather than queried twice.
+  const listings = await getApprovedListings();
+  const sellers = await getPublicSellersFor(listings);
 
   return (
     <>
       <div className="relative overflow-hidden border-b border-[var(--border)]">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-60" />
-        <Section className="relative py-20 text-center">
-          <Badge tone="accent" className="mb-5">For makers</Badge>
-          <h1 className="mx-auto max-w-2xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
-            You had an idea and built it. Now sell it.
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-[var(--muted)]">
-            That idea you shipped to fix your own problem? Someone else has it
-            too. Too small to market on its own? Perfect. List it here, keep{" "}
-            <span className="font-semibold text-[var(--foreground)]">{keepPct}%</span> of
-            every sale, and let buyers run it locally in minutes.
-          </p>
-          <div className="mt-8">
-            <Button onClick={startSelling} size="lg">
-              List your app
-            </Button>
+        <Section className="relative py-14 sm:py-16">
+          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)]">
+            <div className="text-center lg:text-left">
+              <Badge tone="accent" className="mb-5">
+                No listing fees
+              </Badge>
+              <h1 className="mx-auto max-w-2xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:mx-0">
+                Someone out there needs the thing you already built.
+              </h1>
+              <p className="mx-auto mt-5 max-w-xl text-lg text-[var(--muted)] lg:mx-0">
+                Too small to market on its own? Perfect. That is exactly what
+                this marketplace is for. List it once, keep{" "}
+                <span className="font-semibold text-[var(--foreground)]">
+                  {KEEP_PCT}%
+                </span>{" "}
+                of every sale, and let buyers run it on their own machine in
+                minutes.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
+                <StartSellingButton />
+                <ButtonLink href="/docs" variant="secondary" size="lg">
+                  How it works
+                </ButtonLink>
+              </div>
+            </div>
+            {/* The makers already here. Interactive, but nothing depends on it:
+                it carries no information the copy beside it needs.
+                "Builders" rather than "sellers": seller is the internal role
+                word (see Role in lib/types.ts), and every public-facing line on
+                this site says builder or maker. */}
+            <div>
+              <SellerSphere sellers={sellers} className="mx-auto" />
+              <p className="mt-2 text-center text-sm text-[var(--muted)]">
+                Meet the builders
+              </p>
+            </div>
           </div>
         </Section>
       </div>
@@ -67,12 +96,12 @@ export default function SellPage() {
         <div className="grid gap-6 md:grid-cols-3">
           {[
             {
-              big: `${keepPct}%`,
+              big: `${KEEP_PCT}%`,
               label: "You keep",
               body: `All-inclusive ${Math.round(brand.commissionRate * 100)}% fee. No listing fees, no separate payment fees, no monthly cost.`,
             },
             {
-              big: "~20 min",
+              big: "~10 min",
               label: "To list",
               body: "Upload your app package, write a description, set a price. We review and publish.",
             },
@@ -97,10 +126,11 @@ export default function SellPage() {
       <Section className="py-8">
         <h2 className="text-2xl font-semibold tracking-tight">What you can sell</h2>
         <p className="mt-2 max-w-2xl text-[var(--muted)]">
-          {brand.name} is for small 
-          <span className="font-medium text-[var(--foreground)]">software tools
-          </span> people
-          download and run on their own computer. If it&apos;s a self-contained
+          {brand.name} is for small{" "}
+          <span className="font-medium text-[var(--foreground)]">
+            software tools
+          </span>{" "}
+          people download and run on their own computer. If it&apos;s a self-contained
           tool a buyer can own forever, it fits. If it needs your servers or
           isn&apos;t software, it doesn&apos;t.
         </p>
@@ -161,10 +191,13 @@ export default function SellPage() {
       <Section className="py-12 text-center">
         <h2 className="text-2xl font-semibold tracking-tight">Ready to list?</h2>
         <p className="mt-2 text-[var(--muted)]">
-          It takes about 20 minutes and there&apos;s no cost to list.
+          It takes about 10 minutes and there&apos;s no cost to list.
         </p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Button onClick={startSelling} size="lg">Start now</Button>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <StartSellingButton />
+          <ButtonLink href="/docs" variant="secondary" size="lg">
+            Read the docs
+          </ButtonLink>
         </div>
       </Section>
     </>

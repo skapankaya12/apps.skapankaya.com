@@ -9,7 +9,8 @@ chat and leave the file alone until she asks. A doc that rewrites itself every
 session is a doc nobody can trust.
 
 Last updated: 26 August 2026 (seller experience: profiles, handles, listing
-control, saves, upload rework, preview. See §8).
+control, saves, upload rework, preview. Then the /sell rebuild: seller sphere,
+X handles, new hero. See §8).
 
 ---
 
@@ -127,8 +128,9 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 | `rateLimit.ts` | In-memory fixed-window limiter, no deps. Per serverless instance, so it stops one script from one place, not a distributed flood. Cannot protect Storage uploads at all. |
 | `stripe.ts` | Stripe client plus `siteOrigin(req)`. |
 | `brand.ts` | Name, canonical URL, pitch copy. |
+| `xhandle.ts` | Pure rules for a seller's X handle: accepts a bare name, `@name` or a pasted x.com/twitter.com URL and hands back the bare handle. Separate from `handles.ts` because that file protects a URL on this site and this one only describes a name on someone else's platform. |
 | `handles.ts` | Pure rules for a seller handle: format, length, reserved words, and a suggestion from a display name. No Firebase, so the form and the security rules can agree on what is valid. |
-| `profiles.server.ts` | Admin SDK reads of the public half of a seller. Exists because `/users` is readable only by its owner, so a listing page cannot look a seller up. `resolveSellerProfile` falls back per field to the copy stored on the listing. |
+| `profiles.server.ts` | Admin SDK reads of the public half of a seller. Exists because `/users` is readable only by its owner, so a listing page cannot look a seller up. `resolveSellerProfile` falls back per field to the copy stored on the listing. `getPublicSellersFor` builds the sphere on `/sell` from whoever has an approved listing, ranked photo first. |
 | `saves.ts` / `saves.server.ts` | The public save-count threshold, and the server-side aggregation that counts saves without exposing who made them. Split in two so a client component can read the threshold without importing the Admin SDK. |
 | `uploads.ts` | The `Slot` type and `useUploadSlot`, behind the listing form's upload-on-pick. One shared id counter, because two slots with the same id make React drop one. |
 | `articles.ts` | The blog. Eight articles as a hardcoded array. Not a CMS. |
@@ -142,7 +144,8 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
   tools. Server-rendered, in the sitemap, and what schema.org `author.url`
   points at. Deliberately under `/seller/` rather than the root so a future
   route can never collide with a handle somebody registered.
-- `/sell` is the seller pitch and the buyer to seller upgrade.
+- `/sell` is the seller pitch and the buyer to seller upgrade. Server-rendered
+  since the sphere needs the seller list; only the CTA is a client component.
 - `/dashboard` and `/dashboard/new` are the seller's listings and the listing
   form. `?edit=<id>` reuses the form to edit and resubmit.
 - `/admin`, `/admin/[id]`, `/admin/[id]/edit`, `/admin/categories` are the
@@ -151,6 +154,12 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
   placeholder.
 - `/api/stripe/*` is checkout, Connect onboarding, status sync, webhook.
 - `/api/download` is the gated signed-URL download.
+- `/api/profile/x-avatar` fetches the photo on a seller's X profile and returns
+  the bytes. It does not save anything: the browser uploads it through the same
+  `uploadAvatar` a picked file goes through, because the Admin SDK ignores
+  storage.rules and a server-side write would step around the uid binding that
+  is the only control on that path. Same reasoning as `/api/import/asset`.
+  Goes through unavatar.io, since X's own user lookup left the free tier.
 - `/api/seller/stats` answers with the caller's own saves, sales and earnings.
   Both underlying collections are private in the rules (a save belongs to the
   person who made it, a purchase to its buyer), so these aggregates exist
@@ -163,7 +172,7 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 ### `components/`
 
 `AppShell`, `Navbar`, `Footer` are the frame. `ListingCard`, `ListingMedia`,
-`ListingDetail`, `ListingGallery` render listings. `SellerAvatar` is a seller's photo or their initial. `ui/form.tsx` holds `Field`,
+`ListingDetail`, `ListingGallery` render listings. `SellerAvatar` is a seller's photo or their initial. `ui/img-sphere.tsx` is the rotating sphere and `SellerSphere` fills it (photo, then initial, then a muted logo for the empty spots). `StartSellingButton` is the /sell CTA. `ui/form.tsx` holds `Field`,
 `FormSection` and `inputClass`. `Disclaimer.tsx` is the buyer trust copy.
 `PreLaunchNotice.tsx` is temporary and must be removed at launch.
 
@@ -184,7 +193,7 @@ and checkout, but **everyone who already bought it keeps downloading it**: see
 the allowlist in `/api/download`. Relisting needs no new review.
 
 `AppUser` carries the seller's public identity: `handle`, `bio`, `supportEmail`,
-`website`, `avatarUrl`. These used to sit on every `Listing`, which meant a
+`website`, `xHandle`, `avatarUrl`. These used to sit on every `Listing`, which meant a
 maker with three tools typed their bio three times. The old listing fields are
 still there and still read as a per-field fallback for anything written before
 26 August 2026. **Do not delete them.**
@@ -298,6 +307,15 @@ Three roles: `buyer`, `seller`, `admin`.
   already uses it; the other two have not been changed.
 - The buyer download path for an `unlisted` listing has been reasoned through
   but never actually run: it needs a buyer account holding a purchase.
+- **`buttonClass()` glues class strings together instead of merging them.** A
+  class passed to `Button`/`ButtonLink` that collides with one already in
+  `buttonBase` does not win: which one applies depends on the order Tailwind
+  emits them, not on the order in the string. It has bitten once already (see
+  the /sell rebuild in §8). `cn()` in `lib/utils.ts` is the fix and
+  tailwind-merge is already a dependency, but changing it could make classes
+  that have been silently inert all along suddenly apply, so every call site
+  needs a visual check. `components/Navbar.tsx` carries two wrapper spans that
+  exist only to work around this.
 
 ---
 
@@ -305,6 +323,24 @@ Three roles: `buyer`, `seller`, `admin`.
 
 The full prioritised backlog lives in Claude's memory
 (`thesolomarket-next-tasks`), not here. These are the items raised most recently.
+
+### Queued, not started
+
+**A stats strip for /sell** (visitors, sellers, listings, themed "the
+marketplace is growing"). Scoped 26 August and **deliberately deferred by
+Sevval as not a priority.** Two of the three numbers are free: the seller and
+listing counts fall out of `getApprovedListings()`. Visitors do not exist and
+are the reason this is parked. There is no analytics and no middleware in the
+project, every page is cached so a counter in a server component would count
+cache rebuilds rather than people, and `/privacy` states as fact in two places
+that there is no analytics on this site. The clean build is a client beacon to
+an `/api/hit` route incrementing one Firestore counter, which is cookieless and
+filters bots for free because crawlers do not run JavaScript. **It needs a
+one-sentence change to `/privacy` first, and that is Sevval's call.**
+
+Note the small-numbers problem is sharper here than for the sphere: a sphere is
+ambiguous, but "2 sellers" under "the marketplace is growing" argues against
+joining. A "founding sellers" framing works honestly at any size.
 
 ### Next up, ahead of everything else
 
@@ -401,7 +437,50 @@ and mutable forever, which is the package-overwrite hole reintroduced through th
 front door. It also breaks delivery, "own forever" when a link dies, and the
 version tracking behind the Library's "update available" flag.
 
-### Shipped 26 August 2026
+### Shipped 26 August 2026: the /sell rebuild
+
+Recruiting-page work, on `staging` and `main`. No rules change, so nothing to
+deploy to Firebase.
+
+- **Seller sphere on the /sell hero.** A slowly turning sphere of the makers
+  already here, adapted from a component Sevval found. Positions are a
+  deterministic Fibonacci lattice rather than the upstream `Math.random()`, so
+  it renders in the server HTML instead of a grey loading box; rotation writes
+  transforms straight to the DOM rather than calling setState sixty times a
+  second; and the upstream O(n^2) collision pass is gone in favour of depth.
+  Pauses off-screen and under `prefers-reduced-motion`.
+- **Three-tier fill, which is the whole design.** Photo, then the seller's
+  initial, then a muted brand mark for the empty spots. Tier two means the
+  sphere reads as people from the first seller onwards, and each photo added
+  upgrades a node with no deploy. **Sevval accepted the small-numbers optics
+  knowingly**: with one seller it is mostly placeholders, and the plan is to
+  ask sellers for photos rather than to hide the sphere until it fills.
+- **X handles.** `xHandle` on `AppUser`, asked for in `/account`, shown on
+  `/seller/{handle}`, and a "Use my X photo" button that pulls the profile
+  photo into the existing avatar picker. It is a prefill, not a sign-in:
+  **Sign in with X was scoped and declined** because X does not return an email
+  address without elevated permission, and every template in
+  `emailTemplates.ts` plus Stripe onboarding assumes one exists.
+- **Hero copy.** "Someone out there needs the thing you already built", the
+  chip is now "No listing fees", and the CTAs are "Start selling" plus "How it
+  works" pointing at `/docs`, which `/sell` linked to nowhere before. The
+  20 minute claim is now 10 in both places.
+- **`/sell` became a server component**, and `app/sell/layout.tsx` was deleted:
+  it existed only to hold metadata a client component could not export.
+- **Mobile nav** shows "Sell your tool" where "Sign in" was, with Sign in moved
+  into the hamburger panel so it stays reachable.
+
+Three bugs fixed on the way, two of them pre-existing. The sphere drew its first
+frame from the server's width guess before the ResizeObserver had reported the
+real one, and below the fold the IntersectionObserver stopped the loop before it
+could correct itself, so nodes sat 120px outside their box over the buttons
+above. `buttonClass` in `components/ui/index.tsx` concatenates class strings
+instead of merging them, so a `hidden` passed to a button loses to the
+`inline-flex` already in `buttonBase`: both nav buttons rendered and squeezed the
+logo to 3px. That one is worked around with wrapper spans and is **still open**,
+see §7. And the header overlapped itself at 360px, the most common Android width.
+
+### Shipped 26 August 2026: seller experience
 
 Six commits, on `staging` and `main`, rules deployed to both Firebase projects.
 

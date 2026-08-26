@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { getAdminDb, adminConfigured } from "./firebaseAdmin";
-import type { AppUser, Listing, SellerProfile } from "./types";
+import type { AppUser, Listing, SellerFace, SellerProfile } from "./types";
 
 /**
  * Server-side reads of seller profiles.
@@ -23,6 +23,7 @@ function toProfile(uid: string, data: Partial<AppUser>): SellerProfile {
     bio: data.bio,
     supportEmail: data.supportEmail,
     website: data.website,
+    xHandle: data.xHandle,
     avatarUrl: data.avatarUrl,
     memberSince: data.createdAt ?? 0,
   };
@@ -132,4 +133,38 @@ export async function getSellerHandlesFor(
   return profiles
     .map((p) => p?.handle)
     .filter((h): h is string => Boolean(h));
+}
+
+/**
+ * The sellers to draw in the sphere on /sell.
+ *
+ * Derived from approved listings for the same reason getSellerHandlesFor is:
+ * signing up does not make somebody a seller, shipping something does. An
+ * account that upgraded its role and then never listed anything would otherwise
+ * appear on the recruiting page as evidence of a marketplace it never joined.
+ *
+ * Ordered so the most complete profiles come first. The sphere gives its early
+ * indices a larger base scale, so a real photo stays bigger than a placeholder
+ * no matter which way the sphere has rotated. Within a tier the order is
+ * whatever the listing query gave us, which is stable enough that the layout
+ * does not reshuffle between renders.
+ */
+export async function getPublicSellersFor(
+  listings: Listing[]
+): Promise<SellerFace[]> {
+  const uids = [...new Set(listings.map((l) => l.sellerId))];
+  const profiles = await Promise.all(uids.map((uid) => getSellerProfile(uid)));
+
+  const faces = profiles
+    .filter((p): p is SellerProfile => Boolean(p?.displayName?.trim()))
+    .map((p) => ({
+      handle: p.handle,
+      displayName: p.displayName,
+      avatarUrl: p.avatarUrl || undefined,
+    }));
+
+  // Photo, then at least a linkable handle, then the bare name. `rank` rather
+  // than a chain of comparisons so adding a tier later stays one line.
+  const rank = (f: SellerFace) => (f.avatarUrl ? 0 : f.handle ? 1 : 2);
+  return faces.sort((a, b) => rank(a) - rank(b));
 }
