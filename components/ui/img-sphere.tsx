@@ -370,7 +370,13 @@ export function ImgSphere({
       // square sitting in the middle of the page, and touch-none would have it
       // swallow every vertical swipe that started inside it. The page scrolls,
       // and horizontal drags still reach us, which is the axis worth turning.
-      className={`relative aspect-square w-full cursor-grab touch-pan-y select-none active:cursor-grabbing ${className}`}
+      // `isolate` is load-bearing, not decoration. The nodes carry z-indices up
+      // to 1000 so they can stack back to front against each other, and without
+      // a stacking context here those numbers compete with the whole page: the
+      // navbar is z-40, so faces painted straight over the open account menu.
+      // Isolating keeps the depth ordering internal and puts the sphere as a
+      // whole back in normal document order.
+      className={`relative isolate aspect-square w-full cursor-grab touch-pan-y select-none active:cursor-grabbing ${className}`}
       style={{ maxWidth: size }}
     >
       {nodes.map((item, i) => {
