@@ -8,7 +8,8 @@ when it is time. If you notice something here that has gone stale, say so in
 chat and leave the file alone until she asks. A doc that rewrites itself every
 session is a doc nobody can trust.
 
-Last updated: 24 August 2026 (native app packages built, see §8).
+Last updated: 26 August 2026 (seller experience: profiles, handles, listing
+control, saves, upload rework, preview. See §8).
 
 ---
 
@@ -126,6 +127,10 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 | `rateLimit.ts` | In-memory fixed-window limiter, no deps. Per serverless instance, so it stops one script from one place, not a distributed flood. Cannot protect Storage uploads at all. |
 | `stripe.ts` | Stripe client plus `siteOrigin(req)`. |
 | `brand.ts` | Name, canonical URL, pitch copy. |
+| `handles.ts` | Pure rules for a seller handle: format, length, reserved words, and a suggestion from a display name. No Firebase, so the form and the security rules can agree on what is valid. |
+| `profiles.server.ts` | Admin SDK reads of the public half of a seller. Exists because `/users` is readable only by its owner, so a listing page cannot look a seller up. `resolveSellerProfile` falls back per field to the copy stored on the listing. |
+| `saves.ts` / `saves.server.ts` | The public save-count threshold, and the server-side aggregation that counts saves without exposing who made them. Split in two so a client component can read the threshold without importing the Admin SDK. |
+| `uploads.ts` | The `Slot` type and `useUploadSlot`, behind the listing form's upload-on-pick. One shared id counter, because two slots with the same id make React drop one. |
 | `articles.ts` | The blog. Eight articles as a hardcoded array. Not a CMS. |
 | `seed.ts`, `hooks.ts`, `utils.ts`, `categories.server.ts` | Seed data, `useUser`/`useStoreValue`, `safeHttpsUrl`/`isImageSrc`, server-side category labels. |
 | `import/` | URL import feature (new, see §8). `safeFetch.ts` is the SSRF guard, `html.ts` parses OG and JSON-LD, `github.ts` and `producthunt.ts` are per-source adapters, `classify.ts` maps topics to categories. |
@@ -133,6 +138,10 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 ### `app/` routes worth knowing
 
 - `/` `/browse` `/app/[slug]` are the public catalogue, all server-rendered.
+- `/seller/[handle]` is a seller's public page: avatar, bio, join year, their
+  tools. Server-rendered, in the sitemap, and what schema.org `author.url`
+  points at. Deliberately under `/seller/` rather than the root so a future
+  route can never collide with a handle somebody registered.
 - `/sell` is the seller pitch and the buyer to seller upgrade.
 - `/dashboard` and `/dashboard/new` are the seller's listings and the listing
   form. `?edit=<id>` reuses the form to edit and resubmit.
@@ -142,13 +151,15 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
   placeholder.
 - `/api/stripe/*` is checkout, Connect onboarding, status sync, webhook.
 - `/api/download` is the gated signed-URL download.
+- `/api/seller/saves` answers with save counts for the caller's own listings.
+  The listing ids are read back from Firestore, never taken from the request.
 - `/docs/*` is seller and buyer documentation. `/terms` `/privacy` `/refunds`
   are legal, all still marked draft.
 
 ### `components/`
 
 `AppShell`, `Navbar`, `Footer` are the frame. `ListingCard`, `ListingMedia`,
-`ListingDetail`, `ListingGallery` render listings. `ui/form.tsx` holds `Field`,
+`ListingDetail`, `ListingGallery` render listings. `SellerAvatar` is a seller's photo or their initial. `ui/form.tsx` holds `Field`,
 `FormSection` and `inputClass`. `Disclaimer.tsx` is the buyer trust copy.
 `PreLaunchNotice.tsx` is temporary and must be removed at launch.
 
@@ -156,11 +167,34 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 
 ## 5. Data model and roles
 
-Firestore collections: **`users`, `listings`, `purchases`, `categories`.**
+Firestore collections: **`users`, `listings`, `purchases`, `categories`,
+`handles`, `bookmarks`.**
 
-`Listing` carries `status: "draft" | "pending" | "approved" | "rejected"`, a
-`slug` capped at 60 characters, `priceCents`, `runtime`, `setupMode`,
-`screenshots[]`, `demoVideo`, `posterImage`, `packagePath`, and `sellerId`.
+`Listing` carries `status: "draft" | "pending" | "approved" | "rejected" |
+"unlisted"`, a `slug` capped at 60 characters, `priceCents`, `runtime`,
+`setupMode`, `screenshots[]`, `demoVideo`, `posterImage`, `packagePath`,
+`version`, and `sellerId`.
+
+`unlisted` is a seller taking their own tool off sale. It vanishes from browse
+and checkout, but **everyone who already bought it keeps downloading it**: see
+the allowlist in `/api/download`. Relisting needs no new review.
+
+`AppUser` carries the seller's public identity: `handle`, `bio`, `supportEmail`,
+`website`, `avatarUrl`. These used to sit on every `Listing`, which meant a
+maker with three tools typed their bio three times. The old listing fields are
+still there and still read as a per-field fallback for anything written before
+26 August 2026. **Do not delete them.**
+
+`handles/{handle}` is how a handle is resolved to a seller, and the document id
+*is* the handle, because Firestore cannot enforce that a field is unique. A
+renamed handle is kept and marked `active: false` rather than freed, so an old
+link redirects instead of one day resolving to a different person. **Never
+delete one.**
+
+`bookmarks/{uid}_{listingId}` is one save. The id binds the pair, which is what
+stops one person saving the same tool twice to inflate the count. A save is
+private: only its owner can read it, and the public number is counted
+server-side. Below five, a listing shows no count at all.
 
 ### Roles
 
@@ -179,12 +213,26 @@ Three roles: `buyer`, `seller`, `admin`.
 
 ## 6. The flows that matter
 
-1. **Listing.** Seller fills `/dashboard/new`, files upload straight from the
-   browser to Storage under their own uid, `createListing` writes the doc as
-   `pending`, `/api/notify/listing` emails the admin.
+1. **Listing.** Seller fills `/dashboard/new`. **Every file uploads the moment
+   it is picked**, with its own progress bar, straight from the browser to
+   Storage under their own uid. The listing id is reserved at mount so the
+   uploads have somewhere to go, and it lives in the saved draft along with the
+   resulting paths, so coming back tomorrow costs no re-upload. Submit is just
+   the Firestore write. Preview renders the real listing page from form state
+   before any of it is sent. `/api/notify/listing` emails the admin.
 2. **Review.** Admin approves or rejects at `/admin/[id]`, `/api/notify/review`
    emails the seller. An admin edit does **not** reset status, so a live tool
    stays live.
+2b. **Seller edits.** A seller can edit a live listing. Whether that costs them
+   their place on the marketplace depends on what changed: presentation (title,
+   description, price, screenshots, demo) saves in place and stays live, while
+   anything in `REVIEW_CRITICAL_FIELDS` (package, runtime, setup mode, platform,
+   version) goes back to the queue. The form says which before they press the
+   button, and the admin is only emailed when something actually entered the
+   queue. **firestore.rules is the control here, not the client.** Price is
+   editable on a live listing, with the $15 to $250 band enforced in the rules.
+2c. **Takedown.** A seller takes a tool off sale from the dashboard. Status only:
+   the rules refuse a visibility change that moves any other field.
 3. **Buying.** `/api/stripe/checkout` reads `priceCents` from Firestore, never
    from the client, and blocks non-approved listings, self-purchase, and sellers
    without `charges_enabled`.
@@ -203,7 +251,10 @@ Three roles: `buyer`, `seller`, `admin`.
   and `/about` state as fact that every package gets an automated scan for
   network calls, obfuscation and exfiltration patterns. It has not been built.
   This is launch-gating and it is the single most important honesty issue open.
-  **Do not add a second claim like it.** Note this collides with the native-app
+  **Do not add a second claim like it.** Note there is a third place it appears:
+  the acknowledgment checkbox on the listing form has the seller affirm that
+  "every submission is scanned and human-reviewed before it goes live". That one
+  is arguably the worst of the three, because it asks the seller to attest to it. Note this collides with the native-app
   work in §8: that copy promises source scanning, and a closed-source DMG has no
   source. Whatever is written for binaries has to be true of binaries.
 - **Zip contents are checked by hand, not by code.** Sevval downloads every
@@ -222,6 +273,17 @@ Three roles: `buyer`, `seller`, `admin`.
 - No refund mechanism, though the site promises fourteen days.
 - No App Check, which is the only remaining control on direct-to-Storage uploads.
 - Rate limiting resets on redeploy and is per instance.
+- **Nothing ever deletes an unreferenced upload.** Replacing an avatar, a
+  screenshot or a demo leaves the old file in the bucket forever, because the
+  paths are deliberately timestamped so the `immutable` cache header stays
+  honest. With 150MB demos and 500MB installers this adds up. Packages are
+  exempt: they overwrite at a stable path.
+- `/dashboard` and `/account` briefly render their signed-out state before
+  Firebase answers, because `!user` means both "signed out" and "not heard back
+  yet". `getAuthResolved()` in `lib/store.ts` tells the two apart and `/saved`
+  already uses it; the other two have not been changed.
+- The buyer download path for an `unlisted` listing has been reasoned through
+  but never actually run: it needs a buyer account holding a purchase.
 
 ---
 
@@ -232,7 +294,23 @@ The full prioritised backlog lives in Claude's memory
 
 ### Next up, ahead of everything else
 
-**Native app packages (the DMG blocker). BUILT 24 August, not yet committed.**
+**Seller emails and notifications.** Five templates exist in
+`lib/emailTemplates.ts`: new listing to the admin, review decision to the
+seller, receipt to the buyer, sale to the seller, sale to the admin. The gaps,
+roughly in order of value: welcome as a seller; payout setup incomplete (Stripe
+Connect drop-off is silent today, and an approved listing that cannot take money
+is invisible failure); first sale, as its own email rather than the same one as
+the fortieth; payout sent; a weekly or monthly digest of sales, views and saves.
+An in-app notification centre is deliberately **not** in this: a bell needs a
+collection, read state and a listener, and for fewer than twenty sellers email
+plus an honest dashboard does the same job.
+
+One thing to be careful of: `lib/email.ts` is best-effort Resend with no retry.
+Fine for a review notice, not fine for "your payout was sent". Anything
+financial has to be visible in the dashboard too, so the email is a convenience
+rather than the record.
+
+**Native app packages (the DMG blocker). Built and committed 24 August.**
 Raised by the TeraConvert maker: signed and notarized Mac DMG, closed source,
 drag to Applications, no terminal and no `SETUP.md`. The App Package contract
 assumed source-available software, so he could not list.
@@ -309,6 +387,34 @@ and mutable forever, which is the package-overwrite hole reintroduced through th
 front door. It also breaks delivery, "own forever" when a link dies, and the
 version tracking behind the Library's "update available" flag.
 
+### Shipped 26 August 2026
+
+Six commits, on `staging` and `main`, rules deployed to both Firebase projects.
+
+- **Seller identity.** `bio`, `supportEmail`, `website`, `avatarUrl` and
+  `handle` moved from every `Listing` onto `AppUser`, with a public page at
+  `/seller/{handle}`. See §5 for the handle rules, which matter.
+- **Seller control of their own listings.** Editing a live listing is possible
+  at all now (it wasn't), and no longer pulls it off sale to fix a typo.
+  Takedown and relist. A version field, which had never existed, so every
+  listing was `1.0.0` forever and the Library's update-available flag could
+  never fire.
+- **Saves moved off localStorage** into Firestore, so they follow the person
+  rather than the browser and can be counted. Seller sees the true count on
+  their dashboard.
+- **Upload on pick.** The form used to push every file inside the submit
+  handler; a 500MB installer meant minutes on a dead button and any failure lost
+  the lot. Now each file goes up as it is chosen, with a progress bar, and the
+  references live in the draft.
+- **Preview.** The seller can look at their own listing page before an admin
+  does.
+
+Two pre-existing bugs fixed on the way: the "has this form been touched" check
+compared two object literals whose key order differed, so it never matched and
+every visit to `/dashboard/new` autosaved a blank draft and armed the leave
+dialog over nothing; and dashboard earnings were summed over approved listings
+only, so taking a tool off sale would have erased the money it had made.
+
 ### In flight
 
 - **URL import for the listing form.** Paste a website or Product Hunt link and
@@ -321,13 +427,13 @@ version tracking behind the Library's "update available" flag.
 
 ### Requested 24 August
 
-- **Buyer accounts for external launch.** Accounts and the buyer path already
-  work, but the experience is seller-shaped: the login copy, the funnel and the
-  onboarding all assume a maker. Needs a buyer-facing reason to have an account
-  before checkout. *Confirm with Sevval exactly what is missing before building.*
-- **User count in the admin console.** `/admin` currently shows three stats:
-  Pending review, Live listings, Total GMV. Add a registered-user count next to
-  them. Firebase already tracks it, so this is a read, not new bookkeeping.
+- **Buyer accounts for external launch. Parked, 26 August: seller accounts
+  only for now.** Accounts and the buyer path work, but the experience is
+  seller-shaped: the login copy, the funnel and the onboarding all assume a
+  maker. Part of it is already answered, incidentally: saving a tool now needs
+  an account, which is the buyer-facing reason to have one before spending
+  anything. Do not pick the rest of this up without asking Sevval first.
+- **User count in the admin console. Done, `5fde757`.**
 - **More blog articles.** Eight exist in `lib/articles.ts`, AI-written, and the
   standing task is to rewrite them in Sevval's own voice.
 
