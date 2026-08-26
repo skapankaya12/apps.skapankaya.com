@@ -59,7 +59,7 @@ export function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${esc(brand.name)} — Insights</title>
+    <title>${esc(brand.name)} Blogs</title>
     <link>${site}/blog</link>
     <atom:link href="${site}/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>Articles for indie makers and independent professionals: building and selling small software, buying tools instead of renting bloated SaaS, and local-first work.</description>

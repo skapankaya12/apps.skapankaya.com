@@ -5,7 +5,7 @@ import { articlesSorted, readingMinutes, formatDate } from "@/lib/articles";
 import { Section, Badge } from "@/components/ui";
 
 export const metadata: Metadata = {
-  title: "Insights: for indie makers and independent professionals",
+  title: "Blogs: for indie makers and independent professionals",
   description:
     "Articles on building and selling small software, buying tools instead of bloated SaaS, subscription fatigue, and local-first work. Written for indie makers and solo professionals.",
   alternates: {
@@ -23,7 +23,7 @@ export default function BlogPage() {
     <>
       <div className="border-b border-[var(--border)]">
         <Section className="py-12 sm:py-16">
-          <Badge tone="accent" className="mb-4">Insights</Badge>
+          <Badge tone="accent" className="mb-4">Blogs</Badge>
           <h1 className="max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
             Ideas for people who build and buy small software
           </h1>

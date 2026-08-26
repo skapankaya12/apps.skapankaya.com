@@ -77,7 +77,7 @@ export default async function ArticlePage({
       />
 
       <Link href="/blog" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
-        ← Insights
+        ← Blogs
       </Link>
 
       <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">

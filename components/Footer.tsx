@@ -33,7 +33,7 @@ export function Footer() {
           title="Learn"
           links={[
             { href: "/docs", label: "Documentation" },
-            { href: "/blog", label: "Insights" },
+            { href: "/blog", label: "Blogs" },
             { href: "/about", label: "About marketplace" },
             { href: "/how-to-run", label: "How to run a tool" },
             { href: "/about#contact", label: "Contact & support" },

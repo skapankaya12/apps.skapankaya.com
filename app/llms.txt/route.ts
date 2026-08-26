@@ -81,7 +81,7 @@ Not sold: SaaS or anything that runs on the seller's servers, non-software goods
 - [Free tools](${site}/free) — a checked directory of free and open source tools that live on their makers' own sites.
 - [Sell your tool](${site}/sell) — what can be listed and how to submit it.
 - [How to run a tool](${site}/how-to-run) — the two-minute setup guide, including the AI-assisted path for non-technical buyers.
-- [Insights](${site}/blog) — articles for indie makers and independent professionals.
+- [Blogs](${site}/blog) — articles for indie makers and independent professionals.
 
 ## Documentation
 

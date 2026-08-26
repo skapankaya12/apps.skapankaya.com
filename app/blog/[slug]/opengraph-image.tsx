@@ -3,7 +3,7 @@ import { brand } from "@/lib/brand";
 import { articles, getArticle, formatDate } from "@/lib/articles";
 
 /** Per-article social card, so an Insights link shares as more than a URL. */
-export const alt = `Insights · ${brand.name}`;
+export const alt = `Blogs · ${brand.name}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -46,7 +46,7 @@ export default async function Image({
               fontWeight: 600,
             }}
           >
-            {article?.tag ?? "Insights"}
+            {article?.tag ?? "Blogs"}
           </div>
           <div
             style={{
@@ -59,7 +59,7 @@ export default async function Image({
               letterSpacing: -2,
             }}
           >
-            {article?.title ?? "Insights"}
+            {article?.title ?? "Blogs"}
           </div>
         </div>
 

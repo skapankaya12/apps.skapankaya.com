@@ -12,11 +12,13 @@ import { ButtonLink } from "./ui";
 import { LiquidMetalButton } from "./ui/liquid-metal-button";
 
 const navItems = [
-  { href: "/browse", label: "Browse" },
-  { href: "/sell", label: "Sell your tool" },
-  { href: "/blog", label: "Insights" },
   { href: "/about", label: "About" },
-  { href: "/free", label: "Free tools" },
+  { href: "/browse", label: "Browse" },
+  { href: "/free", label: "Free / Open Source tools" },
+  { href: "/blog", label: "Blogs" },
+  // The seller CTA sits last because it is a button rather than a link. See
+  // the LiquidMetalButton branch below.
+  { href: "/sell", label: "Sell your tool" },
 ];
 
 export function Navbar() {
@@ -62,7 +64,14 @@ export function Navbar() {
               className="h-8 w-auto sm:h-10"
             />
           </Link>
-          <nav className="hidden items-center gap-1 md:flex">
+          {/*
+            lg rather than md. Five items including "Free / Open Source tools"
+            do not fit beside the logo, the icon row and the seller button at
+            768px: the long label wrapped to two lines and the button ran under
+            the saved icon. Tablets get the hamburger, which already holds every
+            one of these links.
+          */}
+          <nav className="hidden items-center gap-1 lg:flex">
             {navItems.map((item) => {
               const active = pathname.startsWith(item.href);
               // The seller CTA is the one nav item that gets the treatment —
@@ -131,7 +140,7 @@ export function Navbar() {
                 href="/sell"
                 variant="primary"
                 size="sm"
-                className="shrink-0 sm:ml-1 md:hidden"
+                className="shrink-0 sm:ml-1 lg:hidden"
               >
                 {/* Below 360px the full label cannot coexist with the logo,
                     both icons and the menu button, and something has to give.
@@ -150,7 +159,7 @@ export function Navbar() {
                 href="/login"
                 variant="primary"
                 size="sm"
-                className="ml-1 hidden shrink-0 md:inline-flex"
+                className="ml-1 hidden shrink-0 lg:inline-flex"
               >
                 Sign in
               </ButtonLink>
@@ -165,7 +174,7 @@ export function Navbar() {
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:ml-1 md:hidden"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)] sm:ml-1 lg:hidden"
           >
             {menuOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
@@ -175,7 +184,7 @@ export function Navbar() {
       {menuOpen && (
         <nav
           id="mobile-nav"
-          className="border-t border-[var(--border)] bg-[var(--background)] px-5 py-2 sm:px-8 md:hidden"
+          className="border-t border-[var(--border)] bg-[var(--background)] px-5 py-2 sm:px-8 lg:hidden"
         >
           {navItems.map((item) => {
             const active = pathname.startsWith(item.href);
