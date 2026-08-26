@@ -45,6 +45,7 @@ import {
   type Role,
   type Category,
   type CategoryDef,
+  REVIEW_CRITICAL_FIELDS,
 } from "./types";
 import { normalizeHandle, handleProblem } from "./handles";
 
@@ -813,17 +814,90 @@ export async function requestDownload(listingId: string): Promise<string> {
  * editable fields, resets status to "pending", and clears the old review note.
  * The Firestore rules allow this only while the listing is pending/rejected.
  */
+export type ListingEdit = Omit<
+  Listing,
+  "id" | "slug" | "status" | "salesCount" | "createdAt" | "updatedAt" | "reviewNote"
+>;
+
+/** Just the fields that decide whether an edit needs reviewing again. */
+export type ReviewCriticalParts = Pick<
+  Listing,
+  (typeof REVIEW_CRITICAL_FIELDS)[number]
+>;
+
+/**
+ * Whether this edit has to go back through review.
+ *
+ * Narrow on purpose: the seller form calls this while the seller is still
+ * typing, before anything has been uploaded, so it must not need a finished
+ * edit to answer. A full ListingEdit satisfies it too.
+ *
+ * The answer is not enforced here. firestore.rules decides, reading the same
+ * list of fields. This exists so the seller is told which of the two things
+ * Save is about to do before they press it.
+ */
+export function requiresReReview(
+  current: Listing,
+  next: ReviewCriticalParts
+): boolean {
+  return REVIEW_CRITICAL_FIELDS.some(
+    // Normalised because an absent optional field and an explicit undefined are
+    // the same thing to a seller, and platform is absent on older listings.
+    (field) => (current[field] ?? null) !== (next[field] ?? null)
+  );
+}
+
+/**
+ * Save a seller's edit, and answer with the status the listing ended up in.
+ *
+ * This used to force every edit back to `pending` unconditionally, which meant
+ * correcting a typo took a live, selling tool off the marketplace until someone
+ * reviewed the correction. Now a presentation change keeps the listing exactly
+ * where it was, and only a change to what the buyer receives returns it to the
+ * queue.
+ *
+ * `current` is required rather than re-read here: the caller is editing a
+ * listing it already holds, and passing it makes every call site state which
+ * listing it believes it is changing.
+ */
 export async function updateListing(
   id: string,
-  input: Omit<
-    Listing,
-    "id" | "slug" | "status" | "salesCount" | "createdAt" | "updatedAt" | "reviewNote"
-  >
-): Promise<void> {
+  input: ListingEdit,
+  current: Listing
+): Promise<ListingStatus> {
+  const reviewed = current.status === "approved" || current.status === "unlisted";
+  const staysPut = reviewed && !requiresReReview(current, input);
+  const status: ListingStatus = staysPut ? current.status : "pending";
+
   await updateDoc(doc(db, "listings", id), {
     ...input,
-    status: "pending" as ListingStatus,
-    reviewNote: "",
+    status,
+    updatedAt: Date.now(),
+    // Only worth clearing when the listing is re-entering the queue: on an
+    // in-place edit the note is whatever the last review said, and wiping it
+    // would quietly discard an admin's approval note.
+    ...(staysPut ? {} : { reviewNote: "" }),
+  });
+  return status;
+}
+
+/**
+ * Take a live listing off sale, or put it back.
+ *
+ * Deliberately its own write that touches nothing but the status, which is what
+ * firestore.rules requires: a visibility switch must not be a way to smuggle an
+ * edit past review. Relisting needs no new review because nothing about the
+ * reviewed package changed.
+ *
+ * Buyers who already own it keep downloading it either way. See the unlisted
+ * branch in app/api/download.
+ */
+export async function setListingOnSale(
+  id: string,
+  onSale: boolean
+): Promise<void> {
+  await updateDoc(doc(db, "listings", id), {
+    status: (onSale ? "approved" : "unlisted") satisfies ListingStatus,
     updatedAt: Date.now(),
   });
 }

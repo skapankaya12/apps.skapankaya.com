@@ -1,6 +1,42 @@
 export type Role = "buyer" | "seller" | "admin";
 
-export type ListingStatus = "draft" | "pending" | "approved" | "rejected";
+/**
+ * `unlisted` is a seller taking their own tool off sale.
+ *
+ * Distinct from `rejected`, which is a decision about the tool, and from
+ * `draft`, which never reached review. An unlisted listing keeps its package
+ * and its purchase history: everyone who already bought it keeps downloading it
+ * (see app/api/download), because "buy once, own forever" cannot depend on the
+ * seller still wanting to sell. Relisting needs no new review, since nothing
+ * about the reviewed package changed.
+ */
+export type ListingStatus =
+  | "draft"
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "unlisted";
+
+/**
+ * What a seller cannot change on a live listing without going back through
+ * review.
+ *
+ * The dividing line is whether the change alters what the buyer receives.
+ * A better description, a clearer screenshot or a different price are the
+ * seller's to make, and forcing a live tool offline to fix a typo is how you
+ * teach sellers not to fix typos. A different package is a different product.
+ *
+ * Enforced in firestore.rules, which is the control; requiresReReview() in
+ * lib/store.ts reads the same list so the form can say which one is about to
+ * happen before the seller presses Save.
+ */
+export const REVIEW_CRITICAL_FIELDS = [
+  "packagePath",
+  "runtime",
+  "setupMode",
+  "platform",
+  "version",
+] as const;
 
 export type Runtime = "node" | "python" | "browser" | "binary" | "other";
 

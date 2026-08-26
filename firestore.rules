@@ -85,15 +85,83 @@ service cloud.firestore {
         && request.resource.data.sellerId == request.auth.uid
         && request.resource.data.status == 'pending';
 
-      // Admins change status/notes; a seller may edit their own draft/rejected
-      // listing but cannot flip it to 'approved' themselves, and cannot hand
-      // the listing to (or blame it on) another account by rewriting sellerId.
+      /*
+        Admins change status and notes freely. A seller gets four moves on their
+        own listing, and never the right to approve it.
+
+        The rule that used to be here allowed a seller to edit only while the
+        listing was pending or rejected, which meant a live tool could not be
+        touched at all: fixing a typo was impossible through the UI, and the
+        code path that would have done it sent the listing back to the queue,
+        pulling it off sale until someone reviewed a description change.
+
+        The dividing line now is whether a change alters what the buyer
+        receives. It does not for a price or a screenshot. It does for the
+        package, which is the product.
+      */
+      function changed() {
+        return request.resource.data.diff(resource.data).affectedKeys();
+      }
+      // Written only by the Stripe webhook through the Admin SDK, which
+      // bypasses these rules. No seller edit has any business touching them.
+      function serverOwnedIntact() {
+        return !changed().hasAny(['sellerId', 'salesCount', 'slug', 'createdAt']);
+      }
+      // Mirrors REVIEW_CRITICAL_FIELDS in lib/types.ts. packageVerification is
+      // here too: a seller must not be able to stamp their own installer as
+      // having passed Apple's checks.
+      function reviewedPartsIntact() {
+        return !changed().hasAny([
+          'packagePath', 'runtime', 'setupMode', 'platform', 'version',
+          'packageVerification'
+        ]);
+      }
+      /*
+        Price is the seller's to set, including on a live listing: repricing is
+        an ordinary thing to do and sending a tool offline for it would be
+        absurd. What stops "get approved at $15, then charge $250" is the band
+        itself, which until now lived only in the submit form and so was not a
+        control at all. Mirrors the $15 to $250 the form enforces. Note
+        BUSINESS_MODEL.md still quotes an older $10 to $29 band.
+      */
+      function priceInBand() {
+        return request.resource.data.priceCents is int
+          && request.resource.data.priceCents >= 1500
+          && request.resource.data.priceCents <= 25000;
+      }
+
       allow update: if isAdmin()
         || (isSignedIn()
             && resource.data.sellerId == request.auth.uid
-            && request.resource.data.sellerId == resource.data.sellerId
-            && resource.data.status in ['pending', 'rejected']
-            && request.resource.data.status in ['pending', 'rejected']);
+            && serverOwnedIntact()
+            && priceInBand()
+            && (
+              // 1. Editing something that is not on sale. Unchanged behaviour:
+              //    it stays in, or goes back to, the review queue.
+              (resource.data.status in ['pending', 'rejected']
+               && request.resource.data.status in ['pending', 'rejected'])
+
+              // 2. Taking a live tool off sale, or putting it back. A
+              //    visibility switch and nothing else, so no other field may
+              //    move in the same write.
+              || (resource.data.status in ['approved', 'unlisted']
+                  && request.resource.data.status in ['approved', 'unlisted']
+                  && changed().hasOnly(['status', 'updatedAt']))
+
+              // 3. Editing a listing that has already been reviewed, in place.
+              //    Presentation only, and it keeps whatever status it had, so
+              //    a live tool stays live and one that is off sale stays off.
+              || (resource.data.status in ['approved', 'unlisted']
+                  && request.resource.data.status == resource.data.status
+                  && reviewedPartsIntact())
+
+              // 4. Replacing the package, or changing how the tool runs. That
+              //    is a different product from the one that was reviewed, so
+              //    it goes back to the queue. Taking a listing off sale first
+              //    is not a way around this.
+              || (resource.data.status in ['approved', 'unlisted']
+                  && request.resource.data.status == 'pending')
+            ));
 
       allow delete: if isAdmin();
     }

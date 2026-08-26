@@ -88,10 +88,21 @@ export async function POST(req: Request) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
-  // Buyers can only download a listing that's still approved. If it was pulled or
-  // rejected for cause after purchase, block the download (a refund is the right
-  // remedy — see the refund flow). Admins and the seller can still fetch it.
-  if (isBuyer && listing.status !== "approved") {
+  /*
+    A buyer keeps their download for as long as the listing is one the platform
+    still stands behind.
+
+    `unlisted` is included deliberately. It means the seller stopped selling,
+    which is their right and says nothing about the buyer, who paid once and was
+    promised the tool forever. Pulling their download because the maker moved on
+    would break the single clearest promise this marketplace makes.
+
+    `rejected` is different: that is the platform withdrawing the tool for
+    cause, and a refund is the right remedy rather than a download. Admins and
+    the seller can still fetch it in every state.
+  */
+  const BUYER_DOWNLOADABLE = ["approved", "unlisted"];
+  if (isBuyer && !BUYER_DOWNLOADABLE.includes(listing.status ?? "")) {
     return Response.json({ error: "unavailable" }, { status: 403 });
   }
 

@@ -99,14 +99,23 @@ export function Badge({
   );
 }
 
+/**
+ * An exhaustive Record rather than an object literal, so adding a status is a
+ * compile error here instead of a crash on whichever page renders it first.
+ */
+const STATUS_BADGES: Record<
+  ListingStatus,
+  { tone: "success" | "warning" | "danger" | "neutral"; label: string }
+> = {
+  approved: { tone: "success", label: "Approved" },
+  pending: { tone: "warning", label: "In review" },
+  rejected: { tone: "danger", label: "Rejected" },
+  draft: { tone: "neutral", label: "Draft" },
+  unlisted: { tone: "neutral", label: "Off sale" },
+};
+
 export function StatusBadge({ status }: { status: ListingStatus }) {
-  const map = {
-    approved: { tone: "success" as const, label: "Approved" },
-    pending: { tone: "warning" as const, label: "In review" },
-    rejected: { tone: "danger" as const, label: "Rejected" },
-    draft: { tone: "neutral" as const, label: "Draft" },
-  };
-  const { tone, label } = map[status];
+  const { tone, label } = STATUS_BADGES[status];
   return <Badge tone={tone}>{label}</Badge>;
 }
 

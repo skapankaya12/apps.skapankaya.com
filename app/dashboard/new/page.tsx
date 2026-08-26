@@ -9,8 +9,10 @@ import {
   reserveListingId,
   getListingById,
   notifyListingSubmitted,
+  requiresReReview,
   getCategories,
   subscribe,
+  sellerProfileReady,
 } from "@/lib/store";
 import {
   uploadPackage,
@@ -27,6 +29,7 @@ import {
   type Runtime,
   type SetupMode,
   type Listing,
+  type ListingStatus,
   type AppUser,
   PLATFORM_LABELS,
   SETUP_MODE_LABELS,
@@ -36,10 +39,10 @@ import { Section, Button, ButtonLink, Badge } from "@/components/ui";
 import { Field, FormSection, inputClass } from "@/components/ui/form";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { ImportFromUrl } from "@/components/ImportFromUrl";
+import { SellerAvatar } from "@/components/SellerAvatar";
 import type { ImportResult, SourceKind } from "@/lib/importClient";
 import { SOURCE_LABELS } from "@/lib/importClient";
 import { packageAccept, validatePackage, captureVideoPoster, validateDemo } from "@/lib/media";
-import { safeHttpsUrl } from "@/lib/utils";
 
 export default function NewListingPage() {
   // useSearchParams needs a Suspense boundary in an otherwise-static route.
@@ -60,9 +63,10 @@ function NewListingForm() {
   const user = useUser();
   const editId = useSearchParams().get("edit");
 
-  // Edit mode: /dashboard/new?edit=<listingId> loads an existing (rejected or
-  // pending) listing to edit and resubmit. Existing files are kept unless the
-  // seller replaces them.
+  // Edit mode: /dashboard/new?edit=<listingId> loads any listing of the
+  // seller's to edit, live ones included. Existing files are kept unless the
+  // seller replaces them. Whether saving keeps it live or sends it back to the
+  // queue depends on what they changed; see returnsToReview below.
   const [editing, setEditing] = useState<Listing | undefined>(undefined);
 
   useEffect(() => {
@@ -124,13 +128,14 @@ function ListingForm({
   const [setupMode, setSetupMode] = useState<SetupMode>(start.values.setupMode);
   const [platform, setPlatform] = useState<Platform>(start.values.platform);
   const [price, setPrice] = useState(start.values.price);
+  const [version, setVersion] = useState(start.values.version);
   const [packageFile, setPackageFile] = useState<File | null>(null);
   const [screenshotFiles, setScreenshotFiles] = useState<File[]>([]);
   const [demoFile, setDemoFile] = useState<File | null>(null);
-  const [sellerBio, setSellerBio] = useState(start.values.sellerBio);
-  const [sellerEmail, setSellerEmail] = useState(start.values.sellerEmail);
-  const [sellerWebsite, setSellerWebsite] = useState(start.values.sellerWebsite);
   const [submitted, setSubmitted] = useState(false);
+  // Where the listing landed after an edit. A presentation change keeps a live
+  // tool live, so the confirmation must not claim it went off for review.
+  const [resultStatus, setResultStatus] = useState<ListingStatus | null>(null);
   // Never restored from a draft: an acknowledgment you didn't tick this time
   // isn't an acknowledgment. It is kept when resuming your own live listing.
   const [agreed, setAgreed] = useState(Boolean(editing));
@@ -184,7 +189,7 @@ function ListingForm({
 
   const draft: Draft = {
     title, tagline, description, category: activeCategory, runtime, setupMode,
-    price, sellerBio, sellerEmail, sellerWebsite, platform, savedAt: 0,
+    price, version, platform, savedAt: 0,
   };
   const draftJson = JSON.stringify(draft);
 
@@ -245,17 +250,26 @@ function ListingForm({
   }, [guard]);
 
   if (submitted) {
+    // An edit that never left the queue is the only case that went for review.
+    const stayedLive = resultStatus === "approved" || resultStatus === "unlisted";
     return (
       <Section className="max-w-lg py-24 text-center">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--warning-soft)] text-3xl">
-          🕓
+        <div
+          className={`mx-auto grid h-16 w-16 place-items-center rounded-full text-3xl ${
+            stayedLive ? "bg-[var(--success-soft)]" : "bg-[var(--warning-soft)]"
+          }`}
+        >
+          {stayedLive ? "✓" : "🕓"}
         </div>
         <h1 className="mt-6 text-3xl font-semibold tracking-tight">
-          Submitted for review
+          {stayedLive ? "Changes saved" : "Submitted for review"}
         </h1>
         <p className="mt-3 text-[var(--muted)]">
-          Our team reviews every app before it goes live, usually within 1 to 2
-          business days. You&apos;ll see the status update on your dashboard.
+          {stayedLive
+            ? resultStatus === "approved"
+              ? "Your listing is updated and still on sale. Nothing went offline."
+              : "Your listing is updated. It stays off sale until you put it back."
+            : "Our team reviews every app before it goes live, usually within 1 to 2 business days. You'll see the status update on your dashboard."}
         </p>
         <ButtonLink href="/dashboard" className="mt-8">Back to dashboard</ButtonLink>
       </Section>
@@ -294,10 +308,10 @@ function ListingForm({
       setRuntime(fields.runtime.value);
       marks.runtime = fields.runtime.from;
     }
-    if (fields.sellerWebsite && !sellerWebsite.trim()) {
-      setSellerWebsite(fields.sellerWebsite.value);
-      marks.sellerWebsite = fields.sellerWebsite.from;
-    }
+    // fields.sellerWebsite is deliberately ignored. It used to fill a field on
+    // this form; that field now lives on the seller's profile, and quietly
+    // rewriting someone's profile from inside a listing form is a surprise.
+    // The import adapters still return it, which costs nothing.
 
     setImported((prev) => ({ ...prev, ...marks }));
     return Object.keys(marks).length;
@@ -379,20 +393,24 @@ function ListingForm({
         screenshots,
         demoVideo: demoUrl,
         posterImage: posterUrl,
-        sellerBio: sellerBio.trim() || undefined,
-        sellerEmail: sellerEmail.trim(), // required
-        sellerWebsite: safeHttpsUrl(sellerWebsite),
-        version: editing?.version ?? "1.0.0",
+        version: version.trim(),
         packagePath,
       };
 
+      let landedIn: ListingStatus = "pending";
       if (editId) {
-        await updateListing(editId, data); // resets status to pending, clears note
+        // Answers with where the listing ended up: a presentation edit keeps a
+        // live tool live, anything touching the package sends it back.
+        landedIn = await updateListing(editId, data, editing!);
+        setResultStatus(landedIn);
       } else {
         await createListing(listingId, data);
       }
-      // Best-effort admin notification (fires for both new and resubmitted).
-      await notifyListingSubmitted(listingId);
+      // Best-effort admin notification, but only when there is actually
+      // something to review. An in-place edit to a live listing never entered
+      // the queue, and mailing "new listing to review" for a corrected typo is
+      // how a review inbox stops being read.
+      if (landedIn === "pending") await notifyListingSubmitted(listingId);
       if (draftKey) clearDraft(draftKey); // it's in Firestore now
       setSubmitted(true);
     } catch (err) {
@@ -454,6 +472,32 @@ function ListingForm({
     setDemoFile(file);
   }
 
+  // The seller's public details are on their profile now, so this form checks
+  // that the profile is usable rather than collecting the same fields again.
+  const profileReady = sellerProfileReady(user);
+
+  /*
+    Whether saving will take this listing off sale.
+
+    Asked before anything is uploaded, so the package is represented by whether
+    a new file has been chosen rather than by a path that does not exist yet.
+    Everything else is compared through requiresReReview, which reads the same
+    field list firestore.rules enforces.
+  */
+  const wasLive =
+    editing?.status === "approved" || editing?.status === "unlisted";
+  const returnsToReview =
+    !editing ||
+    !wasLive ||
+    Boolean(packageFile) ||
+    requiresReReview(editing, {
+      packagePath: editing.packagePath,
+      runtime,
+      setupMode,
+      platform: runtime === "binary" ? platform : undefined,
+      version: version.trim(),
+    });
+
   // Exactly what's still blocking submission, in field order — so the button's
   // hint names the culprit instead of a vague "fill all fields".
   const missing: string[] = [];
@@ -462,10 +506,11 @@ function ListingForm({
   if (description.trim().length <= 20) missing.push("a longer description (20+ characters)");
   const priceNum = parseFloat(price || "0");
   if (!(priceNum >= 15 && priceNum <= 250)) missing.push("a price between $15 and $250");
+  if (!/^\d+\.\d+(\.\d+)?$/.test(version.trim()))
+    missing.push("a version like 1.0.0");
   if (!packageFile && !existingPackage) missing.push("a .zip package");
   if (!demoFile && !existingDemo) missing.push("a demo video");
-  if (!sellerEmail.trim() || !sellerEmail.includes("@")) missing.push("a support email");
-  if (sellerWebsite.trim() && !safeHttpsUrl(sellerWebsite)) missing.push("a valid https:// website link");
+  if (!profileReady) missing.push("your seller profile");
   if (!agreed) missing.push("the acknowledgment");
   const valid = missing.length === 0;
 
@@ -473,12 +518,14 @@ function ListingForm({
     <Section className="max-w-2xl py-12">
       <ButtonLink href="/dashboard" variant="ghost" size="sm">← Dashboard</ButtonLink>
       <h1 className="mt-4 text-3xl font-semibold tracking-tight">
-        {editId ? "Edit & resubmit" : "New listing"}
+        {editId ? "Edit listing" : "New listing"}
       </h1>
       <p className="mt-1 text-[var(--muted)]">
-        {editId
-          ? "Update your listing and send it back for review. Files you don't replace stay as they are."
-          : "Fill this in, upload your app package, and submit for review."}
+        {!editId
+          ? "Fill this in, upload your app package, and submit for review."
+          : wasLive && !returnsToReview
+            ? "Your edits go live as soon as you save. Files you don't replace stay as they are."
+            : "Update your listing and send it back for review. Files you don't replace stay as they are."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-10">
@@ -673,6 +720,23 @@ function ListingForm({
         </FormSection>
 
         <FormSection title="Files">
+          {/* Version sits with the package because that is what it describes.
+              It had no input at all before: every listing was written as 1.0.0
+              and stayed there, so the Library's "update available" flag could
+              never fire for anyone. */}
+          <Field
+            label="Version"
+            hint="Bump it when you upload a new package."
+          >
+            <input
+              value={version}
+              onChange={(e) => setVersion(e.target.value)}
+              placeholder="1.0.0"
+              spellCheck={false}
+              className={`${inputClass} max-w-[160px]`}
+            />
+          </Field>
+
           {/* App package upload */}
           <Field
             label={isInstaller ? "Installer (.dmg)" : "App package (.zip)"}
@@ -800,50 +864,15 @@ function ListingForm({
 
         </FormSection>
 
-        {/* Seller / contact info, shown to buyers on the listing page */}
+        {/* Who the buyer is dealing with. Not asked for here any more: it
+            belongs to the seller, not to one of their tools. This is a summary
+            with a way to fix it, so a missing support email is caught before
+            the submit button explains it in the abstract. */}
         <FormSection
           title="About you"
-          hint="Shown to buyers in the &ldquo;About the seller&rdquo; section."
+          hint="From your profile. Shown on every tool you list."
         >
-          <div className="space-y-6">
-            <Field label="Short bio" hint="A sentence about who you are.">
-              <textarea
-                value={sellerBio}
-                onChange={(e) => setSellerBio(e.target.value)}
-                rows={3}
-                placeholder="e.g. Indie maker building small, privacy-first tools for freelancers."
-                className={`${inputClass} resize-y`}
-              />
-            </Field>
-            <div className="grid gap-6 sm:grid-cols-2">
-              <Field label="Support email (required)" hint="Where buyers reach you for help.">
-                <input
-                  type="email"
-                  required
-                  value={sellerEmail}
-                  onChange={(e) => setSellerEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className={inputClass}
-                />
-              </Field>
-              <Field
-                label="Website or profile"
-                hint="Optional. A link buyers can check."
-                source={sourceOf("sellerWebsite")}
-              >
-                <input
-                  type="url"
-                  value={sellerWebsite}
-                  onChange={(e) => {
-                    setSellerWebsite(e.target.value);
-                    clearMark("sellerWebsite");
-                  }}
-                  placeholder="https://your-site.com"
-                  className={inputClass}
-                />
-              </Field>
-            </div>
-          </div>
+          <SellerProfileSummary user={user} />
         </FormSection>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]">
@@ -861,13 +890,32 @@ function ListingForm({
           </span>
         </label>
 
+        {/* A live seller needs to know, before they press it, whether this
+            button takes their tool off sale. Nothing said so before, and the
+            answer used to be "always". */}
+        {editId && wasLive && (
+          <p
+            className={`rounded-xl border px-4 py-3 text-sm ${
+              returnsToReview
+                ? "border-[var(--warning)] bg-[var(--warning-soft)] text-[var(--foreground)]"
+                : "border-[var(--border)] bg-[var(--surface-muted)] text-[var(--muted)]"
+            }`}
+          >
+            {returnsToReview
+              ? "You changed the package or how the tool runs, so this goes back for review. It comes off sale until that's done."
+              : "These are presentation changes, so your listing stays exactly as it is on the marketplace while they save."}
+          </p>
+        )}
+
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" size="lg" disabled={!valid || uploading}>
             {uploading
               ? "Uploading…"
-              : editId
-                ? "Resubmit for review"
-                : "Submit for review"}
+              : !editId
+                ? "Submit for review"
+                : returnsToReview
+                  ? "Resubmit for review"
+                  : "Save changes"}
           </Button>
           {!valid && !uploading && (
             <Badge tone="neutral">Still needed: {missing.join(", ")}</Badge>
@@ -955,6 +1003,54 @@ function LeaveWarning({
 }
 
 /**
+ * What buyers will see about the seller, read from their profile.
+ *
+ * A summary rather than a set of inputs. The seller's bio, contact and link
+ * used to be asked for here, once per listing, which meant three tools carried
+ * three copies of the same details and correcting one of them sent that listing
+ * back through review. They live on the account now.
+ *
+ * Shown here anyway because this is the moment it matters: a seller about to
+ * publish should see the face and the support address that go out with it, and
+ * a missing support email should be visible now rather than as an entry in the
+ * list of reasons the submit button is disabled.
+ */
+function SellerProfileSummary({ user }: { user: AppUser }) {
+  const ready = sellerProfileReady(user);
+
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+      <div className="flex items-start gap-3">
+        <SellerAvatar seller={user} size={44} />
+        <div className="min-w-0 flex-1">
+          <div className="font-medium">{user.displayName}</div>
+          <p className="mt-0.5 break-words text-sm text-[var(--muted)]">
+            {user.bio?.trim() || "No bio yet."}
+          </p>
+          <p className="mt-1 break-words text-xs text-[var(--muted)]">
+            {user.supportEmail?.trim() || "No support email yet."}
+            {user.handle ? ` · /seller/${user.handle}` : ""}
+          </p>
+        </div>
+        <ButtonLink href="/account" variant="secondary" size="sm">
+          Edit
+        </ButtonLink>
+      </div>
+
+      {!ready && (
+        <p className="mt-3 border-t border-[var(--border)] pt-3 text-sm text-[var(--danger)]">
+          {!user.supportEmail?.trim() && !user.handle
+            ? "Add a support email and claim your handle before you publish."
+            : !user.supportEmail?.trim()
+              ? "Add a support email before you publish. Buyers need a way to reach you."
+              : "Claim your handle before you publish."}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * The typed half of the form, kept in localStorage so a refresh, a crash or a
  * misclick doesn't cost the seller twenty minutes of writing. Files are not in
  * here and cannot be — the browser won't serialize a File — which is exactly
@@ -966,8 +1062,7 @@ type ImportedKey =
   | "tagline"
   | "description"
   | "category"
-  | "runtime"
-  | "sellerWebsite";
+  | "runtime";
 
 type Draft = {
   title: string;
@@ -978,9 +1073,7 @@ type Draft = {
   setupMode: SetupMode;
   platform: Platform;
   price: string;
-  sellerBio: string;
-  sellerEmail: string;
-  sellerWebsite: string;
+  version: string;
   savedAt: number;
 };
 
@@ -993,9 +1086,7 @@ const EMPTY_DRAFT: Draft = {
   setupMode: "one-command",
   platform: "macos",
   price: "15",
-  sellerBio: "",
-  sellerEmail: "",
-  sellerWebsite: "",
+  version: "1.0.0",
   savedAt: 0,
 };
 
@@ -1041,9 +1132,7 @@ function draftFromListing(listing: Listing): Draft {
     // accepted today, so it is the safe default rather than a guess.
     platform: listing.platform ?? "macos",
     price: String(listing.priceCents / 100),
-    sellerBio: listing.sellerBio ?? "",
-    sellerEmail: listing.sellerEmail ?? "",
-    sellerWebsite: listing.sellerWebsite ?? "",
+    version: listing.version,
     savedAt: 0,
   };
 }

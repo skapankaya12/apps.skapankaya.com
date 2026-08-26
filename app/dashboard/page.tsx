@@ -8,9 +8,10 @@ import {
   formatPrice,
   getIdToken,
   refreshPayoutStatus,
+  setListingOnSale,
 } from "@/lib/store";
 import { brand } from "@/lib/brand";
-import type { AppUser } from "@/lib/types";
+import type { AppUser, Listing } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
@@ -32,9 +33,13 @@ export default function DashboardPage() {
     );
   }
 
-  const approved = listings.filter((l) => l.status === "approved");
-  const totalSales = approved.reduce((s, l) => s + l.salesCount, 0);
-  const grossCents = approved.reduce((s, l) => s + l.salesCount * l.priceCents, 0);
+  const live = listings.filter((l) => l.status === "approved");
+  // Money earned is counted across every listing, not just the live ones. A
+  // seller who takes a tool off sale, or has one rejected later, has still been
+  // paid for what it sold: showing their earnings drop to zero because they
+  // unlisted something would read as the marketplace losing their money.
+  const totalSales = listings.reduce((s, l) => s + l.salesCount, 0);
+  const grossCents = listings.reduce((s, l) => s + l.salesCount * l.priceCents, 0);
   const netCents = Math.round(grossCents * (1 - brand.commissionRate));
 
   return (
@@ -49,7 +54,7 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <Stat label="Live listings" value={String(approved.length)} />
+        <Stat label="Live listings" value={String(live.length)} />
         <Stat label="Total sales" value={String(totalSales)} />
         <Stat
           label="Your earnings (net)"
@@ -71,49 +76,46 @@ export default function DashboardPage() {
           </ButtonLink>
         </div>
       ) : (
-        <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--border)]">
-          <table className="w-full text-sm">
+        // overflow-x-auto, not overflow-hidden: with five columns this table no
+        // longer fits a phone, and the choice is between scrolling it and
+        // crushing the columns until the actions are unreadable.
+        <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--border)]">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-[var(--surface-muted)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
               <tr>
                 <th className="px-5 py-3 font-medium">App</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Price</th>
                 <th className="px-5 py-3 font-medium">Sales</th>
+                {/* A real label, not an sr-only span: absolutely positioned
+                    sr-only text inside a horizontally scrolled table escapes
+                    the scroll container and stretches the document instead. */}
+                <th className="px-5 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {listings.map((l) => (
                 <tr key={l.id} className="border-t border-[var(--border)]">
                   <td className="px-5 py-4">
-                    <Link
-                      href={l.status === "approved" ? `/app/${l.slug}` : "#"}
-                      className="flex items-center gap-3"
-                    >
-                      <Monogram title={l.title} className="h-9 w-9 rounded-lg text-sm" />
-                      <span>
-                        <span className="font-medium">{l.title}</span>
-                        <span className="block text-xs text-[var(--muted)]">
-                          v{l.version}
-                        </span>
-                      </span>
-                    </Link>
+                    <ListingName listing={l} />
                     {l.status === "rejected" && l.reviewNote && (
                       <p className="mt-2 text-xs text-[var(--danger)]">
                         Rejected: {l.reviewNote}
                       </p>
                     )}
-                    {l.status === "rejected" && (
-                      <Link
-                        href={`/dashboard/new?edit=${l.id}`}
-                        className="mt-1 inline-block text-xs font-medium text-[var(--accent)] hover:underline"
-                      >
-                        Edit &amp; resubmit →
-                      </Link>
+                    {l.status === "unlisted" && (
+                      <p className="mt-2 text-xs text-[var(--muted)]">
+                        Not on sale. Everyone who already bought it keeps their
+                        download.
+                      </p>
                     )}
                   </td>
                   <td className="px-5 py-4"><StatusBadge status={l.status} /></td>
                   <td className="px-5 py-4 tabular-nums">{formatPrice(l.priceCents)}</td>
                   <td className="px-5 py-4 tabular-nums">{l.salesCount}</td>
+                  <td className="px-5 py-4">
+                    <RowActions listing={l} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -121,6 +123,79 @@ export default function DashboardPage() {
         </div>
       )}
     </Section>
+  );
+}
+
+/**
+ * The listing's name, linked to its public page only when there is one.
+ *
+ * Previously this rendered href="#" for anything not approved, which looks like
+ * a link, tabs like a link, and does nothing.
+ */
+function ListingName({ listing }: { listing: Listing }) {
+  const inner = (
+    <>
+      <Monogram title={listing.title} className="h-9 w-9 rounded-lg text-sm" />
+      <span>
+        <span className="font-medium">{listing.title}</span>
+        <span className="block text-xs text-[var(--muted)]">
+          v{listing.version}
+        </span>
+      </span>
+    </>
+  );
+
+  if (listing.status !== "approved") {
+    return <div className="flex items-center gap-3">{inner}</div>;
+  }
+  return (
+    <Link href={`/app/${listing.slug}`} className="flex items-center gap-3">
+      {inner}
+    </Link>
+  );
+}
+
+/**
+ * Edit, and take off sale or put back.
+ *
+ * Edit is offered for every status. It used to appear only on a rejected
+ * listing, which left a seller with a live tool no way to fix a typo in it at
+ * all: the route existed, but nothing linked to it.
+ */
+function RowActions({ listing }: { listing: Listing }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const onSale = listing.status === "approved";
+  const reviewed = onSale || listing.status === "unlisted";
+
+  async function toggle() {
+    setBusy(true);
+    setError("");
+    try {
+      await setListingOnSale(listing.id, !onSale);
+    } catch {
+      setError("Didn't work. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+      <ButtonLink
+        href={`/dashboard/new?edit=${listing.id}`}
+        variant="secondary"
+        size="sm"
+      >
+        Edit
+      </ButtonLink>
+      {reviewed && (
+        <Button variant="ghost" size="sm" onClick={toggle} disabled={busy}>
+          {busy ? "…" : onSale ? "Take off sale" : "Put back on sale"}
+        </Button>
+      )}
+      {error && <span className="text-xs text-[var(--danger)]">{error}</span>}
+    </div>
   );
 }
 
