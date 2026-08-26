@@ -1,5 +1,5 @@
 import { brand } from "@/lib/brand";
-import { articlesSorted, type Block } from "@/lib/articles";
+import { articlesSorted, richToText, type Block } from "@/lib/articles";
 
 /**
  * RSS 2.0 feed for the Insights blog.
@@ -27,11 +27,13 @@ function blocksToText(body: Block[]): string {
     .map((b) => {
       switch (b.type) {
         case "ul":
-          return b.items.map((i) => `• ${i}`).join("\n");
+          return b.items.map((i) => `• ${richToText(i)}`).join("\n");
         case "quote":
           return `“${b.text}”`;
         default:
-          return b.text;
+          // Links flatten to their visible text: a feed reader gets the prose,
+          // and the anchor lives on the page it came from.
+          return richToText(b.text);
       }
     })
     .join("\n\n");

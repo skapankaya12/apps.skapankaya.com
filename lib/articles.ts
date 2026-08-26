@@ -8,11 +8,39 @@
  * consistently, and so we can generate reading time and JSON-LD from them.
  */
 
+/**
+ * One run inside a paragraph: either plain text, or a link.
+ *
+ * Article bodies had no way to express a link, so every article was a dead end
+ * that pointed at nothing. Internal links are how a reader gets from a piece of
+ * writing to the thing it is about, and how ranking authority moves through a
+ * site at all, so "no links" was not a neutral simplification.
+ */
+export type Inline = string | { href: string; text: string };
+
+/**
+ * Plain text, or a sequence of runs and links.
+ *
+ * A bare string stays valid, which is why none of the articles written before
+ * this needed touching. Only a paragraph that wants a link pays the cost of the
+ * array form.
+ */
+export type Rich = string | Inline[];
+
 export type Block =
-  | { type: "p"; text: string }
+  // Headings and pull quotes stay plain on purpose. A link inside a heading is
+  // a bad idea for both reading and search, and a link in a pull quote fights
+  // the thing a pull quote is for.
+  | { type: "p"; text: Rich }
   | { type: "h2"; text: string }
-  | { type: "ul"; items: string[] }
+  | { type: "ul"; items: Rich[] }
   | { type: "quote"; text: string };
+
+/** Flatten a Rich value to plain text, for word counts, feeds and metadata. */
+export function richToText(value: Rich): string {
+  if (typeof value === "string") return value;
+  return value.map((run) => (typeof run === "string" ? run : run.text)).join("");
+}
 
 export type ArticleTag =
   | "Indie makers"
@@ -92,7 +120,7 @@ export const articles: Article[] = [
       { type: "quote", text: "Subscriptions are priced for the customer who uses everything. Most of us are not that customer." },
       { type: "h2", text: "When the SaaS is worth it" },
       { type: "p", text: "This is not an argument against all subscriptions. Collaboration, constantly changing data, and things you depend on every hour are a genuine fit for a platform. The point is to make it a decision instead of a default. Buy the small tool for the small job, and save the monthly spend for the software you truly live in." },
-      { type: "p", text: "The unbundling of software is quietly one of the best raises a freelancer can give themselves. It just shows up as bills you stop paying." },
+      { type: "p", text: ["The unbundling of software is quietly one of the best raises a freelancer can give themselves. It just shows up as bills you stop paying. ", { href: "/browse", text: "See what that looks like in practice" }, "."] },
     ],
   },
   {
@@ -118,7 +146,7 @@ export const articles: Article[] = [
       { type: "p", text: "That's it. No landing page, no company, no funnel. The marketplace is the distribution." },
       { type: "quote", text: "You are not launching a startup. You are giving your past weekend's work a price tag." },
       { type: "h2", text: "The compounding part" },
-      { type: "p", text: "One tool is a nice bit of side income. Five tools, each earning quietly, start to look like a small portfolio. And because they are finished and local, they need almost no maintenance. The work is done once and the sales keep arriving. That is the closest thing indie makers have to passive income that isn't a course about passive income." },
+      { type: "p", text: ["One tool is a nice bit of side income. Five tools, each earning quietly, start to look like a small portfolio. And because they are finished and local, they need almost no maintenance. The work is done once and the sales keep arriving. That is the closest thing indie makers have to passive income that isn't a course about passive income. ", { href: "/sell", text: "Listing one costs nothing" }, "."] },
     ],
   },
   {
@@ -226,7 +254,7 @@ export const articles: Article[] = [
       { type: "h2", text: "Credibility beats volume now" },
       { type: "p", text: "The old game rewarded whoever accumulated the most links. Language models weigh that far less. What they respond to is whether your content reads as credible, current, and specific enough to quote. A page that says something concrete and checkable is worth more than five pages of competent filler, which is a genuinely good change for anyone building alone." },
       { type: "p", text: "It also means the small maker is not automatically at a disadvantage. You cannot outspend a company on links. You can absolutely be clearer, more specific and more honest than one, and that is now the thing being measured." },
-      { type: "p", text: "None of this is a trick, and anyone promising you a ranking is guessing. What you can control is whether the machine reading you finds something true, specific and easy to repeat. Start with the layers you never look at." },
+      { type: "p", text: ["None of this is a trick, and anyone promising you a ranking is guessing. What you can control is whether the machine reading you finds something true, specific and easy to repeat. Start with the layers you never look at: ours are ", { href: "/llms.txt", text: "our llms.txt" }, " and the structured data on every ", { href: "/browse", text: "listing page" }, ", both public and both worth stealing the shape of."] },
     ],
   },
   {
@@ -256,7 +284,7 @@ export const articles: Article[] = [
       ]},
       { type: "h2", text: "The part that does generalise" },
       { type: "p", text: "One person with an idea and an evening can now reach a million people and get paid, without permission from anybody. That was not true a few years ago and it is genuinely worth sitting with. The infrastructure for a single human to build, launch and charge for software is finally as good as the tools large companies use." },
-      { type: "p", text: "The rest of it, the specific viral shape of this specific week, will not repeat. What repeats is the underlying fact: the software was never the hard part, and everyone who paid to climb that board was telling you so." },
+      { type: "p", text: ["The rest of it, the specific viral shape of this specific week, will not repeat. What repeats is the underlying fact: the software was never the hard part, and everyone who paid to climb that board was telling you so. If you have already built the thing and nobody is looking at it, ", { href: "/sell", text: "putting it somewhere people are shopping" }, " costs nothing."] },
     ],
   },
   {
@@ -292,7 +320,7 @@ export const articles: Article[] = [
         "Exports to something you could open in ten years.",
         "A licence that covers what you plan to do with it.",
       ]},
-      { type: "p", text: "None of this requires being technical. It requires two minutes and a willingness to close the tab when the answers are missing. Software made by one person is often better than the corporate alternative, precisely because somebody cared. These checks are how you find the ones where somebody still does." },
+      { type: "p", text: ["None of this requires being technical. It requires two minutes and a willingness to close the tab when the answers are missing. Software made by one person is often better than the corporate alternative, precisely because somebody cared. These checks are how you find the ones where somebody still does. We run every one of them before anything goes on our ", { href: "/free", text: "free tools list" }, "."] },
     ],
   },
 ];
@@ -310,8 +338,10 @@ export function articlesSorted(): Article[] {
 /** Rough reading time from the body's word count. */
 export function readingMinutes(a: Article): number {
   const words = a.body.reduce((n, b) => {
-    if (b.type === "ul") return n + b.items.join(" ").split(/\s+/).length;
-    return n + b.text.split(/\s+/).length;
+    if (b.type === "ul") {
+      return n + b.items.map(richToText).join(" ").split(/\s+/).length;
+    }
+    return n + richToText(b.text).split(/\s+/).length;
   }, 0);
   return Math.max(1, Math.round(words / 200));
 }

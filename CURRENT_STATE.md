@@ -10,7 +10,8 @@ session is a doc nobody can trust.
 
 Last updated: 26 August 2026 (seller experience: profiles, handles, listing
 control, saves, upload rework, preview. Then the /sell rebuild: seller sphere,
-X handles, new hero. See §8).
+X handles, new hero. Then an outside AI-readiness scan and what it changed, the
+/free directory, and three new articles. See §8).
 
 ---
 
@@ -133,7 +134,8 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 | `profiles.server.ts` | Admin SDK reads of the public half of a seller. Exists because `/users` is readable only by its owner, so a listing page cannot look a seller up. `resolveSellerProfile` falls back per field to the copy stored on the listing. `getPublicSellersFor` builds the sphere on `/sell` from whoever has an approved listing, ranked photo first. |
 | `saves.ts` / `saves.server.ts` | The public save-count threshold, and the server-side aggregation that counts saves without exposing who made them. Split in two so a client component can read the threshold without importing the Admin SDK. |
 | `uploads.ts` | The `Slot` type and `useUploadSlot`, behind the listing form's upload-on-pick. One shared id counter, because two slots with the same id make React drop one. |
-| `articles.ts` | The blog. Eight articles as a hardcoded array. Not a CMS. |
+| `articles.ts` | The blog. Nine articles as a hardcoded array. Not a CMS. `Block` now has an inline `Rich` form so a paragraph or list item can hold links; a bare string is still valid, which is why the older articles needed no edit. |
+| `freeTools.server.ts` / `freeTools.ts` | The /free directory. Admin SDK reads for the public page, client SDK writes for the submit form and the review queue. Split for the same reason as `saves.*`. Not part of `store.ts`: one server component reads it and one admin screen edits it, so a live listener on every page would be a subscription nobody consumes. |
 | `seed.ts`, `hooks.ts`, `utils.ts`, `categories.server.ts` | Seed data, `useUser`/`useStoreValue`, `safeHttpsUrl`/`isImageSrc`, server-side category labels. |
 | `import/` | URL import feature (new, see §8). `safeFetch.ts` is the SSRF guard, `html.ts` parses OG and JSON-LD, `github.ts` and `producthunt.ts` are per-source adapters, `classify.ts` maps topics to categories. |
 
@@ -146,10 +148,16 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
   route can never collide with a handle somebody registered.
 - `/sell` is the seller pitch and the buyer to seller upgrade. Server-rendered
   since the sphere needs the seller list; only the CTA is a client component.
+- `/free` is the directory of free tools that live on other people's sites, and
+  `/free/submit` is its short submission form. Server-rendered page, client
+  form. See §5 for why it is not a `Listing`.
 - `/dashboard` and `/dashboard/new` are the seller's listings and the listing
   form. `?edit=<id>` reuses the form to edit and resubmit.
 - `/admin`, `/admin/[id]`, `/admin/[id]/edit`, `/admin/categories` are the
-  review console. Gated on `role === "admin"`.
+  review console. Gated on `role === "admin"`. `/admin/free` is the directory
+  queue, deliberately a separate screen: a listing review asks whether software
+  is safe, a directory review asks whether a link is real and belongs, and one
+  queue holding both would blur two standards the /free page tells apart.
 - `/library` is the buyer's purchases. `/saved` is bookmarks. `/cart` is still a
   placeholder.
 - `/api/stripe/*` is checkout, Connect onboarding, status sync, webhook.
@@ -173,7 +181,11 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 
 `AppShell`, `Navbar`, `Footer` are the frame. `ListingCard`, `ListingMedia`,
 `ListingDetail`, `ListingGallery` render listings. `SellerAvatar` is a seller's photo or their initial. `ui/img-sphere.tsx` is the rotating sphere and `SellerSphere` fills it (photo, then initial, then a muted logo for the empty spots). `StartSellingButton` is the /sell CTA. `ui/form.tsx` holds `Field`,
-`FormSection` and `inputClass`. `Disclaimer.tsx` is the buyer trust copy.
+`FormSection` and `inputClass`. `FreeToolCard` is one /free entry, a plain
+server component because the card is a link out with nothing to hydrate.
+`ui/InfoTooltip.tsx` opens on hover and on tap: hover and pin are separate
+state, because one flag toggled by both means the click after `mouseenter`
+closes what the hover just opened. `Disclaimer.tsx` is the buyer trust copy.
 `PreLaunchNotice.tsx` is temporary and must be removed at launch.
 
 ---
@@ -181,7 +193,18 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 ## 5. Data model and roles
 
 Firestore collections: **`users`, `listings`, `purchases`, `categories`,
-`handles`, `bookmarks`.**
+`handles`, `bookmarks`, `freeTools`.**
+
+`freeTools` is the /free directory and is deliberately **not** a `Listing` with
+a flag. Almost every field on `Listing` describes delivery (package, price,
+version, runtime, setup mode, platform) and a free tool has none of them.
+Sharing the type would have meant teaching checkout, download, the dashboard,
+the admin console and the rules to ask "but is this the external kind?", and the
+answer being wrong anywhere is either a tool nobody can download or a link
+somebody can buy. Nothing existing had to change. A submitter may edit their own
+entry only while it is `pending`: once approved, the record is the reviewed
+thing, which is the opposite of the listings rule and on purpose, because nobody
+owns a link except the site that vouched for it.
 
 `Listing` carries `status: "draft" | "pending" | "approved" | "rejected" |
 "unlisted"`, a `slug` capped at 60 characters, `priceCents`, `runtime`,
@@ -303,10 +326,19 @@ Three roles: `buyer`, `seller`, `admin`.
   exempt: they overwrite at a stable path.
 - `/dashboard` and `/account` briefly render their signed-out state before
   Firebase answers, because `!user` means both "signed out" and "not heard back
-  yet". `getAuthResolved()` in `lib/store.ts` tells the two apart and `/saved`
-  already uses it; the other two have not been changed.
+  yet". `getAuthResolved()` in `lib/store.ts` tells the two apart; `/saved`,
+  `/free/submit` and `/admin/free` use it, and those two have not been changed.
 - The buyer download path for an `unlisted` listing has been reasoned through
   but never actually run: it needs a buyer account holding a purchase.
+- **The /free write path has never been exercised.** The page, the cards and the
+  markup are verified in served HTML on production. Submitting an entry and
+  approving one are both gated on a signed-in account, so neither has been run
+  end to end by anyone. The rules for it are deployed.
+- **The security-scan claim now has a second problem.** A /free entry is a link
+  to somebody else's server, so it cannot be scanned by anyone, ever. /free says
+  plainly what it does and does not check, which is what keeps it honest, but it
+  sits four clicks from copy promising that every submission is scanned. See the
+  first item in this section: fixing that copy got more urgent, not less.
 
 ---
 
@@ -428,6 +460,97 @@ and mutable forever, which is the package-overwrite hole reintroduced through th
 front door. It also breaks delivery, "own forever" when a link dies, and the
 version tracking behind the Library's "update available" flag.
 
+### Shipped 26 August 2026: the AI-readiness fixes
+
+An outside scan (Ryan Lenk) read the site as raw served source and found one
+real problem, which was not a markup gap: **the machine-readable layer said the
+marketplace was open for business while the homepage said pre-launch.** "launch"
+appeared zero times in `llms.txt`, in the FAQ markup and in the JSON-LD.
+
+- **The status now lives once**, as `STATUS_NOTE` in `lib/brand.ts`, read by the
+  JSON-LD `Organization` and `WebSite` nodes and by the /browse heading. Deleting
+  that constant at launch makes the other three a compile error, which is the
+  point. `llms.txt` opens with it, and its three purchase claims are written as
+  how buying will work. /about answers "Can I buy a tool today?" in visible copy,
+  which the `FAQPage` markup picks up because both render from one array.
+- **`offers` came off the `SoftwareApplication` nodes.** An `Offer` with
+  `availability: InStock` is a machine-readable claim the tool can be bought now,
+  and it was the one place the markup promised what the site cannot do. `PreOrder`
+  would be no better: a notify list is not an order. **Every pre-launch string to
+  remove is now listed in `LAUNCH_CHECKLIST.md`,** because the machine-readable
+  half is the half that looks fine on screen when it goes stale.
+- Smaller, from the same scan: an `ItemList` on /browse generated from the query
+  that renders the cards and referencing each tool by `@id`; real `datePublished`
+  and `dateModified` on listing pages; the root URL and the seller pages added to
+  `llms.txt`; seller sitemap entries carrying their most recent listing date
+  instead of the static build date.
+- **`/seller/[handle]` emitted no structured data at all**, which the scan could
+  not have seen because the page shipped after it ran. It now emits `ProfilePage`
+  and `Person` sharing an `@id` with the `author` already on every listing, so a
+  tool and its maker resolve to one entity rather than two strangers with the
+  same name. Same-host URLs are filtered out of `sameAs`: it asserts two URLs are
+  the same thing, so a seller typing thesolomarket.com into their website field
+  would otherwise publish that they and the marketplace are one and the same.
+
+Verified in production's served HTML, not just locally.
+
+Worth keeping in mind about the scan's own advice: FAQ rich results have been
+restricted to government and health sites since 2023, and `ItemList` of
+`SoftwareApplication` is not a Google rich result type. Neither is a reason not
+to do the work, because both make the content quotable by answer engines, but
+nobody should expect a search feature from either.
+
+### Shipped 26 August 2026: /free, the directory
+
+A curated list of free and open source tools that live on **other people's
+sites**. We describe them, show a preview and link out. Nothing is hosted,
+delivered or sold. See §5 for the collection and §4 for the routes.
+
+- **One page, no per-item routes.** A page whose whole substance is a paragraph
+  and an outbound link is what search engines punish directories for. Per-item
+  pages become worth adding when the descriptions can carry one.
+- **Submissions reuse the existing URL import.** `/api/import` needs only a
+  signed-in user, so pasting a link fills the name, blurb, category and preview
+  with no new route. The description arrives **to be rewritten**: publishing a
+  fetched meta description verbatim is duplicate content pointing at a stronger
+  original.
+- **The preview image is stored, not hotlinked, and only on submit.** Hotlinked,
+  the image approved at review can become a different image later. Uploading at
+  paste time would orphan a file every time somebody wandered off, since nothing
+  here deletes unreferenced uploads. New path `public/free/{uid}/`.
+- Search wiring: `ItemList` of `SoftwareApplication` with `downloadUrl` rather
+  than an `Offer` we cannot honour (the `price: 0` offer inside each **is**
+  genuine, these really are available now), a Free tools section in `llms.txt`,
+  a sitemap entry, nav and footer links, and /browse and /free now link to each
+  other.
+
+**This collides with a decision recorded below** ("Rejected, deliberately: or
+provide a download link"). Two of that rejection's three reasons die for a free
+link-out (nothing was sold, so "own forever" does not apply, and there is no
+library entry to version). The third survives untouched: a link is reviewed once
+and mutable forever. Sevval accepted that knowingly, on the basis that /free is
+a visibly separate section with its own page, form and standard.
+
+### Shipped 26 August 2026: header and blog
+
+- Nav reordered to About, Browse, Free / Open Source tools, Blogs, seller button
+  last. **The desktop nav moved from `md` to `lg`:** five items including a label
+  that long do not fit at 768px, where it wrapped to two lines and the button ran
+  under the saved icon. Tablets get the hamburger, which holds every link anyway.
+- "Insights" is now "Blogs" everywhere it is a navigation label. The `/blog`
+  metadata title keeps its descriptive half, because "Blogs" alone is not a
+  phrase anybody searches.
+- Three articles added: getting found by AI (using this site's own status/markup
+  mismatch as the worked example), outbid.lol and what it says about
+  distribution, and how to judge a free tool.
+- **`Block` gained an inline link form.** Article bodies previously had no way to
+  express a link, so every article was a dead end and no ranking authority moved
+  through them. `Rich = string | Inline[]` keeps a bare string valid, so no older
+  article needed editing, and the links added to the existing ones wrap words
+  already on the page rather than rewriting any copy. Headings and pull quotes
+  stay plain deliberately. Only `/` and `https://` hrefs become anchors, so a
+  `javascript:` href never reaches the DOM once these move to a CMS.
+
 ### Shipped 26 August 2026: the /sell rebuild
 
 Recruiting-page work, on `staging` and `main`. No rules change, so nothing to
@@ -520,8 +643,11 @@ only, so taking a tool off sale would have erased the money it had made.
   an account, which is the buyer-facing reason to have one before spending
   anything. Do not pick the rest of this up without asking Sevval first.
 - **User count in the admin console. Done, `5fde757`.**
-- **More blog articles.** Eight exist in `lib/articles.ts`, AI-written, and the
-  standing task is to rewrite them in Sevval's own voice.
+- **More blog articles.** Nine exist in `lib/articles.ts`, AI-written, and the
+  standing task is to rewrite them in Sevval's own voice. The three added on
+  26 August are grounded in checkable specifics (real figures, a named person,
+  this site's own markup mistake) rather than general advice, which narrows the
+  gap but does not close it: they are still not her voice.
 
 ### Scoped, awaiting decisions
 

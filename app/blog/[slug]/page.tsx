@@ -9,6 +9,7 @@ import {
   formatDate,
   articlesSorted,
   type Block,
+  type Rich,
 } from "@/lib/articles";
 import { Section } from "@/components/ui";
 
@@ -137,6 +138,57 @@ export default async function ArticlePage({
   );
 }
 
+/**
+ * Render a paragraph or list item that may contain links.
+ *
+ * Only two shapes of href are followed: a site-relative path, which goes
+ * through next/link so it prefetches and navigates client side, and an https
+ * URL, which opens in a new tab carrying the same rel the rest of the site puts
+ * on outbound links. Anything else renders as its own text rather than becoming
+ * an anchor, which is what keeps a javascript: href from ever reaching the DOM.
+ * Article bodies are ours today, but they are the one field earmarked to move
+ * into a CMS, and a renderer that trusts its input is a renderer that will one
+ * day be handed something else.
+ */
+function RichLine({ value }: { value: Rich }) {
+  if (typeof value === "string") return <>{value}</>;
+
+  return (
+    <>
+      {value.map((run, i) => {
+        if (typeof run === "string") return <span key={i}>{run}</span>;
+
+        const linkClass =
+          "font-medium text-[var(--accent)] underline underline-offset-2 hover:no-underline";
+
+        if (run.href.startsWith("/")) {
+          return (
+            <Link key={i} href={run.href} className={linkClass}>
+              {run.text}
+            </Link>
+          );
+        }
+
+        if (run.href.startsWith("https://")) {
+          return (
+            <a
+              key={i}
+              href={run.href}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className={linkClass}
+            >
+              {run.text}
+            </a>
+          );
+        }
+
+        return <span key={i}>{run.text}</span>;
+      })}
+    </>
+  );
+}
+
 function BlockView({ block }: { block: Block }) {
   switch (block.type) {
     case "h2":
@@ -144,14 +196,20 @@ function BlockView({ block }: { block: Block }) {
         <h2 className="pt-3 text-xl font-semibold tracking-tight">{block.text}</h2>
       );
     case "p":
-      return <p className="leading-relaxed text-[var(--foreground)]/85">{block.text}</p>;
+      return (
+        <p className="leading-relaxed text-[var(--foreground)]/85">
+          <RichLine value={block.text} />
+        </p>
+      );
     case "ul":
       return (
         <ul className="space-y-2 pl-1">
           {block.items.map((it, i) => (
             <li key={i} className="flex gap-2.5 text-[var(--foreground)]/85">
               <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-              <span className="leading-relaxed">{it}</span>
+              <span className="leading-relaxed">
+                <RichLine value={it} />
+              </span>
             </li>
           ))}
         </ul>
