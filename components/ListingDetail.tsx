@@ -86,6 +86,7 @@ export function ListingDetail({
   initial,
   seller,
   saveCount,
+  preview,
 }: {
   slug: string;
   initial?: Listing;
@@ -103,13 +104,27 @@ export function ListingDetail({
    * that has not opened yet reads as nobody wanting it.
    */
   saveCount?: number;
+  /**
+   * Render a listing that does not exist yet, from the seller form.
+   *
+   * The point of a preview is that it is the real page rather than an
+   * impression of one, so this is the same component with the same layout and
+   * the same buy panel. What it does not do is act: the listing has no id worth
+   * buying or saving, so every control is present and inert.
+   */
+  preview?: boolean;
 }) {
   const router = useRouter();
   const user = useUser();
-  const listing = useStoreValue(() => getListingBySlug(slug)) ?? initial;
+  // A preview shows what it was handed. There is nothing in the store to find,
+  // and on an edit there is something wrong to find: the version already live.
+  const stored = useStoreValue(() =>
+    preview ? undefined : getListingBySlug(slug)
+  );
+  const listing = stored ?? initial;
   const loaded = useStoreValue(getListingsLoaded);
   const owned = useStoreValue(() =>
-    user && listing ? hasPurchased(user.uid, listing.id) : false
+    !preview && user && listing ? hasPurchased(user.uid, listing.id) : false
   );
   const inCart = useStoreValue(() => (listing ? isInCart(listing.id) : false));
   const saved = useStoreValue(() => (listing ? isBookmarked(listing.id) : false));
@@ -123,7 +138,7 @@ export function ListingDetail({
 
   if (!listing) {
     // Still waiting on Firestore's first response: show a loader, not "not found".
-    if (!loaded) {
+    if (!loaded && !preview) {
       return (
         <Section className="py-24 text-center">
           <Spinner />
@@ -238,6 +253,7 @@ export function ListingDetail({
               <div className="flex flex-col items-center gap-1">
                 <button
                   aria-label={saved ? "Remove bookmark" : "Save for later"}
+                  disabled={preview}
                   onClick={async () => {
                     if (!(await toggleBookmark(listing.id))) {
                       router.push(
@@ -263,13 +279,19 @@ export function ListingDetail({
               </ButtonLink>
             ) : (
               <div className="mt-5 space-y-2">
-                <Button onClick={handleBuyNow} className="w-full" size="lg">
+                <Button
+                  onClick={handleBuyNow}
+                  disabled={preview}
+                  className="w-full"
+                  size="lg"
+                >
                   Buy now
                 </Button>
                 <Button
                   onClick={() =>
                     inCart ? removeFromCart(listing.id) : addToCart(listing.id)
                   }
+                  disabled={preview}
                   variant="secondary"
                   className="w-full"
                 >

@@ -39,6 +39,7 @@ import {
   type Listing,
   type ListingStatus,
   type AppUser,
+  type SellerProfile,
   PLATFORM_LABELS,
   SETUP_MODE_LABELS,
   SETUP_MODE_HINTS,
@@ -48,6 +49,7 @@ import { Field, FormSection, inputClass } from "@/components/ui/form";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { ImportFromUrl } from "@/components/ImportFromUrl";
 import { SellerAvatar } from "@/components/SellerAvatar";
+import { ListingDetail } from "@/components/ListingDetail";
 import type { ImportResult, SourceKind } from "@/lib/importClient";
 import { SOURCE_LABELS } from "@/lib/importClient";
 import { packageAccept, validatePackage, captureVideoPoster, validateDemo } from "@/lib/media";
@@ -223,6 +225,7 @@ function ListingForm({
     start.fromDraft ? start.values.savedAt : null
   );
   const [leavingTo, setLeavingTo] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState(false);
   const router = useRouter();
 
   // An admin can retire a filter between the day a draft is saved and the day
@@ -235,6 +238,45 @@ function ListingForm({
     categories.some((c) => c.id === category)
       ? category
       : (categories[0]?.id ?? category);
+
+  /*
+    The listing as it would be published, built from what is in the form.
+
+    A seller could not see their own page before submitting it, so the first
+    look at their own work was the same moment an admin saw it. Most of what a
+    listing gets bounced for is obvious the instant you look at the page.
+
+    Not a real Listing: it carries an id and a slug that match nothing, which is
+    why ListingDetail is asked not to go looking for one.
+  */
+  const previewListing: Listing = {
+    id: "preview",
+    slug: "preview",
+    sellerId: user.uid,
+    sellerName: user.displayName,
+    title: title.trim() || "Untitled tool",
+    tagline: tagline.trim(),
+    description: description.trim(),
+    category: activeCategory,
+    priceCents: Math.round(parseFloat(price || "0") * 100),
+    runtime,
+    platform: runtime === "binary" ? platform : undefined,
+    setupMode,
+    screenshots: shots
+      .map((sh) => sh.value)
+      .filter((v): v is string => Boolean(v)),
+    demoVideo: demo.slot?.value,
+    posterImage: posterUrl,
+    status: "approved",
+    version: version.trim() || "1.0.0",
+    packagePath: pkg.slot?.value,
+    salesCount: editing?.salesCount ?? 0,
+    // Zero on a new listing rather than the clock: nothing on the page renders
+    // these, and reading the time during render is not something a component is
+    // allowed to do.
+    createdAt: editing?.createdAt ?? 0,
+    updatedAt: editing?.updatedAt ?? 0,
+  };
 
   const draft: Draft = {
     title, tagline, description, category: activeCategory, runtime, setupMode,
@@ -652,6 +694,17 @@ function ListingForm({
           >
             Save draft
           </Button>
+          {/* Sits with Save draft rather than by the submit button: looking at
+              your own page is something to do while writing it, not a final
+              step before sending it off. */}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setPreviewing(true)}
+            disabled={saving}
+          >
+            Preview
+          </Button>
           {savedAt !== null && !saving && (
             <span className="text-xs text-[var(--muted)]">
               {/* Files are in the draft now, so this no longer has to warn
@@ -994,6 +1047,23 @@ function ListingForm({
         )}
       </form>
 
+      {previewing && (
+        <ListingPreview
+          listing={previewListing}
+          seller={{
+            uid: user.uid,
+            handle: user.handle,
+            displayName: user.displayName,
+            bio: user.bio,
+            supportEmail: user.supportEmail,
+            website: user.website,
+            avatarUrl: user.avatarUrl,
+            memberSince: user.createdAt,
+          }}
+          onClose={() => setPreviewing(false)}
+        />
+      )}
+
       {leavingTo && (
         <LeaveWarning
           uploadInFlight={filesBusy}
@@ -1007,6 +1077,61 @@ function ListingForm({
         />
       )}
     </Section>
+  );
+}
+
+/**
+ * The listing as a buyer would meet it, over the form.
+ *
+ * Deliberately the real ListingDetail rather than a summary of it: a preview
+ * that only approximates the page is a preview you cannot trust, and the
+ * difference between the two is where the mistakes hide. It is handed the
+ * seller's own profile because that is what the published page will show.
+ */
+function ListingPreview({
+  listing,
+  seller,
+  onClose,
+}: {
+  listing: Listing;
+  seller: SellerProfile;
+  onClose: () => void;
+}) {
+  // Escape closes it, because this covers the whole form and a seller who
+  // opened it mid-sentence wants out without hunting for a button.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Listing preview"
+      className="fixed inset-0 z-50 overflow-y-auto bg-[var(--background)]"
+    >
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+        <div>
+          <span className="font-medium">Preview</span>
+          <span className="ml-2 text-sm text-[var(--muted)]">
+            This is your page as a buyer sees it. Nothing here is live yet.
+          </span>
+        </div>
+        <Button type="button" variant="secondary" size="sm" onClick={onClose}>
+          Back to editing
+        </Button>
+      </div>
+      <ListingDetail
+        slug={listing.slug}
+        initial={listing}
+        seller={seller}
+        preview
+      />
+    </div>
   );
 }
 
