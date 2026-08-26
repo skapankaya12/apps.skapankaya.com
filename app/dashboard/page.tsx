@@ -11,7 +11,7 @@ import {
   setListingOnSale,
 } from "@/lib/store";
 import { brand } from "@/lib/brand";
-import type { AppUser, Listing } from "@/lib/types";
+import type { AppUser, Listing, SellerStats } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 
@@ -23,7 +23,7 @@ export default function DashboardPage() {
   // Above the early return below, because a hook cannot be called
   // conditionally. The flag is what stops a buyer landing here from firing a
   // request for a seller's numbers they do not have.
-  const saves = useSaveCounts(user?.role === "seller" || user?.role === "admin");
+  const stats = useSellerStats(user?.role === "seller" || user?.role === "admin");
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (
@@ -38,13 +38,22 @@ export default function DashboardPage() {
   }
 
   const live = listings.filter((l) => l.status === "approved");
-  // Money earned is counted across every listing, not just the live ones. A
-  // seller who takes a tool off sale, or has one rejected later, has still been
-  // paid for what it sold: showing their earnings drop to zero because they
-  // unlisted something would read as the marketplace losing their money.
+  // Sales are counted across every listing, not just the live ones: a seller
+  // who takes a tool off sale has still been paid for what it sold, and showing
+  // that drop to zero would read as the marketplace losing their money.
   const totalSales = listings.reduce((s, l) => s + l.salesCount, 0);
-  const grossCents = listings.reduce((s, l) => s + l.salesCount * l.priceCents, 0);
-  const netCents = Math.round(grossCents * (1 - brand.commissionRate));
+  /*
+    Earnings come from what was actually charged, not from the listing's price
+    today.
+
+    This used to be `salesCount * priceCents`, which quietly rewrote history
+    whenever a price changed: ten sales at $15 became $400 of "earnings" after a
+    rise to $40. The real amounts are on the purchase rows, which a seller
+    cannot read (they belong to the buyer), so the sum arrives from the server.
+  */
+  const netCents = stats
+    ? Math.round(stats.grossCents * (1 - brand.commissionRate))
+    : null;
 
   return (
     <Section className="py-12">
@@ -62,8 +71,12 @@ export default function DashboardPage() {
         <Stat label="Total sales" value={String(totalSales)} />
         <Stat
           label="Your earnings (net)"
-          value={formatPrice(netCents)}
-          hint={`after ${Math.round(brand.commissionRate * 100)}% fee`}
+          value={netCents === null ? "…" : formatPrice(netCents)}
+          hint={
+            stats && !stats.complete
+              ? "partial: some older sales aren't counted yet"
+              : `after ${Math.round(brand.commissionRate * 100)}% fee`
+          }
         />
       </div>
 
@@ -121,7 +134,7 @@ export default function DashboardPage() {
                       that forty people saved a tool and none bought it, which
                       is the most useful thing this number can tell them. */}
                   <td className="px-5 py-4 tabular-nums text-[var(--muted)]">
-                    {saves ? (saves[l.id] ?? 0) : "…"}
+                    {stats ? (stats.saves[l.id] ?? 0) : "…"}
                   </td>
                   <td className="px-5 py-4 tabular-nums">{l.salesCount}</td>
                   <td className="px-5 py-4">
@@ -211,15 +224,16 @@ function RowActions({ listing }: { listing: Listing }) {
 }
 
 /**
- * Save counts for the signed-in seller's listings, keyed by listing id.
+ * The signed-in seller's own numbers, from /api/seller/stats.
  *
- * Fetched rather than read from the store because saves are private in the
- * Firestore rules: only the person who made one can read it, so the totals only
- * exist server-side. Null while in flight, so the column can say so instead of
- * showing a zero that is really "not known yet".
+ * Fetched rather than read from the store because the rows behind them are
+ * private in the Firestore rules: a save is readable only by the person who
+ * made it and a purchase only by its buyer, so these totals exist server-side
+ * or not at all. Null while in flight, so the dashboard can say "not known
+ * yet" rather than showing a zero that means something else.
  */
-function useSaveCounts(enabled: boolean): Record<string, number> | null {
-  const [counts, setCounts] = useState<Record<string, number> | null>(null);
+function useSellerStats(enabled: boolean): SellerStats | null {
+  const [stats, setStats] = useState<SellerStats | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -228,13 +242,13 @@ function useSaveCounts(enabled: boolean): Record<string, number> | null {
       try {
         const token = await getIdToken();
         if (!token) return;
-        const res = await fetch("/api/seller/saves", {
+        const res = await fetch("/api/seller/stats", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json().catch(() => ({}));
-        if (alive && res.ok) setCounts(data.counts ?? {});
+        if (alive && res.ok) setStats(data as SellerStats);
       } catch {
-        // A missing count is not worth an error state on the dashboard.
+        // A missing number is not worth an error state on the dashboard.
       }
     })();
     return () => {
@@ -242,7 +256,7 @@ function useSaveCounts(enabled: boolean): Record<string, number> | null {
     };
   }, [enabled]);
 
-  return counts;
+  return stats;
 }
 
 function PayoutsCard({ user }: { user: AppUser }) {

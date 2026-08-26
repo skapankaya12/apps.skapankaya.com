@@ -47,6 +47,11 @@ export async function POST(req: Request) {
         const title = m.listingTitle ?? "your tool";
         await purchaseRef.set({
           buyerId: m.buyerId,
+          // From the checkout session's own metadata, so it records who was
+          // actually paid rather than who owns the listing today. A seller's
+          // earnings are summed from these rows, not from the listing's current
+          // price, which can change after a sale.
+          sellerId: m.sellerId ?? "",
           listingId: m.listingId,
           listingSlug: m.listingSlug ?? "",
           listingTitle: m.listingTitle ?? "",

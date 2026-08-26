@@ -151,8 +151,12 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
   placeholder.
 - `/api/stripe/*` is checkout, Connect onboarding, status sync, webhook.
 - `/api/download` is the gated signed-URL download.
-- `/api/seller/saves` answers with save counts for the caller's own listings.
-  The listing ids are read back from Firestore, never taken from the request.
+- `/api/seller/stats` answers with the caller's own saves, sales and earnings.
+  Both underlying collections are private in the rules (a save belongs to the
+  person who made it, a purchase to its buyer), so these aggregates exist
+  server-side or not at all. Scoped to the caller: listing ids are read back
+  from Firestore and purchases matched on `sellerId`, never taken from the
+  request.
 - `/docs/*` is seller and buyer documentation. `/terms` `/privacy` `/refunds`
   are legal, all still marked draft.
 
@@ -278,6 +282,11 @@ Three roles: `buyer`, `seller`, `admin`.
 - No refund mechanism, though the site promises fourteen days.
 - No App Check, which is the only remaining control on direct-to-Storage uploads.
 - Rate limiting resets on redeploy and is per instance.
+- **`REVIEW_CRITICAL_FIELDS` exists twice**, in `lib/types.ts` and again inside
+  `reviewedPartsIntact()` in `firestore.rules`, because rules cannot import
+  TypeScript. `scripts/check-review-fields.mjs` compares them and runs as
+  `prebuild`, so a drift fails the build here and on Vercel rather than quietly
+  letting the form promise a review the rules do not enforce.
 - **Nothing ever deletes an unreferenced upload.** Replacing an avatar, a
   screenshot or a demo leaves the old file in the bucket forever, because the
   paths are deliberately timestamped so the `immutable` cache header stays

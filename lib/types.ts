@@ -307,9 +307,42 @@ export interface PackageVerification {
   detail?: string;
 }
 
+/**
+ * What /api/seller/stats answers with: a seller's own numbers, per listing.
+ *
+ * Aggregates only. The rows behind them (who saved what, who bought what) stay
+ * private to the person who created them, and nothing here can reveal them.
+ */
+export interface SellerStats {
+  /** Saves per listing id. */
+  saves: Record<string, number>;
+  /** Completed sales per listing id, counted from purchases. */
+  sales: Record<string, number>;
+  /** Gross taken per listing id, in cents, as actually charged. */
+  grossByListing: Record<string, number>;
+  /** Gross across everything they have sold, in cents. */
+  grossCents: number;
+  /**
+   * False when some of their sales predate `Purchase.sellerId` and so are not
+   * counted here. The dashboard says the totals are partial rather than
+   * presenting a number that is quietly too low.
+   */
+  complete: boolean;
+}
+
 export interface Purchase {
   id: string;
   buyerId: string;
+  /**
+   * Who sold it. Absent on purchases recorded before 26 August 2026; the
+   * backfill script fills those in by joining through `listingId`.
+   *
+   * Without this there is no way to ask "everything this seller sold", which is
+   * what a seller's real earnings have to be summed from. Deriving it from the
+   * listing instead does not work: `amountCents` here is what was actually
+   * charged, and the listing's price is only what it costs today.
+   */
+  sellerId?: string;
   listingId: string;
   listingSlug: string;
   listingTitle: string;

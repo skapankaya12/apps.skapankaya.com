@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prebuild": "node scripts/check-review-fields.mjs"
   },
   "dependencies": {
     "@paper-design/shaders": "^0.0.80",
