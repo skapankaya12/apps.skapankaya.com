@@ -57,10 +57,15 @@ export default async function SellPage() {
               <Badge tone="accent" className="mb-5">
                 No listing fees
               </Badge>
-              <h1 className="mx-auto max-w-2xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:mx-0">
-                Someone out there needs the thing you already built.
+              {/* No text-balance here. The balancer equalises line lengths, which on
+                  this sentence put the break inside "Someone out there": it read
+                  "Someone out / there needs what / you already built." Natural
+                  wrapping keeps the opening phrase whole. Same failure the
+                  homepage headline hit, noted in its own comment there. */}
+              <h1 className="mx-auto max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl lg:mx-0">
+                Someone out there needs what you already built.
               </h1>
-              <p className="mx-auto mt-5 max-w-xl text-lg text-[var(--muted)] lg:mx-0">
+              <p className="mx-auto mt-5 max-w-xl text-[var(--muted)] lg:mx-0">
                 Too small to market on its own? Perfect. That is exactly what
                 this marketplace is for. List it once, keep{" "}
                 <span className="font-semibold text-[var(--foreground)]">
