@@ -613,7 +613,13 @@ export type SellerProfileEdit = {
   bio: string;
   supportEmail: string;
   website: string;
-  avatarUrl?: string;
+  /**
+   * A URL sets a new photo, null takes the current one away, and leaving it out
+   * keeps whatever is there. Three states because saving the form without
+   * touching the photo must not clear it, and there has to be some way to go
+   * back to the monogram once you have uploaded a face.
+   */
+  avatarUrl?: string | null;
 };
 
 /**
@@ -630,7 +636,10 @@ export async function saveSellerProfile(edit: SellerProfileEdit): Promise<void> 
     supportEmail: edit.supportEmail.trim(),
     website: edit.website.trim(),
   };
-  if (edit.avatarUrl) patch.avatarUrl = edit.avatarUrl;
+  // Stored as "" rather than deleted: every reader treats it as absent and
+  // falls back to the monogram, and an empty string is one less shape for the
+  // user document to have.
+  if (edit.avatarUrl !== undefined) patch.avatarUrl = edit.avatarUrl ?? "";
   await updateDoc(doc(db, "users", currentUser.uid), patch);
 }
 

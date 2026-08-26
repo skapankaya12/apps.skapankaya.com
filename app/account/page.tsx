@@ -278,6 +278,9 @@ function PublicProfileSection({ user }: { user: AppUser }) {
   const [supportEmail, setSupportEmail] = useState(user.supportEmail ?? "");
   const [website, setWebsite] = useState(user.website ?? "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  // Set when they ask to go back to the monogram, so Save knows to clear rather
+  // than to leave the existing photo alone.
+  const [avatarCleared, setAvatarCleared] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -306,6 +309,7 @@ function PublicProfileSection({ user }: { user: AppUser }) {
 
   function pickAvatar(file: File | null) {
     setAvatarError("");
+    setAvatarCleared(false);
     const problem = file ? validateAvatar(file) : null;
     if (problem) {
       setAvatarFile(null);
@@ -317,6 +321,9 @@ function PublicProfileSection({ user }: { user: AppUser }) {
     setPreviewFor(file);
   }
 
+  // What the avatar slot is showing right now, which is not the same as what
+  // is saved: a pending pick counts, and a pending removal does not.
+  const hasPhoto = Boolean(avatarFile) || (Boolean(user.avatarUrl) && !avatarCleared);
   const emailBad = Boolean(supportEmail.trim()) && !supportEmail.includes("@");
   const websiteBad = Boolean(website.trim()) && !safeHttpsUrl(website);
 
@@ -328,7 +335,9 @@ function PublicProfileSection({ user }: { user: AppUser }) {
       // with a bio that changed and a face that did not.
       const avatarUrl = avatarFile
         ? await uploadAvatar(user.uid, avatarFile)
-        : undefined;
+        : avatarCleared
+          ? null
+          : undefined;
       await saveSellerProfile({
         bio,
         supportEmail,
@@ -336,6 +345,7 @@ function PublicProfileSection({ user }: { user: AppUser }) {
         avatarUrl,
       });
       setAvatarFile(null);
+      setAvatarCleared(false);
       setOk(true);
       setMsg("Profile saved.");
     } catch (e) {
@@ -355,20 +365,34 @@ function PublicProfileSection({ user }: { user: AppUser }) {
         <SellerAvatar
           seller={{
             displayName: user.displayName,
-            avatarUrl: preview ?? user.avatarUrl,
+            avatarUrl: avatarCleared ? undefined : (preview ?? user.avatarUrl),
           }}
           size={56}
         />
         <div>
-          <label className="inline-block cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm hover:border-[var(--accent)]">
-            {user.avatarUrl || avatarFile ? "Change photo" : "Add a photo"}
-            <input
-              type="file"
-              accept={AVATAR_ACCEPT}
-              className="hidden"
-              onChange={(e) => pickAvatar(e.target.files?.[0] ?? null)}
-            />
-          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="inline-block cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-sm hover:border-[var(--accent)]">
+              {hasPhoto ? "Change photo" : "Add a photo"}
+              <input
+                type="file"
+                accept={AVATAR_ACCEPT}
+                className="hidden"
+                onChange={(e) => pickAvatar(e.target.files?.[0] ?? null)}
+              />
+            </label>
+            {hasPhoto && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setAvatarFile(null);
+                  setPreviewFor(null);
+                  setAvatarCleared(true);
+                }}
+              >
+                Remove
+              </Button>
+            )}
+          </div>
           <p className="mt-1.5 text-xs text-[var(--muted)]">
             Optional. PNG, JPEG or WebP, up to 2MB.
           </p>
