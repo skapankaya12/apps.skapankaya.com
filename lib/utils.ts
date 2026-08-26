@@ -64,3 +64,22 @@ export function listingPoster(listing: {
 }): string | undefined {
   return listing.posterImage || firstScreenshot(listing.screenshots);
 }
+
+/**
+ * The host a link points at, for display beside an outbound link.
+ *
+ * Lives here rather than next to the /free reads because it is pure and both
+ * sides need it: the card renders on the server, the review queue in the
+ * browser. Importing it from a `.server` module dragged the Firebase Admin SDK
+ * into the client bundle and broke the build outright.
+ *
+ * Falls back to the raw string rather than throwing. A malformed URL should
+ * make one card look wrong, not take the page down.
+ */
+export function linkHost(url: string): string {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}

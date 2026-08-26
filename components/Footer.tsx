@@ -24,6 +24,7 @@ export function Footer() {
           title="Marketplace"
           links={[
             { href: "/browse", label: "Browse tools" },
+            { href: "/free", label: "Free tools" },
             { href: "/sell", label: "Sell your tool" },
             { href: "/library", label: "My library" },
           ]}

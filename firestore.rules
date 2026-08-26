@@ -219,6 +219,77 @@ service cloud.firestore {
       allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
 
+    /* -----------------------------------------------------------------------
+       Free tools: the directory at /free. Mirrors lib/types.ts FreeTool.
+
+       A separate collection from listings on purpose, and the rules stay simple
+       because there is nothing to deliver: no package path to bind to an owner,
+       no price to keep in a band, no purchase to protect. What has to hold is
+       that a submitter cannot approve their own entry and cannot edit one after
+       it has been approved, because the whole value of the directory is that a
+       human looked at every link in it.
+    ----------------------------------------------------------------------- */
+    match /freeTools/{id} {
+      // Approved entries are world-readable; a submitter sees their own; admins
+      // see everything, which is what the review queue reads.
+      allow read: if resource.data.status == 'approved'
+        || (isSignedIn() && resource.data.submitterId == request.auth.uid)
+        || isAdmin();
+
+      function changed() {
+        return request.resource.data.diff(resource.data).affectedKeys();
+      }
+
+      /*
+        Shape checks, held on every non-admin write.
+
+        `url` is the entire point of the record and the one field a visitor
+        clicks, so http and javascript: are refused here rather than only in the
+        form. The length caps mirror FREE_TOOL_TITLE_MAX and
+        FREE_TOOL_DESCRIPTION_MAX so a script cannot write a card the page
+        cannot lay out.
+      */
+      function validFreeTool() {
+        let d = request.resource.data;
+        return d.url is string
+          && d.url.matches('https://.*')
+          && d.url.size() <= 2000
+          && d.title is string
+          && d.title.size() > 0
+          && d.title.size() <= 70
+          && d.description is string
+          && d.description.size() > 0
+          && d.description.size() <= 240
+          && d.category is string
+          && d.submitterName is string;
+      }
+
+      // Anyone signed in may submit, and a submission always enters the queue.
+      allow create: if isSignedIn()
+        && request.resource.data.submitterId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && validFreeTool();
+
+      /*
+        An admin edits anything, including status, which is how review happens.
+
+        A submitter may only fix their own entry while it is still pending, and
+        may never touch status, ownership or the created stamp. Once it is
+        approved the record is the reviewed thing, so further edits go through
+        an admin. That is the opposite of the listings rule, deliberately: a
+        seller edits a live listing because they own the product, and nobody
+        owns a link except the site that vouched for it.
+      */
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.submitterId == request.auth.uid
+            && resource.data.status == 'pending'
+            && !changed().hasAny(['submitterId', 'status', 'createdAt'])
+            && validFreeTool());
+
+      allow delete: if isAdmin();
+    }
+
     match /purchases/{id} {
       // A buyer reads their own purchases; admins read all.
       allow read: if isSignedIn()

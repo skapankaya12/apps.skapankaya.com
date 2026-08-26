@@ -61,6 +61,16 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    // Free directory previews: public/free/{uid}/{timestamp}.{ext}
+    // One small image per entry, fetched from the source and stored so what was
+    // reviewed stays what is shown. Same cap as an avatar: these are card-sized.
+    match /public/free/{uid}/{allPaths=**} {
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
     // Demo video: public/demos/{uid}/{listingId}.{ext}
     // The submit form mirrors this at 150MB and caps length at 40 seconds.
     // Keep the two in sync — a form that accepts what the rules reject fails

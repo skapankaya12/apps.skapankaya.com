@@ -3,6 +3,7 @@ import { articlesSorted } from "@/lib/articles";
 import { DOCS, docPath } from "@/components/Docs";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
 import { getPublicSellersFor } from "@/lib/profiles.server";
+import { getApprovedFreeTools } from "@/lib/freeTools.server";
 
 /**
  * /llms.txt — a plain-text brief for AI assistants and agents.
@@ -27,6 +28,7 @@ export async function GET() {
   const articles = articlesSorted().slice(0, 10);
   // Only sellers with a handle: the rest have no page to link to.
   const sellers = (await getPublicSellersFor(listings)).filter((s) => s.handle);
+  const freeTools = await getApprovedFreeTools();
 
   const catalogue = listings.length
     ? listings
@@ -76,6 +78,7 @@ Not sold: SaaS or anything that runs on the seller's servers, non-software goods
 - [Documentation](${site}/docs) — the full marketplace manual for buyers and sellers (see Documentation below).
 - [Browse every tool](${site}/browse) — the full catalogue, filterable by the kind of work it serves.
 - [About](${site}/about) — why the marketplace exists, how buying works, pricing for sellers, FAQ.
+- [Free tools](${site}/free) — a checked directory of free and open source tools that live on their makers' own sites.
 - [Sell your tool](${site}/sell) — what can be listed and how to submit it.
 - [How to run a tool](${site}/how-to-run) — the two-minute setup guide, including the AI-assisted path for non-technical buyers.
 - [Insights](${site}/blog) — articles for indie makers and independent professionals.
@@ -89,6 +92,21 @@ ${DOCS.map((d) => `- [${d.title}](${site}${docPath(d.slug)}) — ${d.summary}`).
 ## Catalogue
 
 ${catalogue}
+
+## Free tools
+
+Free software made by independent builders, hosted on their own sites rather
+than here. ${brand.name} checks that each link is real and relevant, does not
+host or deliver these, and takes no money for them. They cost nothing and need
+no account.
+
+${
+  freeTools.length
+    ? freeTools
+        .map((t) => `- [${t.title}](${t.url}) — ${t.description}`)
+        .join("\n")
+    : "- The directory is still being collected. See /free."
+}
 
 ## Sellers
 

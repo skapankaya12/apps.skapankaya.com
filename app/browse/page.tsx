@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { brand } from "@/lib/brand";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
 import { JsonLd } from "@/components/JsonLd";
@@ -62,7 +63,13 @@ export default async function BrowsePage() {
             inside one listing's description where a visitor scrolls past it.
             Remove with the rest of the pre-launch copy at launch. */}
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
-          {brand.statusNote}
+          {brand.statusNote}{" "}
+          {/* The two catalogues are the only pages on the site that index other
+              pages, and neither pointed at the other. A crawler reaching one had
+              no route to the other except the footer. */}
+          <Link href="/free" className="text-[var(--accent)] hover:underline">
+            Free tools are available now.
+          </Link>
         </p>
       </div>
       <BrowseExperience initial={listings} />

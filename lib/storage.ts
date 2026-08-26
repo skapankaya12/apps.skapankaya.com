@@ -215,6 +215,28 @@ export async function uploadScreenshots(
 
 
 /**
+ * Upload the preview image for a /free directory entry.
+ *
+ * Stored rather than hotlinked from the source. A hotlinked og:image can become
+ * a different picture the day after it was reviewed, and a dead one the day
+ * they reorganise their site, so what an admin approved would not be what a
+ * visitor sees. Same uid-scoped, timestamped shape as the avatar above, and for
+ * the same cache reason.
+ *
+ * Not scoped to the entry id: the id does not exist until the Firestore write,
+ * and the submit form uploads before that. The uid is the part the rules bind.
+ */
+export async function uploadFreeToolPreview(uid: string, file: File): Promise<string> {
+  const path = `public/free/${uid}/${Date.now()}${ext(file.name) || ".png"}`;
+  const r = ref(storage, path);
+  await uploadBytes(r, file, {
+    contentType: file.type || "image/png",
+    cacheControl: PUBLIC_ASSET_CACHE,
+  });
+  return getDownloadURL(r);
+}
+
+/**
  * Upload a seller's avatar. Returns the public URL to store on their user doc.
  *
  * Timestamped like the screenshots, and for the same reason: the public assets

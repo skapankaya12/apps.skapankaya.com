@@ -16,6 +16,7 @@ const navItems = [
   { href: "/sell", label: "Sell your tool" },
   { href: "/blog", label: "Insights" },
   { href: "/about", label: "About" },
+  { href: "/free", label: "Free tools" },
 ];
 
 export function Navbar() {
@@ -65,8 +66,8 @@ export function Navbar() {
             {navItems.map((item) => {
               const active = pathname.startsWith(item.href);
               // The seller CTA is the one nav item that gets the treatment —
-              // it is what this pre-launch phase is recruiting for. Making all
-              // four a shader would be four WebGL contexts and no hierarchy.
+              // it is what this pre-launch phase is recruiting for. Making
+              // every one a shader would be five WebGL contexts and no hierarchy.
               if (item.href === "/sell") {
                 return (
                   <LiquidMetalButton

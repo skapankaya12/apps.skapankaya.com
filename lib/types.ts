@@ -373,6 +373,67 @@ export interface Purchase {
   createdAt: number;
 }
 
+/* ---------------------------------------------------------------------------
+   Free tools: the directory at /free.
+
+   A free tool lives on somebody else's site. We describe it, show a preview and
+   link out. We do not host it, deliver it, take money for it or review its
+   source, and none of the marketplace's promises about packages apply to it.
+
+   Deliberately its own collection rather than a Listing with a flag. Almost
+   every field on Listing is about delivery — package, price, version, runtime,
+   setup mode, platform — and a free tool has none of them. Sharing the type
+   would mean teaching checkout, download, the dashboard, the admin console and
+   the security rules to ask "but is this the external kind?", and the answer
+   being wrong anywhere is a tool nobody can download or a link somebody can
+   buy. Separate collection, no branches, nothing existing has to change.
+
+   The review standard here is relevance and legitimacy, not security. That is a
+   different question from the one asked of a listing, and /free says so on the
+   page so the two never read as the same guarantee.
+--------------------------------------------------------------------------- */
+
+export type FreeToolStatus = "pending" | "approved" | "rejected";
+
+export interface FreeTool {
+  id: string;
+  /** URL segment. Not a page of its own yet, but anchors and filters need it. */
+  slug: string;
+  /** Where the tool actually lives. https only. The card links straight here. */
+  url: string;
+  title: string;
+  /**
+   * Our own words, not the source's meta description.
+   *
+   * Reprinting a fetched blurb publishes duplicate content pointing at a
+   * stronger original, which is how a directory earns nothing. The importer
+   * prefills this to be rewritten, not to be kept.
+   */
+  description: string;
+  /**
+   * Preview image, stored in our own bucket rather than hotlinked.
+   *
+   * Hotlinking means the image approved during review can silently become a
+   * different image afterwards, and a dead one the day they reorganise.
+   */
+  previewImage?: string;
+  /** Same taxonomy as listings, so one vocabulary covers the whole site. */
+  category: Category;
+  submitterId: string;
+  submitterName: string;
+  status: FreeToolStatus;
+  /** Admin note left on review, mirroring Listing.reviewNote. */
+  reviewNote?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Card headline. Longer than TITLE_MAX: these are names we did not choose. */
+export const FREE_TOOL_TITLE_MAX = 70;
+/** Card blurb. Two sentences, enough to say what it does and who it is for. */
+export const FREE_TOOL_DESCRIPTION_MAX = 240;
+
+
 /**
  * The filters the marketplace ships with, and the fallback whenever the
  * `categories` collection is empty or unreachable — a build with no service

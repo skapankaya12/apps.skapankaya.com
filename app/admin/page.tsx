@@ -56,6 +56,9 @@ export default function AdminPage() {
           <h1 className="text-3xl font-semibold tracking-tight">Admin console</h1>
           <p className="mt-1 text-[var(--muted)]">Review submissions and monitor the marketplace.</p>
         </div>
+        <ButtonLink href="/admin/free" variant="secondary" size="sm">
+          Free tools
+        </ButtonLink>
         <ButtonLink href="/admin/categories" variant="secondary" size="sm">
           Browse filters
         </ButtonLink>

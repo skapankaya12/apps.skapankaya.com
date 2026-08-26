@@ -788,7 +788,7 @@ export function getListingById(id: string): Listing | undefined {
  * uncapped slug from a title that's really a paragraph produces a path long
  * enough to break the filesystem at build time (it has).
  */
-function slugify(title: string): string {
+export function slugify(title: string): string {
   const base = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
