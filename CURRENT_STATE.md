@@ -307,15 +307,6 @@ Three roles: `buyer`, `seller`, `admin`.
   already uses it; the other two have not been changed.
 - The buyer download path for an `unlisted` listing has been reasoned through
   but never actually run: it needs a buyer account holding a purchase.
-- **`buttonClass()` glues class strings together instead of merging them.** A
-  class passed to `Button`/`ButtonLink` that collides with one already in
-  `buttonBase` does not win: which one applies depends on the order Tailwind
-  emits them, not on the order in the string. It has bitten once already (see
-  the /sell rebuild in §8). `cn()` in `lib/utils.ts` is the fix and
-  tailwind-merge is already a dependency, but changing it could make classes
-  that have been silently inert all along suddenly apply, so every call site
-  needs a visual check. `components/Navbar.tsx` carries two wrapper spans that
-  exist only to work around this.
 
 ---
 
@@ -474,11 +465,13 @@ Three bugs fixed on the way, two of them pre-existing. The sphere drew its first
 frame from the server's width guess before the ResizeObserver had reported the
 real one, and below the fold the IntersectionObserver stopped the loop before it
 could correct itself, so nodes sat 120px outside their box over the buttons
-above. `buttonClass` in `components/ui/index.tsx` concatenates class strings
-instead of merging them, so a `hidden` passed to a button loses to the
+above. `buttonClass` in `components/ui/index.tsx` concatenated class strings
+instead of merging them, so a `hidden` passed to a button lost to the
 `inline-flex` already in `buttonBase`: both nav buttons rendered and squeezed the
-logo to 3px. That one is worked around with wrapper spans and is **still open**,
-see §7. And the header overlapped itself at 360px, the most common Android width.
+logo to 3px. **Now fixed**: it merges with `cn()`, which was audited across all
+37 call sites (every one passes only `mt-*` or `w-full`, neither of which
+collides with anything in the base, variants or sizes, so nothing else moved).
+And the header overlapped itself at 360px, the most common Android width.
 
 ### Shipped 26 August 2026: seller experience
 

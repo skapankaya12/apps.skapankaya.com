@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { ListingStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 /* Small, dependency-free UI primitives shared across the app. */
 
@@ -26,12 +27,20 @@ const buttonSizes: Record<ButtonSize, string> = {
   lg: "text-base px-6 py-3",
 };
 
+/**
+ * Merged with cn(), not concatenated, so `extra` actually wins.
+ *
+ * Plain interpolation left the outcome to whatever order Tailwind happened to
+ * emit the utilities in, which is not the order of the string: passing
+ * "hidden md:inline-flex" to a button was silently inert against the
+ * `inline-flex` already in buttonBase, and the caller got both states at once.
+ */
 export function buttonClass(
   variant: ButtonVariant = "primary",
   size: ButtonSize = "md",
   extra = ""
 ) {
-  return `${buttonBase} ${buttonVariants[variant]} ${buttonSizes[size]} ${extra}`;
+  return cn(buttonBase, buttonVariants[variant], buttonSizes[size], extra);
 }
 
 export function Button({

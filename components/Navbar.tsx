@@ -126,27 +126,33 @@ export function Navbar() {
                   phone the CTA takes the slot and Sign in moves into the menu
                   panel, which is the reverse of the desktop arrangement, where
                   /sell already has the shader button in the nav itself. */}
-              {/* The breakpoint class goes on a wrapper, not on the button.
-                  buttonClass() concatenates raw strings, so a `hidden` handed
-                  to it competes with the `inline-flex` already in buttonBase
-                  and loses on stylesheet order: both buttons render. */}
-              <span className="shrink-0 sm:ml-1 md:hidden">
-                <ButtonLink href="/sell" variant="primary" size="sm">
-                  {/* Below 360px the full label cannot coexist with the logo,
-                      both icons and the menu button, and something has to give.
-                      Shortening the label is the one option that keeps every
-                      control reachable; the destination is the same either way.
-                      Only one span is ever displayed, so the button's own gap-2
-                      never applies between them. */}
-                  <span className="sm:hidden">Sell</span>
-                  <span className="hidden sm:inline">Sell your tool</span>
-                </ButtonLink>
-              </span>
-              <span className="ml-1 hidden shrink-0 md:block">
-                <ButtonLink href="/login" variant="primary" size="sm">
-                  Sign in
-                </ButtonLink>
-              </span>
+              <ButtonLink
+                href="/sell"
+                variant="primary"
+                size="sm"
+                className="shrink-0 sm:ml-1 md:hidden"
+              >
+                {/* Below 360px the full label cannot coexist with the logo,
+                    both icons and the menu button, and something has to give.
+                    Shortening the label is the one option that keeps every
+                    control reachable; the destination is the same either way.
+                    Only one span is ever displayed, so the button's own gap-2
+                    never applies between them. */}
+                <span className="sm:hidden">Sell</span>
+                <span className="hidden sm:inline">Sell your tool</span>
+              </ButtonLink>
+              {/* `hidden` here has to beat the `inline-flex` in buttonBase,
+                  which it only does because buttonClass merges with cn(). It
+                  was concatenation until 26 August 2026, and this exact pair
+                  rendered both buttons at once. */}
+              <ButtonLink
+                href="/login"
+                variant="primary"
+                size="sm"
+                className="ml-1 hidden shrink-0 md:inline-flex"
+              >
+                Sign in
+              </ButtonLink>
             </>
           )}
 
