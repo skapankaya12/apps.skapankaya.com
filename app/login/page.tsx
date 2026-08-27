@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   signIn,
@@ -9,6 +9,8 @@ import {
   signInWithGoogle,
 } from "@/lib/store";
 import { brand } from "@/lib/brand";
+import { validateAvatar, AVATAR_ACCEPT } from "@/lib/media";
+import { SellerAvatar } from "@/components/SellerAvatar";
 import { Section, Button } from "@/components/ui";
 
 type Mode = "signin" | "signup" | "reset";
@@ -41,6 +43,38 @@ function LoginInner() {
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+
+  // The photo is held here and only uploaded once the account exists, because
+  // storage.rules scopes an avatar path to its owner's uid and there is no uid
+  // to scope it to until then. See signUp in lib/store.ts.
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarError, setAvatarError] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const previewRef = useRef<string | null>(null);
+
+  function pickAvatar(file: File | null) {
+    setAvatarError("");
+    const problem = file ? validateAvatar(file) : null;
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    if (problem || !file) {
+      previewRef.current = null;
+      setAvatarPreview(null);
+      setAvatarFile(null);
+      setAvatarError(problem ?? "");
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    previewRef.current = url;
+    setAvatarPreview(url);
+    setAvatarFile(file);
+  }
+
+  // Release the object URL if they navigate away mid-signup.
+  useEffect(() => {
+    return () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    };
+  }, []);
 
   function switchMode(m: Mode) {
     setMode(m);
@@ -99,7 +133,8 @@ function LoginInner() {
 
     setBusy(true);
     try {
-      if (mode === "signup") await signUp(email.trim(), password, name);
+      if (mode === "signup")
+        await signUp(email.trim(), password, name, avatarFile ?? undefined);
       else await signIn(email.trim(), password);
       router.push(next);
     } catch (err: unknown) {
@@ -187,6 +222,50 @@ function LoginInner() {
                 className={inputClass}
                 autoFocus
               />
+
+              {/* Beside the name rather than in its own section: the two answer
+                  the same question, and the preview shows the initial they get
+                  by default, so skipping this reads as a choice rather than as
+                  something left undone. */}
+              <div className="mt-3 flex items-center gap-3">
+                <SellerAvatar
+                  seller={{
+                    displayName: name,
+                    avatarUrl: avatarPreview ?? undefined,
+                  }}
+                  size={44}
+                />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-block cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:border-[var(--accent)]">
+                      {avatarFile ? "Change photo" : "Add a photo"}
+                      <input
+                        type="file"
+                        accept={AVATAR_ACCEPT}
+                        className="hidden"
+                        onChange={(e) =>
+                          pickAvatar(e.target.files?.[0] ?? null)
+                        }
+                      />
+                    </label>
+                    {avatarFile && (
+                      <button
+                        type="button"
+                        onClick={() => pickAvatar(null)}
+                        className="text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Optional. You can add one later.
+                  </p>
+                </div>
+              </div>
+              {avatarError && (
+                <p className="mt-2 text-xs text-[var(--danger)]">{avatarError}</p>
+              )}
             </div>
           )}
 

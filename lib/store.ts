@@ -48,6 +48,7 @@ import {
   REVIEW_CRITICAL_FIELDS,
 } from "./types";
 import { normalizeHandle, handleProblem } from "./handles";
+import { uploadAvatar } from "./storage";
 
 /* ---------------------------------------------------------------------------
    Data store, backed by Firestore + Firebase Auth.
@@ -316,7 +317,12 @@ export async function signInWithGoogle(): Promise<void> {
   await signInWithPopup(auth, googleProvider());
 }
 
-export async function signUp(email: string, password: string, displayName?: string) {
+export async function signUp(
+  email: string,
+  password: string,
+  displayName?: string,
+  avatar?: File
+) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   const name = displayName?.trim();
   if (name) await updateProfile(cred.user, { displayName: name });
@@ -334,6 +340,24 @@ export async function signUp(email: string, password: string, displayName?: stri
   );
   // Fire off the verification email (link-based; Firebase hosts the handler).
   await sendEmailVerification(cred.user);
+
+  // The photo goes last, and deliberately after the user document rather than
+  // before it. storage.rules binds an avatar to its owner's uid, so there is
+  // nowhere to put this file until the account exists at all; and putting the
+  // upload ahead of the setDoc would stretch the window the comment above
+  // warns about, since a 2MB photo takes far longer than a document write.
+  //
+  // It also cannot be allowed to fail the sign-up. Somebody who picked a photo
+  // the network then dropped has an account either way, and /account is right
+  // there. Never leave them with no account over an optional picture.
+  if (avatar) {
+    try {
+      const avatarUrl = await uploadAvatar(cred.user.uid, avatar);
+      await updateDoc(doc(db, "users", cred.user.uid), { avatarUrl });
+    } catch (err) {
+      console.error("[signUp] avatar upload failed:", err);
+    }
+  }
 }
 
 export async function signIn(email: string, password: string) {
