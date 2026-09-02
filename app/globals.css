@@ -108,6 +108,47 @@ h3 {
 .animate-fade-up { animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 /* ---------------------------------------------------------------------------
+   Featured-on marquee (components/FooterBadges.tsx)
+
+   The track holds two identical copies of the badge list and travels exactly
+   half its own width, so the second copy arrives where the first began and the
+   loop has no seam. `width: max-content` is what makes that half honest: the
+   track has to be as wide as its contents, never as wide as the row.
+
+   The mask fades both ends, so badges enter and leave instead of being cut off
+   at a hard edge. Hovering pauses it, because these are links and a link that
+   slides out from under the cursor cannot be clicked.
+--------------------------------------------------------------------------- */
+@keyframes badge-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.badge-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.badge-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: badge-marquee 45s linear infinite;
+  will-change: transform;
+}
+
+.badge-marquee:hover .badge-marquee-track,
+.badge-marquee:focus-within .badge-marquee-track {
+  animation-play-state: paused;
+}
+
+/* Still readable, just still. The duplicate half stays in the DOM and simply
+   sits off to the right, unreachable, which is what it already is. */
+@media (prefers-reduced-motion: reduce) {
+  .badge-marquee-track { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
    Documentation prose (/docs)
    No typography plugin is installed, so long-form document pages style their
    own semantic HTML here. Kept plain and readable on purpose: these pages are
