@@ -22,6 +22,29 @@ const ACCOUNT_KINDS: { id: AccountKind; label: string; hint: string }[] = [
   { id: "sell", label: "Sell my tools", hint: "List what you built" },
 ];
 
+const KEEP_PCT = Math.round((1 - brand.commissionRate) * 100);
+
+/**
+ * What each side of the marketplace gets, beside the choice that picks it.
+ *
+ * Deliberately not new marketing copy. The buyer lines are the three clauses of
+ * the pitch in lib/brand.ts, taken apart; the seller lines are the three
+ * economics cards on /sell, shortened. A claim that appears in only one of
+ * those places would be a claim nobody is maintaining.
+ */
+const SIDE_FACTS: Record<AccountKind, { label: string; body: string }[]> = {
+  buy: [
+    { label: "Pay once", body: "No subscription, and nothing to renew." },
+    { label: "Run it yourself", body: "Tools run on your own machine, not on ours." },
+    { label: "Keep it for good", body: "Your library holds everything you buy." },
+  ],
+  sell: [
+    { label: `Keep ${KEEP_PCT}% of every sale`, body: "All-inclusive fee. No listing fees, no monthly cost." },
+    { label: "List in about 10 minutes", body: "Upload your package, describe it, set a price." },
+    { label: "Automatic payouts", body: "Connect Stripe once. Your share lands after each sale." },
+  ],
+};
+
 /**
  * Only ever redirect to a path on this site.
  *
@@ -221,214 +244,274 @@ function LoginInner() {
         ? "One account to buy tools, and to sell your own. We'll email you a link to verify it."
         : "Enter your email and we'll send you a reset link.";
 
+  // Two columns, because the account has two sides and the page now asks which
+  // one somebody is. Only sign-up earns the width: the picker and what it means
+  // move out of the form and into the space beside it, which leaves the card
+  // the length it was before any of this was added. Signing in is three fields
+  // and has nothing to say, so it stays the narrow card it always was.
+  const wide = mode === "signup";
+
   return (
-    <Section className="max-w-md py-20">
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-[var(--shadow-sm)]">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">{subtitle}</p>
+    <Section className={wide ? "max-w-5xl py-14 sm:py-20" : "max-w-md py-20"}>
+      <div
+        className={
+          wide
+            ? "grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:gap-x-16 lg:gap-y-8"
+            : ""
+        }
+      >
+        <div className="lg:col-start-1 lg:row-start-1">
+          <h1
+            className={`font-semibold tracking-tight ${
+              wide ? "text-3xl sm:text-4xl" : "text-2xl"
+            }`}
+          >
+            {title}
+          </h1>
+          <p className="mt-3 max-w-md text-sm text-[var(--muted)]">{subtitle}</p>
 
-        {/* Above the Google button rather than inside the form, because it
-            governs both ways in. Google cannot ask this itself: it does not
-            distinguish signing up from signing in, so whatever is chosen here
-            is the only thing we know about someone arriving that way. */}
-        {mode === "signup" && (
-          <fieldset className="mt-6">
-            <legend className="text-sm font-medium">What brings you here?</legend>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              {ACCOUNT_KINDS.map((option) => {
-                const selected = kind === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => setKind(option.id)}
-                    className={`rounded-xl border p-3 text-left transition ${
-                      selected
-                        ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                        : "border-[var(--border)] hover:border-[var(--border-strong)]"
-                    }`}
-                  >
-                    <span className="block text-sm font-medium">{option.label}</span>
-                    <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                      {option.hint}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="mt-2 text-xs text-[var(--muted)]">
-              Buyers can start selling later, from the Sell page.
-            </p>
-          </fieldset>
-        )}
-
-        {mode !== "reset" && (
-          <>
-            <Button
-              type="button"
-              variant="secondary"
-              size="lg"
-              className="mt-6 w-full"
-              onClick={handleGoogle}
-              disabled={busy || googleBusy}
-            >
-              <GoogleMark />
-              {googleBusy ? "Opening Google…" : "Continue with Google"}
-            </Button>
-
-            <div className="mt-6 flex items-center gap-3">
-              <span className="h-px flex-1 bg-[var(--border)]" />
-              <span className="text-xs text-[var(--muted)]">or</span>
-              <span className="h-px flex-1 bg-[var(--border)]" />
-            </div>
-          </>
-        )}
-
-        <form onSubmit={handle} className="mt-6 space-y-4">
+          {/* Out here rather than in the form, and ahead of the Google button,
+              because it governs both ways in. Google cannot ask this itself: it
+              does not distinguish signing up from signing in, so whatever is
+              chosen here is the only thing we know about somebody arriving that
+              way. */}
           {mode === "signup" && (
-            <div>
-              <label className="text-sm font-medium" htmlFor="name">Name</label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="How buyers will see you"
-                autoComplete="name"
-                className={inputClass}
-                autoFocus
-              />
-
-              {/* Beside the name rather than in its own section: the two answer
-                  the same question, and the preview shows the initial they get
-                  by default, so skipping this reads as a choice rather than as
-                  something left undone. */}
-              <div className="mt-3 flex items-center gap-3">
-                <SellerAvatar
-                  seller={{
-                    displayName: name,
-                    avatarUrl: avatarPreview ?? undefined,
-                  }}
-                  size={44}
-                />
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label className="inline-block cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:border-[var(--accent)]">
-                      {avatarFile ? "Change photo" : "Add a photo"}
-                      <input
-                        type="file"
-                        accept={AVATAR_ACCEPT}
-                        className="hidden"
-                        onChange={(e) =>
-                          pickAvatar(e.target.files?.[0] ?? null)
-                        }
-                      />
-                    </label>
-                    {avatarFile && (
-                      <button
-                        type="button"
-                        onClick={() => pickAvatar(null)}
-                        className="text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    Optional. You can add one later.
-                  </p>
-                </div>
+            <fieldset className="mt-8">
+              <legend className="text-sm font-medium">What brings you here?</legend>
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:max-w-md">
+                {ACCOUNT_KINDS.map((option) => {
+                  const selected = kind === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setKind(option.id)}
+                      className={`rounded-xl border p-4 text-left transition ${
+                        selected
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                          : "border-[var(--border)] hover:border-[var(--border-strong)]"
+                      }`}
+                    >
+                      <span className="block text-sm font-medium">{option.label}</span>
+                      <span className="mt-0.5 block text-xs text-[var(--muted)]">
+                        {option.hint}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              {avatarError && (
-                <p className="mt-2 text-xs text-[var(--danger)]">{avatarError}</p>
-              )}
-            </div>
+              <p className="mt-3 text-xs text-[var(--muted)]">
+                Buyers can start selling later, from the Sell page.
+              </p>
+            </fieldset>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)] sm:p-8 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+          {mode !== "reset" && (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                className="w-full"
+                onClick={handleGoogle}
+                disabled={busy || googleBusy}
+              >
+                <GoogleMark />
+                {googleBusy ? "Opening Google…" : "Continue with Google"}
+              </Button>
+
+              <div className="mt-6 flex items-center gap-3">
+                <span className="h-px flex-1 bg-[var(--border)]" />
+                <span className="text-xs text-[var(--muted)]">or</span>
+                <span className="h-px flex-1 bg-[var(--border)]" />
+              </div>
+            </>
           )}
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              className={inputClass}
-              autoFocus={mode !== "signup"}
-            />
-          </div>
+          <form onSubmit={handle} className="mt-6 space-y-4">
+            {mode === "signup" && (
+              <div>
+                <label className="text-sm font-medium" htmlFor="name">Name</label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="How buyers will see you"
+                  autoComplete="name"
+                  className={inputClass}
+                  autoFocus
+                />
 
-          {mode !== "reset" && (
-            <div>
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium" htmlFor="password">Password</label>
-                {mode === "signin" && (
-                  <button
-                    type="button"
-                    onClick={() => switchMode("reset")}
-                    className="text-xs font-medium text-[var(--accent)] hover:underline"
-                  >
-                    Forgot password?
-                  </button>
+                {/* Beside the name rather than in its own section: the two answer
+                    the same question, and the preview shows the initial they get
+                    by default, so skipping this reads as a choice rather than as
+                    something left undone. */}
+                <div className="mt-3 flex items-center gap-3">
+                  <SellerAvatar
+                    seller={{
+                      displayName: name,
+                      avatarUrl: avatarPreview ?? undefined,
+                    }}
+                    size={44}
+                  />
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="inline-block cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--background)] px-3 py-1.5 text-xs font-medium hover:border-[var(--accent)]">
+                        {avatarFile ? "Change photo" : "Add a photo"}
+                        <input
+                          type="file"
+                          accept={AVATAR_ACCEPT}
+                          className="hidden"
+                          onChange={(e) => pickAvatar(e.target.files?.[0] ?? null)}
+                        />
+                      </label>
+                      {avatarFile && (
+                        <button
+                          type="button"
+                          onClick={() => pickAvatar(null)}
+                          className="text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--muted)]">
+                      Optional. You can add one later.
+                    </p>
+                  </div>
+                </div>
+                {avatarError && (
+                  <p className="mt-2 text-xs text-[var(--danger)]">{avatarError}</p>
                 )}
               </div>
+            )}
+
+            <div>
+              <label className="text-sm font-medium" htmlFor="email">Email</label>
               <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
                 className={inputClass}
+                autoFocus={mode !== "signup"}
               />
             </div>
-          )}
 
-          {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+            {mode !== "reset" && (
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium" htmlFor="password">Password</label>
+                  {mode === "signin" && (
+                    <button
+                      type="button"
+                      onClick={() => switchMode("reset")}
+                      className="text-xs font-medium text-[var(--accent)] hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  className={inputClass}
+                />
+              </div>
+            )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={busy || googleBusy}
-          >
-            {busy
-              ? "…"
-              : mode === "signin"
-                ? "Sign in"
-                : mode === "signup"
-                  ? "Create account"
-                  : "Send reset link"}
-          </Button>
-        </form>
+            {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
 
-        <p className="mt-6 text-center text-sm text-[var(--muted)]">
-          {mode === "reset" ? (
-            <>
-              Remembered it?{" "}
-              <button
-                type="button"
-                className="font-medium text-[var(--accent)] hover:underline"
-                onClick={() => switchMode("signin")}
-              >
-                Back to sign in
-              </button>
-            </>
-          ) : (
-            <>
-              {mode === "signin" ? "New here? " : "Already have an account? "}
-              <button
-                type="button"
-                className="font-medium text-[var(--accent)] hover:underline"
-                onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
-              >
-                {mode === "signin" ? "Create an account" : "Sign in"}
-              </button>
-            </>
-          )}
-        </p>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={busy || googleBusy}
+            >
+              {busy
+                ? "…"
+                : mode === "signin"
+                  ? "Sign in"
+                  : mode === "signup"
+                    ? "Create account"
+                    : "Send reset link"}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-[var(--muted)]">
+            {mode === "reset" ? (
+              <>
+                Remembered it?{" "}
+                <button
+                  type="button"
+                  className="font-medium text-[var(--accent)] hover:underline"
+                  onClick={() => switchMode("signin")}
+                >
+                  Back to sign in
+                </button>
+              </>
+            ) : (
+              <>
+                {mode === "signin" ? "New here? " : "Already have an account? "}
+                <button
+                  type="button"
+                  className="font-medium text-[var(--accent)] hover:underline"
+                  onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
+                >
+                  {mode === "signin" ? "Create an account" : "Sign in"}
+                </button>
+              </>
+            )}
+          </p>
+        </div>
+
+        {/* Beside the picker on a wide screen, under the card on a narrow one.
+            The form is what somebody came here for, so on a phone it must not
+            sit below three facts about a choice they have already made. */}
+        {mode === "signup" && (
+          <div className="border-t border-[var(--border)] pt-8 sm:max-w-md lg:col-start-1 lg:row-start-2">
+            {/* What the choice actually means, in the words the rest of the site
+                already uses: the buyer lines are the three clauses of the pitch
+                in lib/brand.ts, the seller lines are the three economics cards
+                on /sell. Nothing is claimed here that is not claimed there, so
+                this cannot drift away from either. */}
+            <ul className="space-y-4 sm:max-w-md">
+              {SIDE_FACTS[kind].map((fact) => (
+                <li key={fact.label} className="flex gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium">{fact.label}</span>
+                    <span className="block text-sm text-[var(--muted)]">{fact.body}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Pre-launch. Somebody signing up to buy is the one person on this
+                page who needs telling, and the seller beside them is being
+                recruited precisely because of it. Remove at launch: see
+                LAUNCH_CHECKLIST.md. */}
+            {kind === "buy" && (
+              <p className="mt-6 text-xs text-[var(--muted)] sm:max-w-md">
+                Buying opens at the public launch. Your account and your saved
+                tools are waiting for you when it does.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </Section>
   );

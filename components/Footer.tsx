@@ -18,6 +18,25 @@ export function Footer() {
           <p className="mt-3 max-w-xs text-sm text-[var(--muted)]">
             {brand.tagline}
           </p>
+
+          {/* Featured badge, served by Nick Launches. Plain <img> rather than
+              next/image, matching every other remote image on the site: it is
+              their asset on their host, and routing it through the optimizer
+              would mean adding them to remotePatterns to cache a 7KB PNG. */}
+          <a
+            href="https://nicklaunches.com/products/the-solo-market/?utm_source=thesolomarket.com&utm_medium=badge&utm_campaign=featured"
+            target="_blank"
+            rel="noopener"
+            className="mt-5 inline-block"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://nicklaunches.com/badges/featured.png"
+              alt="The Solo Market on Nick Launches"
+              width={244}
+              height={56}
+            />
+          </a>
         </div>
 
         <FooterCol

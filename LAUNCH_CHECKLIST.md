@@ -129,6 +129,11 @@ nobody remembers, because nothing on screen looks broken when it is stale.
       `app/about/page.tsx`. It feeds both the visible list and the `FAQPage`
       markup, so one deletion clears both.
 - [ ] **Remove `components/PreLaunchNotice.tsx`** and its use on the home page.
+- [ ] **Delete the buying-opens line on the signup page.** `app/login/page.tsx`
+      shows "Buying opens at the public launch" beside the buyer half of the
+      account picker. It is the only qualifier a buyer signing up ever sees, so
+      it is also the only one that will read as a lie the day checkout works.
+      The seller half deliberately has no equivalent and needs no edit.
 - [ ] **Edit the pre-launch PS out of the seeded listing descriptions** in the
       admin console. This one is Firestore data, not code, so no build will ever
       warn you about it.
