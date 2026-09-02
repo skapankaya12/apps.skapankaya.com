@@ -51,17 +51,9 @@ export default function AdminPage() {
 
   return (
     <Section className="py-12">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Admin console</h1>
-          <p className="mt-1 text-[var(--muted)]">Review submissions and monitor the marketplace.</p>
-        </div>
-        <ButtonLink href="/admin/free" variant="secondary" size="sm">
-          Free tools
-        </ButtonLink>
-        <ButtonLink href="/admin/categories" variant="secondary" size="sm">
-          Browse filters
-        </ButtonLink>
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight">Admin console</h1>
+        <p className="mt-1 text-[var(--muted)]">Review submissions and monitor the marketplace.</p>
       </div>
 
       {/* Stats */}
@@ -117,6 +109,25 @@ export default function AdminPage() {
           ))}
         </div>
       )}
+
+      {/* The other two admin screens. They used to be buttons beside the page
+          title, which put marketplace-wide navigation above the one thing this
+          page exists for. They belong after the queue they sit alongside: a
+          listing review asks whether software is safe, a directory review asks
+          whether a link is real and belongs, and the browse filters are what
+          both get filed under.
+
+          Nothing else in the app links to either route, so do not delete these
+          without putting them somewhere: /admin/free is a review queue, and a
+          queue nobody can reach is a queue nobody empties. */}
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <ButtonLink href="/admin/free" variant="secondary" size="sm">
+          Free tools
+        </ButtonLink>
+        <ButtonLink href="/admin/categories" variant="secondary" size="sm">
+          Browse filters
+        </ButtonLink>
+      </div>
 
       {/* Recently reviewed */}
       {(approved.length > 0 || rejected.length > 0) && (
