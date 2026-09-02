@@ -13,6 +13,7 @@ import {
   getCategories,
   subscribe,
   sellerProfileReady,
+  getAuthResolved,
 } from "@/lib/store";
 import {
   uploadPackage,
@@ -71,6 +72,7 @@ export default function NewListingPage() {
  */
 function NewListingForm() {
   const user = useUser();
+  const authResolved = useStoreValue(getAuthResolved);
   const editId = useSearchParams().get("edit");
 
   // Edit mode: /dashboard/new?edit=<listingId> loads any listing of the
@@ -85,6 +87,18 @@ function NewListingForm() {
     read();
     return subscribe(read);
   }, [editId]);
+
+  // `!user` means "signed out" and "not heard back yet" alike. It matters here
+  // more than it looks: signing up to sell lands straight on this page, so
+  // reading the gate too early tells somebody who has just become a seller
+  // that they need a seller account.
+  if (!authResolved) {
+    return (
+      <Section className="py-24 text-center">
+        <p className="text-sm text-[var(--muted)]">Loading…</p>
+      </Section>
+    );
+  }
 
   if (!user || (user.role !== "seller" && user.role !== "admin")) {
     return (

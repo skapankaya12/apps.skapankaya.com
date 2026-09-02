@@ -14,11 +14,12 @@ import { LiquidMetalButton } from "@/components/ui/liquid-metal-button";
  * This is the only part that genuinely has to run in the browser, because
  * "start selling" means three different things depending on who is asking.
  *
- * Signed out, it sends them to sign in and comes back here. Signed in as a
- * buyer, it promotes the account first: everybody signs up as a buyer (see
- * signUp in lib/store.ts), so upgrading on the way through is what makes /sell
- * a one-click door rather than a settings errand. setRole refuses "admin", so
- * there is nothing to escalate here.
+ * Signed out, it sends them to sign up with the intent attached, so they are
+ * promoted there and land on the listing form rather than back here. Signed in
+ * as a buyer, it promotes the account first: an account is always created as a
+ * buyer (see signUp in lib/store.ts), so upgrading on the way through is what
+ * makes /sell a one-click door rather than a settings errand. setRole refuses
+ * "admin", so there is nothing to escalate here.
  */
 export function StartSellingButton({
   children = "Start selling",
@@ -32,7 +33,11 @@ export function StartSellingButton({
 
   async function startSelling() {
     if (!user) {
-      router.push("/login?next=/sell");
+      // Carry the intent through sign-in, and land where a signed-in seller
+      // lands. Without `intent=sell` this button forgets why they came: they
+      // would sign up as a buyer, arrive back here, and have to press it
+      // again. See app/login/page.tsx.
+      router.push("/login?next=/dashboard/new&intent=sell");
       return;
     }
     if (user.role === "buyer") await setRole("seller");

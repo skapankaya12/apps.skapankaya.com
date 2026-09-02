@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   signIn,
   signUp,
+  becomeSeller,
   requestPasswordReset,
   signInWithGoogle,
 } from "@/lib/store";
@@ -14,6 +15,12 @@ import { SellerAvatar } from "@/components/SellerAvatar";
 import { Section, Button } from "@/components/ui";
 
 type Mode = "signin" | "signup" | "reset";
+type AccountKind = "buy" | "sell";
+
+const ACCOUNT_KINDS: { id: AccountKind; label: string; hint: string }[] = [
+  { id: "buy", label: "Buy tools", hint: "Own them, no subscription" },
+  { id: "sell", label: "Sell my tools", hint: "List what you built" },
+];
 
 /**
  * Only ever redirect to a path on this site.
@@ -35,7 +42,15 @@ function LoginInner() {
   const sp = useSearchParams();
   const next = safeNext(sp.get("next"));
 
-  const [mode, setMode] = useState<Mode>("signin");
+  // What brought them here. `?intent=sell` is set by the Start selling button
+  // (components/StartSellingButton.tsx), which is the only way to become a
+  // seller: without it, somebody who pressed that button while signed out
+  // would sign up, land back on /sell, and have to press it a second time.
+  // Anyone who closed the tab first stayed a buyer for good.
+  const sellIntent = sp.get("intent") === "sell";
+
+  const [mode, setMode] = useState<Mode>(sellIntent ? "signup" : "signin");
+  const [kind, setKind] = useState<AccountKind>(sellIntent ? "sell" : "buy");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,12 +97,35 @@ function LoginInner() {
     setResetSent(false);
   }
 
+  /**
+   * Whether this account should end up as a seller.
+   *
+   * Signing up, it is whatever they picked. Signing in, the picker is not on
+   * screen, so the only signal is the button that sent them here, and an
+   * existing seller or admin is left alone by becomeSeller either way.
+   */
+  function wantsSeller(): boolean {
+    return mode === "signup" ? kind === "sell" : sellIntent;
+  }
+
+  /**
+   * Where to go once they are in. `next` is the listing form when the Start
+   * selling button sent them, so somebody who arrived that way and then picked
+   * Buy tools has to be sent somewhere else: the form would only tell them they
+   * need a seller account.
+   */
+  function destination(): string {
+    if (sellIntent && !wantsSeller()) return "/browse";
+    return next;
+  }
+
   async function handleGoogle() {
     setError("");
     setGoogleBusy(true);
     try {
       await signInWithGoogle();
-      router.push(next);
+      if (wantsSeller()) await becomeSeller();
+      router.push(destination());
     } catch (err: unknown) {
       // Closing the Google window is a decision, not a failure — say nothing.
       const code = (err as { code?: string })?.code ?? "";
@@ -136,7 +174,10 @@ function LoginInner() {
       if (mode === "signup")
         await signUp(email.trim(), password, name, avatarFile ?? undefined);
       else await signIn(email.trim(), password);
-      router.push(next);
+      // After the account exists, never before: the role lives on a document
+      // that sign-up has only just written.
+      if (wantsSeller()) await becomeSeller();
+      router.push(destination());
     } catch (err: unknown) {
       setError(friendlyAuthError(err));
       setBusy(false);
@@ -185,6 +226,42 @@ function LoginInner() {
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-[var(--shadow-sm)]">
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">{subtitle}</p>
+
+        {/* Above the Google button rather than inside the form, because it
+            governs both ways in. Google cannot ask this itself: it does not
+            distinguish signing up from signing in, so whatever is chosen here
+            is the only thing we know about someone arriving that way. */}
+        {mode === "signup" && (
+          <fieldset className="mt-6">
+            <legend className="text-sm font-medium">What brings you here?</legend>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              {ACCOUNT_KINDS.map((option) => {
+                const selected = kind === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setKind(option.id)}
+                    className={`rounded-xl border p-3 text-left transition ${
+                      selected
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                        : "border-[var(--border)] hover:border-[var(--border-strong)]"
+                    }`}
+                  >
+                    <span className="block text-sm font-medium">{option.label}</span>
+                    <span className="mt-0.5 block text-xs text-[var(--muted)]">
+                      {option.hint}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-[var(--muted)]">
+              Buyers can start selling later, from the Sell page.
+            </p>
+          </fieldset>
+        )}
 
         {mode !== "reset" && (
           <>

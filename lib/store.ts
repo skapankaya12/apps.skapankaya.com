@@ -143,6 +143,35 @@ function setupContextListeners() {
   }
 }
 
+/**
+ * Create the account document if it is not there yet, as a buyer. Idempotent.
+ * Prefers the Auth displayName (set at signup) and falls back to the email's
+ * local part.
+ *
+ * A transaction rather than getDoc-then-setDoc, because the auth listener runs
+ * this the moment createUserWithEmailAndPassword resolves and therefore races
+ * signUp, which is writing the same document with the name the person typed.
+ * Read and write have to be one step, or this can decide the document is
+ * missing and write its defaults over that name a moment later.
+ *
+ * Always a buyer, never a seller, because firestore.rules allows no other role
+ * on create. Anyone signing up to sell is promoted by becomeSeller once the
+ * document exists.
+ */
+async function ensureUserDoc(fbUser: { uid: string; email: string | null; displayName: string | null }) {
+  const uref = doc(db, "users", fbUser.uid);
+  await runTransaction(db, async (tx) => {
+    const existing = await tx.get(uref);
+    if (existing.exists()) return;
+    tx.set(uref, {
+      email: fbUser.email ?? "",
+      displayName: fbUser.displayName || (fbUser.email ?? "user").split("@")[0],
+      role: "buyer" as Role,
+      createdAt: Date.now(),
+    });
+  });
+}
+
 /** Call once on the client (from AppShell). Wires up Firestore + auth. */
 export function markClientReady() {
   if (clientReady) return;
@@ -213,18 +242,9 @@ export function markClientReady() {
     currentEmailVerified = fbUser.emailVerified;
     currentProviders = fbUser.providerData.map((p) => p.providerId);
 
-    // Ensure a user doc exists (first sign-in creates it as a buyer). Prefer the
-    // Auth displayName (set at signup); fall back to the email's local part.
+    // First sign-in creates the account document, as a buyer.
     const uref = doc(db, "users", fbUser.uid);
-    const existing = await getDoc(uref);
-    if (!existing.exists()) {
-      await setDoc(uref, {
-        email: fbUser.email ?? "",
-        displayName: fbUser.displayName || (fbUser.email ?? "user").split("@")[0],
-        role: "buyer" as Role,
-        createdAt: Date.now(),
-      });
-    }
+    await ensureUserDoc(fbUser);
 
     // Live user doc so role changes take effect immediately.
     unsubUserDoc = onSnapshot(uref, (s) => {
@@ -524,6 +544,33 @@ export async function setRole(role: Role) {
     throw new Error("Admin access can't be self-assigned.");
   }
   await updateDoc(doc(db, "users", currentUser.uid), { role });
+}
+
+/**
+ * Promote the account that just authenticated to seller.
+ *
+ * Separate from setRole because of when it is called: moments after sign-up or
+ * sign-in, while the store's `currentUser` is still null. It is filled by the
+ * user-doc listener, which has usually not answered yet, so setRole would see
+ * nothing and return without writing. That silent no-op is the whole reason
+ * somebody can arrive through the sell door and end up a buyer, so this reads
+ * the uid from Firebase Auth, which is set the moment authentication resolves.
+ *
+ * Only a buyer is promoted. The role is read from Firestore rather than from
+ * the cache for the same reason as the uid, and an admin pressing the same
+ * button must not write themselves down to seller.
+ */
+export async function becomeSeller(): Promise<void> {
+  const fbUser = auth.currentUser;
+  if (!fbUser) return;
+  // Google does not distinguish signing up from signing in, so this can run
+  // before the account document exists at all. Create it here rather than
+  // returning empty-handed and racing the listener that would have created it.
+  await ensureUserDoc(fbUser);
+  const uref = doc(db, "users", fbUser.uid);
+  const snap = await getDoc(uref);
+  if (!snap.exists() || snap.data().role !== "buyer") return;
+  await updateDoc(uref, { role: "seller" as Role });
 }
 
 /* ---------------------------------------------------------------------------
