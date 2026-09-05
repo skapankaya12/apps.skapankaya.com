@@ -41,6 +41,21 @@ export const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 /** What the avatar picker offers. GIF is excluded: an animated face is a lot. */
 export const AVATAR_ACCEPT = "image/png,image/jpeg,image/webp";
 
+const MB = 1024 * 1024;
+
+/**
+ * Megabytes for a size we are about to call too big, always rounded up.
+ *
+ * toFixed rounds to nearest, which made the rejection contradict itself: a
+ * 2.02MB file came back as "That image is 2.0MB. The limit is 2MB", and the
+ * only sensible reading of that is that the check is broken. Rounding up keeps
+ * the number on the right side of the limit it is being compared to. Anything
+ * reaching this is strictly over, so the result is never equal to the cap.
+ */
+function overBy(bytes: number): string {
+  return (Math.ceil((bytes / MB) * 10) / 10).toFixed(1);
+}
+
 /**
  * Check a chosen avatar. Returns the message to show, or null when it is fine.
  */
@@ -49,7 +64,9 @@ export function validateAvatar(file: File): string | null {
     return "Use a PNG, JPEG or WebP image.";
   }
   if (file.size > MAX_AVATAR_BYTES) {
-    return `That image is ${(file.size / 1024 / 1024).toFixed(1)}MB. The limit is 2MB.`;
+    // The cap is read from the constant rather than typed into the sentence,
+    // so raising MAX_AVATAR_BYTES cannot leave the message quoting the old one.
+    return `That image is ${overBy(file.size)}MB. The limit is ${MAX_AVATAR_BYTES / MB}MB.`;
   }
   return null;
 }
