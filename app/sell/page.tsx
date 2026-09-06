@@ -55,24 +55,29 @@ export default async function SellPage() {
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)]">
             <div className="text-center lg:text-left">
               <Badge tone="accent" className="mb-5">
-                No listing fees
+                For solo developers
               </Badge>
-              {/* No text-balance here. The balancer equalises line lengths, which on
-                  this sentence put the break inside "Someone out there": it read
-                  "Someone out / there needs what / you already built." Natural
-                  wrapping keeps the opening phrase whole. Same failure the
-                  homepage headline hit, noted in its own comment there. */}
+              {/* No text-balance here. The balancer equalises line lengths, which
+                  on a headline this short pulls "solo." down on to a line of its
+                  own. Natural wrapping keeps "built solo." together. Same failure
+                  the homepage headline hit, noted in its own comment there. */}
               <h1 className="mx-auto max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl lg:mx-0">
-                Someone out there needs what you already built.
+                Sell what you built solo.
               </h1>
               <p className="mx-auto mt-5 max-w-xl text-[var(--muted)] lg:mx-0">
-                Too small to market on its own? Perfect. That is exactly what
-                this marketplace is for. List it once, keep{" "}
+                The Solo Market connects{" "}
                 <span className="font-semibold text-[var(--foreground)]">
-                  {KEEP_PCT}%
+                  solo developers
                 </span>{" "}
-                of every sale, and let buyers run it on their own machine in
-                minutes.
+                building{" "}
+                <span className="font-semibold text-[var(--foreground)]">
+                  self-hosted indie products
+                </span>{" "}
+                with{" "}
+                <span className="font-semibold text-[var(--foreground)]">
+                  buyers who are tired of paying monthly
+                </span>{" "}
+                for software they could simply run themselves.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
                 <StartSellingButton />
