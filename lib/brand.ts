@@ -11,7 +11,7 @@
 const HERO_HEADLINE = "A marketplace for self-hosted software,";
 /** The headline's second row. `accent` is drawn in the logo's gradient. */
 const HERO_BYLINE = { before: "made", accent: "by", after: "solo developers." } as const;
-const HERO_SUB = "Pay once, run it on your own computer, not in someone else's cloud.";
+const HERO_SUB = "Discover software built by solo developers. Buy it once. Keep it yours.";
 /** Drawn in the logo's blue to violet gradient on the hero. */
 const HERO_SUB_ACCENT = "No subscriptions.";
 
