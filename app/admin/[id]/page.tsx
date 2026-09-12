@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useParams, useRouter } from "next/navigation";
 import { useStoreValue, useUser } from "@/lib/hooks";
 import {
@@ -12,11 +14,20 @@ import {
   setListingCategory,
   getCategories,
 } from "@/lib/store";
-import { RUNTIME_LABELS, SETUP_MODE_LABELS, type Listing } from "@/lib/types";
+import {
+  PLATFORM_LABELS,
+  RUNTIME_LABELS,
+  SETUP_MODE_LABELS,
+  type AppUser,
+  type Listing,
+  type SellerProfile,
+} from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 import { RichText } from "@/components/RichText";
 import { NoteEditor, noteIsUploading } from "@/components/NoteEditor";
+import { ReviewMedia } from "@/components/ReviewMedia";
+import { ListingDetail } from "@/components/ListingDetail";
 
 /** The reviewer's checklist, mirroring BUSINESS_MODEL.md §3. */
 const CHECKLIST = [
@@ -78,6 +89,113 @@ function SignatureVerdict({ listing }: { listing: Listing }) {
   );
 }
 
+/**
+ * The submitting seller's account, read directly.
+ *
+ * The rules keep /users readable by its owner and by admins, and this page is
+ * only ever an admin's, so the client SDK can read it here where a listing page
+ * cannot. Undefined while loading, null when it could not be read.
+ */
+function useSeller(uid: string | undefined): AppUser | null | undefined {
+  const [seller, setSeller] = useState<{ uid: string; user: AppUser | null }>();
+
+  useEffect(() => {
+    if (!uid) return;
+    let live = true;
+    getDoc(doc(db, "users", uid))
+      .then((snap) => {
+        if (live) {
+          setSeller({
+            uid,
+            user: snap.exists() ? ({ uid, ...snap.data() } as AppUser) : null,
+          });
+        }
+      })
+      .catch(() => live && setSeller({ uid, user: null }));
+    return () => {
+      live = false;
+    };
+  }, [uid]);
+
+  return seller && seller.uid === uid ? seller.user : undefined;
+}
+
+/**
+ * The public half of a seller, from their account with the listing's own copy
+ * as a per-field fallback. Mirrors resolveSellerProfile on the server, so the
+ * preview shows the About-the-seller block the live page will.
+ */
+function sellerProfileFor(listing: Listing, user: AppUser | null): SellerProfile {
+  return {
+    uid: listing.sellerId,
+    handle: user?.handle,
+    displayName: user?.displayName || listing.sellerName,
+    bio: user?.bio || listing.sellerBio,
+    supportEmail: user?.supportEmail || listing.sellerEmail,
+    website: user?.website || listing.sellerWebsite,
+    xHandle: user?.xHandle,
+    avatarUrl: user?.avatarUrl,
+    memberSince: user?.createdAt ?? listing.createdAt,
+  };
+}
+
+/**
+ * The submission as a buyer would meet it, over the review page. The real
+ * ListingDetail, same as the seller's own preview, because judging a listing
+ * means judging the page it becomes.
+ */
+function BuyerPreview({
+  listing,
+  seller,
+  onClose,
+}: {
+  listing: Listing;
+  seller: SellerProfile;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Buyer preview"
+      className="fixed inset-0 z-50 overflow-y-auto bg-[var(--background)]"
+    >
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+        <div>
+          <span className="font-medium">Preview</span>
+          <span className="ml-2 text-sm text-[var(--muted)]">
+            The listing page as a buyer will see it once approved.
+          </span>
+        </div>
+        <Button type="button" variant="secondary" size="sm" onClick={onClose}>
+          Back to review
+        </Button>
+      </div>
+      <ListingDetail
+        slug={listing.slug}
+        initial={{ ...listing, status: "approved" }}
+        seller={seller}
+        preview
+      />
+    </div>
+  );
+}
+
+function formatDate(ms: number): string {
+  return new Date(ms).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export default function AdminReviewPage() {
   const params = useParams<{ id: string }>();
@@ -91,6 +209,8 @@ export default function AdminReviewPage() {
   const [downloadError, setDownloadError] = useState("");
   const [savingCategory, setSavingCategory] = useState(false);
   const [categoryError, setCategoryError] = useState("");
+  const [previewing, setPreviewing] = useState(false);
+  const seller = useSeller(listing?.sellerId);
 
   if (!user || user.role !== "admin") {
     return (
@@ -143,17 +263,23 @@ export default function AdminReviewPage() {
   }
 
   return (
-    <Section className="max-w-4xl py-12">
+    <Section className="py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ButtonLink href="/admin" variant="ghost" size="sm">← Review queue</ButtonLink>
-        <ButtonLink href={`/admin/${listing.id}/edit`} variant="secondary" size="sm">
-          Edit listing
-        </ButtonLink>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setPreviewing(true)}>
+            Preview as buyer
+          </Button>
+          <ButtonLink href={`/admin/${listing.id}/edit`} variant="secondary" size="sm">
+            Edit listing
+          </ButtonLink>
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
+      {/* min-w-0: a grid item otherwise grows to its widest content. */}
+      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Submission details */}
-        <div>
+        <div className="min-w-0">
           <div className="flex items-start gap-4">
             <Monogram title={listing.title} className="h-16 w-16 rounded-2xl text-2xl" />
             <div>
@@ -162,11 +288,44 @@ export default function AdminReviewPage() {
                 <StatusBadge status={listing.status} />
               </div>
               <p className="mt-1 text-[var(--muted)]">{listing.tagline}</p>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                By{" "}
+                <span className="font-medium text-[var(--foreground)]">
+                  {seller?.displayName || listing.sellerName}
+                </span>
+                {seller?.email && (
+                  <>
+                    {" · "}
+                    <a href={`mailto:${seller.email}`} className="hover:underline">
+                      {seller.email}
+                    </a>
+                  </>
+                )}
+                {seller?.handle && (
+                  <>
+                    {" · "}
+                    <a
+                      href={`/seller/${seller.handle}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--accent)] hover:underline"
+                    >
+                      Profile
+                    </a>
+                  </>
+                )}
+                {" · "}Submitted {formatDate(listing.createdAt)}
+                {listing.updatedAt > listing.createdAt + 60_000 &&
+                  `, updated ${formatDate(listing.updatedAt)}`}
+              </p>
             </div>
           </div>
 
           <div className="mt-5 flex flex-wrap gap-2">
             <Badge tone="neutral">{RUNTIME_LABELS[listing.runtime]}</Badge>
+            {listing.platform && (
+              <Badge tone="neutral">{PLATFORM_LABELS[listing.platform]}</Badge>
+            )}
             <Badge tone="neutral">v{listing.version}</Badge>
             <Badge tone="accent">
               {SETUP_MODE_LABELS[listing.setupMode]}
@@ -223,6 +382,12 @@ export default function AdminReviewPage() {
             {categoryError && (
               <span className="text-sm text-[var(--danger)]">{categoryError}</span>
             )}
+          </div>
+
+          {/* Before the description: a demo that doesn't play or a screenshot
+              that isn't the tool is the fastest reason to send one back. */}
+          <div className="mt-8">
+            <ReviewMedia listing={listing} />
           </div>
 
           <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -347,6 +512,14 @@ export default function AdminReviewPage() {
           </div>
         </aside>
       </div>
+
+      {previewing && (
+        <BuyerPreview
+          listing={listing}
+          seller={sellerProfileFor(listing, seller ?? null)}
+          onClose={() => setPreviewing(false)}
+        />
+      )}
     </Section>
   );
 }
