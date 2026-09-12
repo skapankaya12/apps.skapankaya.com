@@ -8,10 +8,15 @@ when it is time. If you notice something here that has gone stale, say so in
 chat and leave the file alone until she asks. A doc that rewrites itself every
 session is a doc nobody can trust.
 
-Last updated: 26 August 2026 (seller experience: profiles, handles, listing
-control, saves, upload rework, preview. Then the /sell rebuild: seller sphere,
-X handles, new hero. Then an outside AI-readiness scan and what it changed, the
-/free directory, and three new articles. See §8).
+Last updated: 12 September 2026, at Sevval's request (the seller welcome email
+and how mail actually leaves the building, launch moved to November, the "fully
+unlocked" listing rule, the "free AI assistant" wording removed, and what
+shipped between 27 August and 6 September: signup asking buy or sell, the
+homepage split, footer badges. See §8).
+
+Before that: 26 August 2026 (seller experience, the /sell rebuild, the
+AI-readiness fixes, /free, three articles), amended 6 September with four
+scoping passes that built nothing.
 
 ---
 
@@ -27,9 +32,12 @@ package, an admin reviews it by hand, and a buyer pays once and keeps it.
 - Owner is EU (Portugal), so DAC7 applies.
 
 Current phase: **seller-only soft launch.** Sevval is approaching solo builders
-one at a time to seed listings. No buyers yet. Public launch September 2026,
-which is also when payouts open. Production deliberately runs with no Stripe
-keys until then.
+one at a time to seed listings. No buyers yet. Public launch **November 2026**
+(moved from September on 12 September), which is also when payouts open.
+Production deliberately runs with no Stripe keys until then. The date appears
+in user-facing copy in two places, the payouts notice in `app/dashboard` and
+the waitlist confirmation in `components/WaitlistForm.tsx`; move both if it
+moves again.
 
 ---
 
@@ -108,7 +116,32 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 `firebase deploy` so a staging command cannot silently hit production.
 
 **Env vars used in code but missing from `.env.example`:** `WAITLIST_WEBHOOK_URL`,
-`PRODUCTHUNT_TOKEN`, `GITHUB_API_TOKEN`. Worth adding.
+`PRODUCTHUNT_TOKEN`, `GITHUB_API_TOKEN`, and the two optional welcome-email
+switches `SELLER_WELCOME_EMAIL` (`off` stops it) and `SELLER_WELCOME_FROM`.
+Worth adding.
+
+### Mail: three services, three jobs
+
+Checked against public DNS on 12 September. DNS lives at **Namecheap**
+(`registrar-servers.com`), not Vercel, so every mail record is edited there.
+
+| Job | Who | Evidence |
+|---|---|---|
+| Sending | **Resend**, which runs on Amazon SES in eu-west-1 | `send` MX points at `feedback-smtp.eu-west-1.amazonses.com` |
+| Receiving (anything @thesolomarket.com, including hello@) | **Google Workspace** | root MX is `smtp.google.com` |
+| Images inside emails | Vercel, the site itself | plain files in `public/email/`, so a new one only shows in mail once deployed |
+
+Firebase sends its own auth mail (verification, password reset) and the contact
+form goes to a Google Sheet; neither touches Resend.
+
+Authentication records, all live as of 12 September: DKIM for Resend
+(`resend._domainkey`) and for Google (`google._domainkey`); SPF for Resend on
+`send` (`include:amazonses.com`) and for Google on the root
+(`include:_spf.google.com`), the last two added that day; DMARC at
+`_dmarc` with **`p=none`**, also added that day. Move DMARC to `p=quarantine`
+after a few weeks of mail arriving normally. Do not accept Google Admin's
+"naked domain redirect": it wants the root A record pointed at Google, and the
+root A record is what keeps the apex redirecting to Vercel.
 
 ---
 
@@ -118,14 +151,15 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 
 | File | Purpose |
 |---|---|
-| `store.ts` | **The main data layer, 993 lines.** Firestore + Auth wrapped so components call synchronous getters (`getApprovedListings()`). `onSnapshot` listeners keep in-memory caches live and call `emit()` so subscribers re-render. Cart and bookmarks are localStorage, not Firestore. |
+| `store.ts` | **The main data layer, about 1,460 lines.** Firestore + Auth wrapped so components call synchronous getters (`getApprovedListings()`). `onSnapshot` listeners keep in-memory caches live and call `emit()` so subscribers re-render. Cart and bookmarks are localStorage, not Firestore. |
 | `types.ts` | `Listing`, `AppUser`, `Purchase`, `CategoryDef`, `Role`, `Runtime`, `SetupMode`, plus `DEFAULT_CATEGORIES`. Read this before touching any data shape. |
 | `listings.server.ts` | Admin SDK reads, memoized with React `cache()`. This is what makes listing pages server-render. Without it the catalogue was invisible to AI crawlers. |
 | `firebase.ts` / `firebaseAdmin.ts` | Client SDK / Admin SDK (lazy, guarded on `adminConfigured`). |
 | `storage.ts` | Uploads. Paths are **uid-scoped**: `submissions/{uid}/{listingId}.zip`, `public/shots/{uid}/…`, `public/demos/{uid}/…`. Sets long `Cache-Control` on public assets. |
 | `media.ts` | File rules in one place: 40s and 150MB demo cap, 200MB package cap, QuickTime rejection. Mirrored in `storage.rules`. |
 | `markdown.ts` | A deliberately tiny Markdown subset for seller descriptions: headings, lists, paragraphs, nothing else. No HTML parsed or emitted. Rendered by `components/RichText`. |
-| `email.ts` / `emailTemplates.ts` | Resend REST, best-effort. **All email copy is in `emailTemplates.ts`,** one file to edit. |
+| `email.ts` / `emailTemplates.ts` | Resend REST, best-effort. **All email copy is in `emailTemplates.ts`,** one file to edit, with one exception: the seller welcome, below. `sendEmail` takes an optional `from` (mail from a person rather than noreply) and inline `cid:` attachments. |
+| `emails/sellerWelcome.ts` | **Generated, do not edit.** The seller welcome email as one HTML string, compiled from `design/emails/welcome.html` by `design/emails/build-template.mjs`. |
 | `rateLimit.ts` | In-memory fixed-window limiter, no deps. Per serverless instance, so it stops one script from one place, not a distributed flood. Cannot protect Storage uploads at all. |
 | `stripe.ts` | Stripe client plus `siteOrigin(req)`. |
 | `brand.ts` | Name, canonical URL, pitch copy. |
@@ -174,8 +208,31 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
   server-side or not at all. Scoped to the caller: listing ids are read back
   from Firestore and purchases matched on `sellerId`, never taken from the
   request.
+- `/login` doubles as signup. Signup is two columns and asks, beside the form,
+  whether somebody is here to buy or to sell (above the Google button, because
+  Google cannot tell signing up from signing in). It also takes an optional
+  photo, uploaded straight after the account exists since the avatar path is
+  scoped to a uid that does not exist until then.
+- `/api/notify/welcome` sends the seller welcome email. See §6, flow 0.
 - `/docs/*` is seller and buyer documentation. `/terms` `/privacy` `/refunds`
   are legal, all still marked draft.
+
+### `design/emails/`
+
+Where emails are designed, outside the app so nothing in it ships as a page.
+`welcome.html` is the seller welcome, previewed with the `emailpreview` entry
+in `.claude/launch.json` (a static server on port 4410; `img/` is a symlink to
+`public/email/`). Two scripts:
+
+- `build-template.mjs` compiles `welcome.html` into `lib/emails/sellerWelcome.ts`.
+  **Re-run it after any edit to the HTML, or the site keeps sending the old
+  design.**
+- `build-illustrations.mjs` resizes Sevval's step illustrations from
+  `source/*.png` into `public/email/step-*.jpg` at 720x480.
+
+Email HTML is not web HTML: tables, inline styles, and coloured words done one
+span per letter, because gradient text via `background-clip` goes invisible in
+Gmail.
 
 ### `components/`
 
@@ -187,13 +244,21 @@ server component because the card is a link out with nothing to hydrate.
 state, because one flag toggled by both means the click after `mouseenter`
 closes what the hover just opened. `Disclaimer.tsx` is the buyer trust copy.
 `PreLaunchNotice.tsx` is temporary and must be removed at launch.
+`FooterBadges.tsx` is the strip of launch-board and directory badges under the
+footer, a seamless marquee; adding one is a line in its `BADGES` array.
 
 ---
 
 ## 5. Data model and roles
 
 Firestore collections: **`users`, `listings`, `purchases`, `categories`,
-`handles`, `bookmarks`, `freeTools`.**
+`handles`, `bookmarks`, `freeTools`, `emailLog`.**
+
+`emailLog/{uid}` records which one-time emails an account has been sent
+(today only `sellerWelcomeAt`). **Server-only:** there is no rule for it, so
+clients can neither read nor write it and nobody can clear it to be sent the
+same email again. It is deliberately not a field on `users`, which its owner
+can write. Any later lifecycle email records itself here too.
 
 `freeTools` is the /free directory and is deliberately **not** a `Listing` with
 a flag. Almost every field on `Listing` describes delivery (package, price,
@@ -236,9 +301,15 @@ server-side. Below five, a listing shows no count at all.
 
 Three roles: `buyer`, `seller`, `admin`.
 
-- **Everyone signs up as `buyer`.** See `signUp` in `store.ts`.
-- `/sell` calls `setRole("seller")` to upgrade. `setRole` refuses `admin`, so
-  there is no privilege escalation path.
+- **Every account document is created as `buyer`,** because firestore.rules
+  allows no other role on create. Signup asks buy or sell; choosing sell calls
+  `becomeSeller()` straight after, which reads the uid from Firebase Auth
+  (the store's `currentUser` is still null at that moment) and promotes a
+  buyer only, never an admin.
+- `/sell`'s Start selling button calls `setRole("seller")` for someone already
+  signed in. `setRole` refuses `admin`, so there is no privilege escalation
+  path.
+- Both promotions fire the seller welcome email. See §6, flow 0.
 - Admin is set by hand on the user doc per Firebase project. Sevval
   (`kapankayasevval@gmail.com`) is the sole admin. Done on staging; **still to
   do on production after first signup.**
@@ -249,6 +320,17 @@ Three roles: `buyer`, `seller`, `admin`.
 
 ## 6. The flows that matter
 
+0. **Becoming a seller.** `becomeSeller` or `setRole("seller")` writes the role,
+   then calls `/api/notify/welcome`, which sends the welcome email **once per
+   account, ever**. The client only says "now". The server reads the role from
+   Firestore, takes the address from Firebase Auth rather than the user doc
+   (which its owner can write, so anyone could otherwise aim a welcome at a
+   stranger), and claims `emailLog/{uid}` in a transaction before sending, so
+   two tabs cannot both send. A Resend failure releases the claim, so it is
+   retried on the next promotion rather than lost. It comes from
+   `Sevval from The Solo Market <hello@thesolomarket.com>`, replies to hello@,
+   subject "guess what? happy to have you!". Accounts that were already sellers
+   before 12 September never trigger it.
 1. **Listing.** Seller fills `/dashboard/new`. **Every file uploads the moment
    it is picked**, with its own progress bar, straight from the browser to
    Storage under their own uid. The listing id is reserved at mount so the
@@ -281,8 +363,9 @@ Three roles: `buyer`, `seller`, `admin`.
    the signature against the raw body, idempotent by session id, records the
    purchase and sends three emails.
 5. **Download.** `/api/download` binds `packagePath` to the seller's own uid
-   folder and checks buyer, seller or admin. Buyers can only download while the
-   listing is approved.
+   folder and checks buyer, seller or admin. Buyers can download while the
+   listing is approved or `unlisted` (a seller's own takedown), not once it is
+   `rejected`.
 
 ---
 
@@ -339,6 +422,18 @@ Three roles: `buyer`, `seller`, `admin`.
   plainly what it does and does not check, which is what keeps it honest, but it
   sits four clicks from copy promising that every submission is scanned. See the
   first item in this section: fixing that copy got more urgent, not less.
+- **The welcome email's real path has not been run end to end.** The design was
+  sent to a real inbox with `scripts/send-welcome-test.ts` (which attaches the
+  images inline and writes nothing), and the route refuses callers without a
+  valid token. Promotion to seller on a deployed site, the `emailLog` claim and
+  the hosted images have not been exercised together. The quickest check is a
+  new account on production choosing "sell".
+- **`/privacy` does not mention the welcome email.** It lists the mail it sends
+  as receipts, review decisions and sale notices. A one-time account email sits
+  under the same basis, but the list should say so. Sevval's call.
+- **"Fully unlocked" is now a listing rule** (no in-app payments, license keys,
+  or an account needed to use it), stated in the `/docs/selling` table, the
+  `/sell` lists and the welcome email. Nothing checks it but review.
 
 ---
 
@@ -367,13 +462,28 @@ joining. A "founding sellers" framing works honestly at any size.
 
 ### Next up, ahead of everything else
 
-**Seller emails and notifications.** Five templates exist in
-`lib/emailTemplates.ts`: new listing to the admin, review decision to the
-seller, receipt to the buyer, sale to the seller, sale to the admin. The gaps,
-roughly in order of value: welcome as a seller; payout setup incomplete (Stripe
-Connect drop-off is silent today, and an approved listing that cannot take money
-is invisible failure); first sale, as its own email rather than the same one as
-the fortieth; payout sent; a weekly or monthly digest of sales, views and saves.
+**Seller emails and notifications.** Six emails exist: the five transactional
+ones in `lib/emailTemplates.ts` (new listing to the admin, review decision to
+the seller, receipt to the buyer, sale to the seller, sale to the admin) and,
+since 12 September, **the seller welcome** (see §6, flow 0, and the Shipped
+section below). The remaining gaps, roughly in order of value: payout setup
+incomplete (Stripe Connect drop-off is silent today, and an approved listing
+that cannot take money is invisible failure; it cannot fire before November,
+when production gets Stripe keys); first sale, as its own email rather than the
+same one as the fortieth; payout sent; a weekly or monthly digest of sales,
+views and saves.
+
+The plan these come from is "Send When Stuck" (23 August):
+<https://claude.ai/code/artifact/5f0f19bc-b60f-4b72-8408-2e18a96c2b88>.
+Each nudge fires only while a seller is stuck at a step and cancels itself when
+they move, read from live Firestore state by one daily cron. Decided on 12
+September: **a Monday digest to Sevval** is the next one wanted; lifecycle mail
+comes from hello@; the engine runs **dry for a week** (logging what it would
+send) before it sends anything. Not yet chosen: the "no listing after 3 days"
+and "rejected, not resubmitted" nudges. Not possible as scoped: "stuck in
+draft", because drafts live in the seller's localStorage and the server never
+sees one. Anything recurring needs a working unsubscribe first; the welcome
+has none because it is one-time.
 An in-app notification centre is deliberately **not** in this: a bell needs a
 collection, read state and a listener, and for fewer than twenty sellers email
 plus an honest dashboard does the same job.
@@ -459,6 +569,43 @@ actually asks.
 and mutable forever, which is the package-overwrite hole reintroduced through the
 front door. It also breaks delivery, "own forever" when a link dies, and the
 version tracking behind the Library's "update available" flag.
+
+### Shipped 12 September 2026: the seller welcome email, and copy
+
+- **The welcome email.** Designed with Sevval over a long iteration and her own
+  words kept as written (lowercase included). Layout: a greeting with "hi
+  there," and the brand name in the logo's gradient and her photo captioned
+  "your fellow admin"; a box stating the three rules every listing must meet
+  (self-hosted, no subscription, fully unlocked) with example kinds of tool;
+  four steps, each with one of her illustrations and a button; a signature of
+  the logo, hello@ and the tagline. How it sends is §6, flow 0; how it is built
+  is §4 under `design/emails/`. **Rejected along the way, so do not bring them
+  back:** a four-colour band from the logo tiles, the dark night-sky hero, page
+  screenshots as step images, a logo in the header, and the photo in the
+  signature.
+- **Launch moved to November**, in the two user-facing places listed in §1.
+- **"Fully unlocked"** added as a listing rule: a row in the `/docs/selling`
+  table and a line on each side of the `/sell` can and can't lists.
+- **"a free AI assistant" became "an AI assistant"** on every page that said it
+  (about, docs, how-to-run, llms.txt, listing detail), at Sevval's request.
+  Do not reintroduce "free" there.
+- **Homepage split.** Two buttons under the hero, "I'm a buyer" (jumps to the
+  catalogue) and "I'm a seller" (to /sell).
+- DNS: SPF for Resend and Google, and DMARC, added. See §3.
+
+### Shipped 27 August to 6 September 2026
+
+- Signup asks buy or sell and takes an optional photo; the signup page went two
+  columns around that question. See `/login` in §4.
+- Footer badges moved into their own marquee strip (`FooterBadges.tsx`), with
+  the Nick Launches badge added.
+- The admin console's two side screens (/admin/free, /admin/categories) moved
+  below the review queue rather than being deleted, since nothing else links
+  to them.
+- The avatar size error rounds up, so it can no longer say "2.0MB, the limit
+  is 2MB".
+- The /sell hero names who it is for: solo developers with self-hosted
+  products, buyers done paying monthly.
 
 ### Shipped 26 August 2026: the AI-readiness fixes
 
@@ -660,6 +807,69 @@ there are no listing fees and a higher price already pays more commission.
 Watermark disclosure closes a real refund-liability gap. Per-buyer
 fingerprinting would reverse the piracy position already written in
 `BUSINESS_MODEL.md` §7.
+
+### Scoped 5 and 6 September 2026, nothing built
+
+Four scoping passes, none of them started, none of them agreed. Recorded here
+so the reasoning is not lost, not because any of them is next.
+
+**Seller funnel: fourteen gates.** The one with evidence behind it, and the
+most useful of the four.
+<https://claude.ai/code/artifact/2e393a5b-7172-4370-b580-8807c84e746b>
+
+The `missing` array in `app/dashboard/new/page.tsx` is the literal list of what
+blocks submit. Fourteen entries. Twelve cost about forty minutes together and
+two cost three and a half hours: the app package and the demo video. Everything
+shipped for sellers so far (upload on pick, preview, edit and relist, URL
+import) improved the twelve cheap ones. Findings worth keeping:
+
+- **The demo video is required and screenshots are optional**, which inverts the
+  effort. `lib/media.ts` also rejects QuickTime, correctly, but that is what the
+  macOS screen recorder produces, so the default Mac path is record, get
+  rejected, learn to re-export. And no 40 second film exists for a CLI tool or a
+  library, so those makers never start. Accepting three screenshots in place of
+  a demo is one entry in `missing` and half a day.
+- **The package contract is checked by a human, days later.** Reading the zip
+  client side at pick time would name the missing file in one second, needs no
+  server, and works at 200MB because only the central directory is read. Note
+  this is structure, not safety, and must never be described as the security
+  scan in §7.
+- **A package scaffolder** is the biggest single lever on listing count: six
+  questions, out comes a valid package.
+- **Widening splits in two.** Plugins and extensions (Raycast, Obsidian, Figma,
+  VS Code), self-hosted deployables, and Windows and Linux installers are
+  excluded by the *contract*, not by the position: they are owned, they run on
+  the buyer's machine, they fit "own forever". Templates, courses and SaaS are
+  excluded by the *position*. Plugins are the biggest population and would need
+  a host app field and a `plugin` `SetupMode`. Templates would need their own
+  type, for the same reason `freeTools` is not a `Listing` (§5).
+
+**Per-buyer licence keys.**
+<https://claude.ai/code/artifact/0705ca0b-9aea-4dcd-a6df-7737dfebe681>
+A certificate (proof of ownership, gates nothing) and an enforcement key (DRM)
+are different products that look identical. The second reverses §7. Two things
+worth keeping regardless: `/refunds` says a refund ends the licence and the
+tool leaves the library, and **nothing implements either**, since
+`/api/download` only checks that a purchase row exists. And a per-buyer
+watermark is impossible for installers, because changing bytes in a notarized
+`.dmg` invalidates the signature `scripts/verify-package.ts` exists to check.
+
+**A seller badge programme.**
+<https://claude.ai/code/artifact/21fd49fc-77fa-4f96-a99e-838f7a252d11>
+A launch board badge commemorates a day; a marketplace badge can carry a live
+price and a working checkout. `components/FooterBadges.tsx` is the receiving
+end of this and the emitting end does not exist. The claim has to be **"human
+reviewed", never "verified" or "scanned"**: a badge sits on domains we do not
+control, and would be a fourth surface asserting the scan in §7.
+
+**Access passes for hosted tools.**
+<https://claude.ai/code/artifact/36cbe7aa-b181-4630-8c12-c8bbe4c58d7d>
+Blocked on one sentence: hosted software cannot be owned forever, so admitting
+it means either a stated term ("access passes run for the term shown") or a
+promise nobody can keep. Also holds the honest economics: on a $29 tool a
+seller keeps $28.17 through their own checkout, $24.65 through us, and $19.72
+with a 20% marketplace discount. That is a good trade on a buyer they would
+never have reached and a bad one on a buyer they already had.
 
 ---
 
