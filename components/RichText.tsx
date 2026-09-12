@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { parseBlocks, parseInline, type Inline } from "@/lib/markdown";
+import { isReviewImageUrl } from "@/lib/reviewImages";
 
 /**
  * Seller-written prose, rendered readably.
@@ -16,15 +17,21 @@ import { parseBlocks, parseInline, type Inline } from "@/lib/markdown";
  *
  * Text written before the editor existed still renders exactly as it did:
  * anything that isn't one of the patterns above is left alone.
+ *
+ * `images` is for review notes only: it turns `![alt](url)` lines into
+ * screenshots, and only for URLs lib/reviewImages accepts. Seller descriptions
+ * never pass it.
  */
 export function RichText({
   text,
   className = "",
+  images = false,
 }: {
   text: string;
   className?: string;
+  images?: boolean;
 }) {
-  const blocks = parseBlocks(text);
+  const blocks = parseBlocks(text, { images });
   if (blocks.length === 0) return null;
 
   return (
@@ -38,6 +45,20 @@ export function RichText({
             <h3 key={i} className="pt-2 text-base font-semibold break-words">
               <Inlines text={block.text} />
             </h3>
+          );
+        }
+
+        if (block.kind === "image") {
+          if (!isReviewImageUrl(block.src)) return null;
+          return (
+            // eslint-disable-next-line @next/next/no-img-element -- a Storage URL of unknown size, shown as uploaded
+            <img
+              key={i}
+              src={block.src}
+              alt={block.alt || "Screenshot"}
+              loading="lazy"
+              className="max-w-full rounded-xl border border-[var(--border)]"
+            />
           );
         }
 

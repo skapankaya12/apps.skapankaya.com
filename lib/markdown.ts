@@ -17,11 +17,19 @@ export type Block =
   | { kind: "heading"; text: string }
   | { kind: "list"; ordered: boolean; items: string[] }
   /** Consecutive non-blank lines. Line breaks inside are kept as typed. */
-  | { kind: "paragraph"; text: string };
+  | { kind: "paragraph"; text: string }
+  /**
+   * `![alt](https://...)` alone on its line. Only parsed when the caller asks
+   * for images (review notes); seller descriptions never produce this block,
+   * so their rendering is unchanged. Renderers must still check the src
+   * against lib/reviewImages before showing it.
+   */
+  | { kind: "image"; src: string; alt: string };
 
 const HEADING = /^#{1,6}[ \t]+(.*)$/;
 const BULLET = /^[-*][ \t]+(.*)$/;
 const NUMBERED = /^\d+[.)][ \t]+(.*)$/;
+const IMAGE = /^!\[([^\]\n]*)\]\((https:\/\/[^\s)]+)\)$/;
 
 /**
  * Split seller text into blocks.
@@ -30,7 +38,10 @@ const NUMBERED = /^\d+[.)][ \t]+(.*)$/;
  * renderer keeps them with `whitespace-pre-line`) because sellers hard-wrap
  * their text and re-flowing it changes their meaning.
  */
-export function parseBlocks(text: string): Block[] {
+export function parseBlocks(
+  text: string,
+  options: { images?: boolean } = {}
+): Block[] {
   const blocks: Block[] = [];
   let paragraph: string[] = [];
   let list: { ordered: boolean; items: string[] } | null = null;
@@ -55,6 +66,13 @@ export function parseBlocks(text: string): Block[] {
   for (const line of text.split("\n")) {
     if (!line.trim()) {
       flush();
+      continue;
+    }
+
+    const image = options.images ? line.trim().match(IMAGE) : null;
+    if (image) {
+      flush();
+      blocks.push({ kind: "image", alt: image[1].trim(), src: image[2] });
       continue;
     }
 
@@ -185,6 +203,7 @@ function stripInline(line: string): string {
 export function stripMarkdown(text: string): string {
   return parseBlocks(text)
     .map((block) => {
+      if (block.kind === "image") return "";
       const lines =
         block.kind === "list"
           ? block.items

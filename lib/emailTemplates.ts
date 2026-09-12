@@ -3,6 +3,8 @@ import { COMMISSION_RATE } from "@/lib/stripe";
 import { brand } from "@/lib/brand";
 import { SELLER_WELCOME_HTML } from "@/lib/emails/sellerWelcome";
 import { SELLER_NO_LISTING_HTML } from "@/lib/emails/sellerNoListing";
+import { SELLER_REJECTED_HTML } from "@/lib/emails/sellerRejected";
+import { noteToEmailHtml } from "@/lib/noteEmail";
 
 /* ---------------------------------------------------------------------------
    All transactional email copy lives here — one place to edit the wording.
@@ -58,6 +60,28 @@ export function sellerNoListingEmail(
   };
 }
 
+/**
+ * To a seller whose listing was rejected, carrying the review note as the
+ * admin wrote it in the review console (formatting and screenshots included,
+ * via lib/noteEmail). Designed in design/emails/rejected.html. An account
+ * email about their own listing, so no unsubscribe.
+ */
+export function sellerRejectedEmail(a: {
+  title: string;
+  note: string;
+  editUrl: string;
+  imageBase?: string;
+}) {
+  const title = escapeHtml(a.title);
+  return {
+    subject: `a quick note on ${a.title}`,
+    html: SELLER_REJECTED_HTML.replaceAll("{{IMG}}", a.imageBase ?? `${brand.url}/email/`)
+      .replaceAll("{{TITLE}}", title)
+      .replaceAll("{{EDIT_URL}}", escapeHtml(a.editUrl))
+      .replace("{{NOTE}}", noteToEmailHtml(a.note)),
+  };
+}
+
 /** To the admin: a seller submitted a new listing for review. */
 export function newListingAdminEmail(a: {
   title: string;
@@ -85,7 +109,7 @@ export function reviewDecisionSellerEmail(a: {
   dashboardUrl: string;
 }) {
   const noteHtml = a.note?.trim()
-    ? `<p style="background:#f7f7f8;border-radius:12px;padding:12px"><strong>Note from review:</strong><br/>${escapeHtml(a.note.trim())}</p>`
+    ? `<div style="background:#f7f7f8;border-radius:12px;padding:12px"><p style="margin:0 0 8px"><strong>Note from review:</strong></p>${noteToEmailHtml(a.note)}</div>`
     : "";
   const title = escapeHtml(a.title);
   if (a.decision === "approved") {

@@ -160,7 +160,9 @@ root A record is what keeps the apex redirecting to Vercel.
 | `firebase.ts` / `firebaseAdmin.ts` | Client SDK / Admin SDK (lazy, guarded on `adminConfigured`). |
 | `storage.ts` | Uploads. Paths are **uid-scoped**: `submissions/{uid}/{listingId}.zip`, `public/shots/{uid}/…`, `public/demos/{uid}/…`. Sets long `Cache-Control` on public assets. |
 | `media.ts` | File rules in one place: 40s and 150MB demo cap, 200MB package cap, QuickTime rejection. Mirrored in `storage.rules`. |
-| `markdown.ts` | A deliberately tiny Markdown subset for seller descriptions: headings, lists, paragraphs, nothing else. No HTML parsed or emitted. Rendered by `components/RichText`. |
+| `markdown.ts` | A deliberately tiny Markdown subset for seller descriptions: headings, lists, paragraphs, bold, italic, code, bare https links. No HTML parsed or emitted. Rendered by `components/RichText`. `parseBlocks(text, { images: true })` also reads `![alt](url)` lines as screenshots; only review notes ask for that, so descriptions render as before. |
+| `reviewImages.ts` | Which image URLs a review note may show: only our own bucket under `public/review/`. Applied by both renderers, so a hand-typed link to another site or a tracking pixel shows as nothing. |
+| `noteEmail.ts` | A review note as inline-styled email HTML, from the same blocks RichText draws. Escapes every piece of text and emits a fixed set of tags. |
 | `email.ts` / `emailTemplates.ts` | Resend REST, best-effort. **All email copy is in `emailTemplates.ts`,** one file to edit, with one exception: the seller welcome, below. `sendEmail` takes an optional `from` (mail from a person rather than noreply) and inline `cid:` attachments. |
 | `emails/sellerWelcome.ts` | **Generated, do not edit.** The seller welcome email as one HTML string, compiled from `design/emails/welcome.html` by `design/emails/build-template.mjs`. |
 | `rateLimit.ts` | In-memory fixed-window limiter, no deps. Per serverless instance, so it stops one script from one place, not a distributed flood. Cannot protect Storage uploads at all. |
@@ -234,7 +236,9 @@ root A record is what keeps the apex redirecting to Vercel.
 ### `design/emails/`
 
 Where emails are designed, outside the app so nothing in it ships as a page.
-`welcome.html` is the seller welcome, previewed with the `emailpreview` entry
+`welcome.html` (the seller welcome), `no-listing.html` (the lifecycle tip) and
+`rejected.html` (the rejection, whose sample title, note and link sit in slot
+markers the build swaps for placeholders) are previewed with the `emailpreview` entry
 in `.claude/launch.json` (a static server on port 4410; `img/` is a symlink to
 `public/email/`). Two scripts:
 
@@ -258,7 +262,10 @@ server component because the card is a link out with nothing to hydrate.
 state, because one flag toggled by both means the click after `mouseenter`
 closes what the hover just opened. `Disclaimer.tsx` is the buyer trust copy.
 `PreLaunchNotice.tsx` is temporary and must be removed at launch.
-`FooterBadges.tsx` is the strip of launch-board and directory badges under the
+`NoteEditor.tsx` is the review console's note editor: toolbar (bold, lists,
+link, screenshot), screenshots uploaded the moment they are pasted, dropped or
+picked, a Write/Preview toggle, and an Expand view with the text beside the note
+as the seller will see it. `FooterBadges.tsx` is the strip of launch-board and directory badges under the
 footer, a seamless marquee; adding one is a line in its `BADGES` array.
 
 ---
@@ -289,7 +296,10 @@ owns a link except the site that vouched for it.
 `Listing` carries `status: "draft" | "pending" | "approved" | "rejected" |
 "unlisted"`, a `slug` capped at 60 characters, `priceCents`, `runtime`,
 `setupMode`, `screenshots[]`, `demoVideo`, `posterImage`, `packagePath`,
-`version`, and `sellerId`.
+`version`, and `sellerId`. `reviewNote` is the admin's note in the Markdown
+subset above plus screenshots (`![screenshot](url)`, stored under
+`public/review/{adminUid}/{listingId}/`), shown to the seller on their
+dashboard and in the rejection email.
 
 `unlisted` is a seller taking their own tool off sale. It vanishes from browse
 and checkout, but **everyone who already bought it keeps downloading it**: see
@@ -373,8 +383,12 @@ Three roles: `buyer`, `seller`, `admin`.
    resulting paths, so coming back tomorrow costs no re-upload. Submit is just
    the Firestore write. Preview renders the real listing page from form state
    before any of it is sent. `/api/notify/listing` emails the admin.
-2. **Review.** Admin approves or rejects at `/admin/[id]`, `/api/notify/review`
-   emails the seller. An admin edit does **not** reset status, so a live tool
+2. **Review.** Admin approves or rejects at `/admin/[id]`, writing the note in
+   `NoteEditor`, and `/api/notify/review` emails the seller. A rejection sends
+   the designed email (`design/emails/rejected.html`, subject "a quick note on
+   {title}", from hello@) with the note as its body and an "Edit your listing"
+   button to `/dashboard/new?edit={id}`; approval still sends the short plain
+   notice. Nothing is sent for listings rejected before 12 September. An admin edit does **not** reset status, so a live tool
    stays live.
 2b. **Seller edits.** A seller can edit a live listing. Whether that costs them
    their place on the marketplace depends on what changed: presentation (title,

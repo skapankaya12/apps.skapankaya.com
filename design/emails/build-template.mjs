@@ -7,7 +7,10 @@
 // lib/emails/*.ts module from each: comments stripped, line breaks between tags
 // collapsed, and every img/ path swapped for a {{IMG}} placeholder that the
 // sender fills with the site's own /email/ folder. Any other {{PLACEHOLDER}}
-// (e.g. {{UNSUBSCRIBE}}) is left for the sender to fill per person. Re-run
+// (e.g. {{UNSUBSCRIBE}}) is left for the sender to fill per person. Sample
+// content that makes a mockup look real sits between slot markers,
+//   <!--slot:TITLE-->PDF Merger Pro<!--/slot-->
+// and becomes {{TITLE}} here, before comments are stripped. Re-run
 // after any edit to an .html file, or the site keeps sending the old design.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
@@ -15,6 +18,7 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 const EMAILS = [
   { html: "welcome.html", ts: "sellerWelcome.ts", name: "SELLER_WELCOME_HTML", about: "The seller welcome email." },
   { html: "no-listing.html", ts: "sellerNoListing.ts", name: "SELLER_NO_LISTING_HTML", about: "The nudge to a seller with no listing three days in." },
+  { html: "rejected.html", ts: "sellerRejected.ts", name: "SELLER_REJECTED_HTML", about: "The rejection email, carrying the admin's review note." },
 ];
 
 const here = new URL(".", import.meta.url);
@@ -23,6 +27,7 @@ await mkdir(new URL("../../lib/emails/", here), { recursive: true });
 for (const e of EMAILS) {
   const src = await readFile(new URL(e.html, here), "utf8");
   const html = src
+    .replace(/<!--slot:([A-Z_]+)-->[\s\S]*?<!--\/slot-->/g, "{{$1}}")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/src="img\//g, 'src="{{IMG}}')
     // Only whitespace that spans a line break: a plain space between two tags is

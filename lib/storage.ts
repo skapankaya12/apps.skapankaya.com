@@ -244,6 +244,30 @@ export async function uploadFreeToolPreview(uid: string, file: File): Promise<st
  * rather than new bytes at the old one. Otherwise a seller changes their photo
  * and keeps seeing the old one for a year.
  */
+/**
+ * Upload a screenshot for a review note. Returns the public URL the note
+ * embeds as `![screenshot](url)`.
+ *
+ * Under public/review/ because the note is shown to the seller on their
+ * dashboard and inside an email, both of which need a URL anyone can load;
+ * lib/reviewImages only shows images from this folder. Scoped to the uploading
+ * admin's uid like every other public path, and timestamped for the same
+ * immutable-cache reason as screenshots and avatars.
+ */
+export async function uploadReviewImage(
+  uid: string,
+  listingId: string,
+  file: File
+): Promise<string> {
+  const path = `public/review/${uid}/${listingId}/${Date.now()}${ext(file.name) || ".png"}`;
+  const r = ref(storage, path);
+  await uploadBytes(r, file, {
+    contentType: file.type || "image/png",
+    cacheControl: PUBLIC_ASSET_CACHE,
+  });
+  return getDownloadURL(r);
+}
+
 export async function uploadAvatar(uid: string, file: File): Promise<string> {
   const path = `public/avatars/${uid}/${Date.now()}${ext(file.name) || ".png"}`;
   const r = ref(storage, path);

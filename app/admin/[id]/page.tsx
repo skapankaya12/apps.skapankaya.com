@@ -16,6 +16,7 @@ import { RUNTIME_LABELS, SETUP_MODE_LABELS, type Listing } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 import { RichText } from "@/components/RichText";
+import { NoteEditor, noteIsUploading } from "@/components/NoteEditor";
 
 /** The reviewer's checklist, mirroring BUSINESS_MODEL.md §3. */
 const CHECKLIST = [
@@ -110,6 +111,9 @@ export default function AdminReviewPage() {
   }
 
   const allChecked = checks.every(Boolean);
+  // A screenshot still uploading sits in the note as a placeholder; deciding
+  // then would send the seller "Uploading screenshot…" instead of the image.
+  const uploading = noteIsUploading(note);
 
   async function decide(decision: "approved" | "rejected") {
     const defaultNote =
@@ -262,7 +266,7 @@ export default function AdminReviewPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                 Review note
               </p>
-              <p className="mt-1 text-sm">{listing.reviewNote}</p>
+              <RichText text={listing.reviewNote} images className="mt-1 text-sm" />
             </div>
           )}
         </div>
@@ -292,12 +296,12 @@ export default function AdminReviewPage() {
                 Note to seller{" "}
                 <span className="text-[var(--muted)]">(required to reject)</span>
               </label>
-              <textarea
+              <NoteEditor
                 value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={3}
+                onChange={setNote}
+                uid={user.uid}
+                listingId={listing.id}
                 placeholder="Optional for approval. Explain what to fix if rejecting."
-                className="mt-1.5 w-full resize-y rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
               />
             </div>
 
@@ -306,7 +310,7 @@ export default function AdminReviewPage() {
                 <Button
                   variant="success"
                   className="w-full"
-                  disabled={!allChecked}
+                  disabled={!allChecked || uploading}
                   onClick={() => decide("approved")}
                 >
                   ✓ Approve &amp; publish
@@ -319,7 +323,7 @@ export default function AdminReviewPage() {
                 <Button
                   variant="danger"
                   className="w-full"
-                  disabled={!note.trim()}
+                  disabled={!note.trim() || uploading}
                   onClick={() => decide("rejected")}
                 >
                   Reject
@@ -333,6 +337,7 @@ export default function AdminReviewPage() {
                 <Button
                   variant="secondary"
                   className="mt-3 w-full"
+                  disabled={uploading}
                   onClick={() => decide(listing.status === "approved" ? "rejected" : "approved")}
                 >
                   Reverse decision

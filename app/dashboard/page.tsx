@@ -14,6 +14,7 @@ import { brand } from "@/lib/brand";
 import type { AppUser, Listing, SellerStats } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
+import { RichText } from "@/components/RichText";
 
 export default function DashboardPage() {
   const user = useUser();
@@ -117,9 +118,10 @@ export default function DashboardPage() {
                   <td className="px-5 py-4">
                     <ListingName listing={l} />
                     {l.status === "rejected" && l.reviewNote && (
-                      <p className="mt-2 text-xs text-[var(--danger)]">
-                        Rejected: {l.reviewNote}
-                      </p>
+                      <div className="mt-2 max-w-md text-xs">
+                        <p className="font-medium text-[var(--danger)]">Rejected. Note from the review:</p>
+                        <RichText text={l.reviewNote} images className="mt-1 text-[var(--foreground)]" />
+                      </div>
                     )}
                     {l.status === "unlisted" && (
                       <p className="mt-2 text-xs text-[var(--muted)]">

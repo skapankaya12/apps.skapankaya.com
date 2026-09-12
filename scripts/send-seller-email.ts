@@ -3,7 +3,7 @@
  *
  *   npx tsx --env-file=.env.local scripts/send-seller-email.ts <email> <to...> [--live]
  *
- *   <email>   welcome | no-listing
+ *   <email>   welcome | no-listing | rejected (a sample note)
  *   --live    send exactly what the site sends: the real subject, and images
  *             loaded from the live site. Use it for a real person, e.g. a
  *             seller who joined before an email existed.
@@ -21,6 +21,7 @@ import { sendEmail, emailConfigured } from "../lib/email";
 import {
   sellerWelcomeEmail,
   sellerNoListingEmail,
+  sellerRejectedEmail,
   SELLER_WELCOME_FROM,
   SELLER_WELCOME_REPLY_TO,
 } from "../lib/emailTemplates";
@@ -28,6 +29,21 @@ import {
 const TEMPLATES: Record<string, (imageBase?: string) => { subject: string; html: string }> = {
   welcome: sellerWelcomeEmail,
   "no-listing": sellerNoListingEmail,
+  // A sample rejection, to see the design with a formatted note in it.
+  rejected: (imageBase) =>
+    sellerRejectedEmail({
+      title: "PDF Merger Pro",
+      note: [
+        "thanks for sending this in, the tool itself looks **really useful**. two things before it can go live:",
+        "",
+        "- the demo video stops before the merge finishes, so buyers never see the result",
+        "- SETUP.md is missing from the zip. the checklist is at https://www.thesolomarket.com/docs/app-package",
+        "",
+        "if anything is unclear, just reply.",
+      ].join("\n"),
+      editUrl: "https://www.thesolomarket.com/dashboard",
+      imageBase,
+    }),
 };
 
 const args = process.argv.slice(2);
