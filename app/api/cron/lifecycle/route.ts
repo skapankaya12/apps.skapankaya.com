@@ -44,28 +44,43 @@ const MAX_PER_RUN = 50;
  *
  * Refuses to run without CRON_SECRET, which Vercel Cron sends as a bearer
  * token, so nobody else can trigger a round of email.
+ *
+ * Two admin controls ride on the same secret, since production's Firestore
+ * cannot be reached any other way from outside:
+ *   GET ?list=1  who is due right now, as addresses, never sending anything
+ *                and never emailing the admin.
+ *   POST         {"skip": [emails], "hold": [emails], "holdDays": 3}
+ *                skip sets emailLog.optOut, the same flag as unsubscribing,
+ *                so a test account never gets lifecycle mail; hold sets
+ *                emailLog.holdUntil, which the run respects, for someone who
+ *                should wait (e.g. a seller welcomed by hand that morning).
  */
-export async function GET(req: Request) {
+function authorized(req: Request): Response | null {
   const secret = process.env.CRON_SECRET;
   if (!secret) return Response.json({ ok: false, error: "CRON_SECRET not set" }, { status: 503 });
   if (req.headers.get("authorization") !== `Bearer ${secret}`) {
     return Response.json({ ok: false }, { status: 401 });
   }
   if (!adminConfigured) return Response.json({ ok: false, error: "not-configured" }, { status: 501 });
+  return null;
+}
 
-  const live = process.env.LIFECYCLE_EMAILS === "live";
+type Due = { uid: string; email: string; since: number };
+
+/** Every seller due the no-listing tip right now. Reads only. */
+async function findDue(now: number): Promise<Due[]> {
   const db = getAdminDb();
   const auth = getAdminAuth();
-  const now = Date.now();
-
   const sellers = await db.collection("users").where("role", "==", "seller").get();
-  const due: { uid: string; email: string; since: number }[] = [];
+  const due: Due[] = [];
 
   for (const doc of sellers.docs) {
     if (due.length >= MAX_PER_RUN) break;
     const uid = doc.id;
     const log = (await db.collection("emailLog").doc(uid).get()).data() ?? {};
     if (log.optOut || log.noListingNudgeAt) continue;
+    const holdUntil = (log.holdUntil as Timestamp | undefined)?.toMillis();
+    if (holdUntil && now < holdUntil) continue;
 
     const welcomeAt = (log.sellerWelcomeAt as Timestamp | undefined)?.toMillis();
     const createdAt = doc.data().createdAt;
@@ -79,6 +94,26 @@ export async function GET(req: Request) {
     if (!user?.email || user.disabled) continue;
     due.push({ uid, email: user.email, since });
   }
+  return due;
+}
+
+export async function GET(req: Request) {
+  const denied = authorized(req);
+  if (denied) return denied;
+
+  const now = Date.now();
+  const due = await findDue(now);
+
+  if (new URL(req.url).searchParams.get("list") === "1") {
+    return Response.json({
+      ok: true,
+      mode: "list",
+      due: due.map((d) => ({ email: d.email, since: new Date(d.since).toISOString() })),
+    });
+  }
+
+  const live = process.env.LIFECYCLE_EMAILS === "live";
+  const db = getAdminDb();
 
   const sent: string[] = [];
   const failed: string[] = [];
@@ -146,4 +181,41 @@ export async function GET(req: Request) {
     sent: sent.length,
     failed: failed.length,
   });
+}
+
+export async function POST(req: Request) {
+  const denied = authorized(req);
+  if (denied) return denied;
+
+  const body = (await req.json().catch(() => ({}))) as {
+    skip?: string[];
+    hold?: string[];
+    holdDays?: number;
+  };
+  const holdDays = Math.min(Math.max(Number(body.holdDays) || 3, 1), 60);
+  const db = getAdminDb();
+  const auth = getAdminAuth();
+  const results: { email: string; action: string; ok: boolean; error?: string }[] = [];
+
+  async function apply(email: string, action: "skip" | "hold") {
+    const user = await auth.getUserByEmail(email.trim()).catch(() => null);
+    if (!user) return results.push({ email, action, ok: false, error: "no account" });
+    const ref = db.collection("emailLog").doc(user.uid);
+    if (action === "skip") {
+      await ref.set(
+        { optOut: true, optOutAt: FieldValue.serverTimestamp(), optOutBy: "admin" },
+        { merge: true }
+      );
+    } else {
+      await ref.set(
+        { holdUntil: new Date(Date.now() + holdDays * DAY_MS) },
+        { merge: true }
+      );
+    }
+    results.push({ email, action, ok: true });
+  }
+
+  for (const e of body.skip ?? []) await apply(e, "skip");
+  for (const e of body.hold ?? []) await apply(e, "hold");
+  return Response.json({ ok: true, holdDays, results });
 }
