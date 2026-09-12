@@ -70,6 +70,17 @@ export default async function HomePage() {
               <p className="mx-auto mt-3 max-w-lg text-balance text-[var(--muted)]">
                 {copy.heroSub}
               </p>
+              {/* Split the room before anything else. A buyer's page is this
+                  one, so theirs jumps to the catalogue below; a seller's is
+                  /sell. */}
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <ButtonLink href="#apps" size="lg">
+                  I&apos;m a buyer
+                </ButtonLink>
+                <ButtonLink href="/sell" variant="secondary" size="lg">
+                  I&apos;m a seller
+                </ButtonLink>
+              </div>
             </div>
             <PreLaunchNotice />
           </div>
