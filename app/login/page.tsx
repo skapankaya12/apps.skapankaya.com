@@ -11,6 +11,7 @@ import {
 } from "@/lib/store";
 import { brand } from "@/lib/brand";
 import { validateAvatar, AVATAR_ACCEPT } from "@/lib/media";
+import { normalizeXHandle, xHandleProblem } from "@/lib/xhandle";
 import { SellerAvatar } from "@/components/SellerAvatar";
 import { Section, Button } from "@/components/ui";
 
@@ -107,6 +108,39 @@ function LoginInner() {
     setAvatarFile(file);
   }
 
+  // A seller's X handle, and the photo it can pull. Same route the account page
+  // uses, called here with no token since the account does not exist yet; the
+  // bytes go through pickAvatar like a chosen file, so the one upload path in
+  // signUp is still the only way an avatar reaches Storage.
+  const [xHandle, setXHandle] = useState("");
+  const [xBusy, setXBusy] = useState(false);
+  const xBad = Boolean(xHandle.trim()) && Boolean(xHandleProblem(xHandle));
+
+  async function pullXPhoto() {
+    setAvatarError("");
+    setXBusy(true);
+    try {
+      const res = await fetch("/api/profile/x-avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle: xHandle }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setAvatarError(body.error ?? "Couldn't fetch that photo.");
+        return;
+      }
+      const blob = await res.blob();
+      const ext =
+        blob.type === "image/png" ? "png" : blob.type === "image/webp" ? "webp" : "jpg";
+      pickAvatar(new File([blob], `x-avatar.${ext}`, { type: blob.type }));
+    } catch {
+      setAvatarError("Couldn't fetch that photo. Try uploading one instead.");
+    } finally {
+      setXBusy(false);
+    }
+  }
+
   // Release the object URL if they navigate away mid-signup.
   useEffect(() => {
     return () => {
@@ -191,11 +225,22 @@ function LoginInner() {
       setError("Tell us your name (at least 2 characters).");
       return;
     }
+    const sellerX = mode === "signup" && kind === "sell";
+    if (sellerX && xBad) {
+      setError("Check your X handle, or leave it empty.");
+      return;
+    }
 
     setBusy(true);
     try {
       if (mode === "signup")
-        await signUp(email.trim(), password, name, avatarFile ?? undefined);
+        await signUp(
+          email.trim(),
+          password,
+          name,
+          avatarFile ?? undefined,
+          sellerX && xHandle.trim() ? normalizeXHandle(xHandle) : undefined
+        );
       else await signIn(email.trim(), password);
       // After the account exists, never before: the role lives on a document
       // that sign-up has only just written.
@@ -386,6 +431,43 @@ function LoginInner() {
                 </div>
                 {avatarError && (
                   <p className="mt-2 text-xs text-[var(--danger)]">{avatarError}</p>
+                )}
+
+                {/* Sellers only: the handle is shown on the seller page, and
+                    the button fills the photo above from their X profile. */}
+                {kind === "sell" && (
+                  <div className="mt-4">
+                    <label className="text-sm font-medium" htmlFor="xhandle">
+                      X handle
+                    </label>
+                    <span className="ml-2 text-xs text-[var(--muted)]">
+                      Optional. Shown on your seller page.
+                    </span>
+                    <div className="mt-1.5 flex gap-2">
+                      <input
+                        id="xhandle"
+                        type="text"
+                        value={xHandle}
+                        onChange={(e) => setXHandle(e.target.value)}
+                        placeholder="@yourhandle"
+                        autoComplete="off"
+                        className={`${inputClass} min-w-0 flex-1`}
+                      />
+                      <button
+                        type="button"
+                        onClick={pullXPhoto}
+                        disabled={xBusy || xBad || !xHandle.trim()}
+                        className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--background)] px-3 text-xs font-medium hover:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {xBusy ? "Fetching…" : "Use my X photo"}
+                      </button>
+                    </div>
+                    {xBad && (
+                      <p className="mt-1 text-xs text-[var(--danger)]">
+                        {xHandleProblem(xHandle)}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}

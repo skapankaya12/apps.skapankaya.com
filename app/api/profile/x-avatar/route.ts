@@ -1,5 +1,5 @@
 import { verifyRequestUid, adminConfigured } from "@/lib/firebaseAdmin";
-import { rateLimit, tooManyRequests } from "@/lib/rateLimit";
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rateLimit";
 import { fetchImage, ImportError } from "@/lib/import/safeFetch";
 import { AVATAR_ACCEPT, MAX_AVATAR_BYTES } from "@/lib/media";
 import { normalizeXHandle, xHandleProblem } from "@/lib/xhandle";
@@ -32,22 +32,29 @@ export const runtime = "nodejs";
 
 /** Enough for a few typos and a change of mind, not enough to proxy-scrape. */
 const AVATAR_LIMIT = 20;
+/** Tighter for callers with no account, who can only be told apart by IP. */
+const ANON_AVATAR_LIMIT = 10;
 const AVATAR_WINDOW_MS = 60 * 60 * 1000;
 
 /** What the avatar upload will accept, so a GIF is refused here not at Storage. */
 const ALLOWED = AVATAR_ACCEPT.split(",");
 
+/**
+ * Signed in or not. The account page calls this with a token; the signup form
+ * calls it before any account exists, so it has none to send, and the photo it
+ * gets back is held in memory until signUp has a uid to upload it under.
+ *
+ * Letting a signed-out caller in is safe because of what this can do: fetch
+ * one host we chose, for a handle already validated to [A-Za-z0-9_]{1,15},
+ * and return at most 2MB of image. It writes nothing. So the only thing a token
+ * changes is who the rate limit counts against: the account, or else the IP,
+ * with a lower ceiling.
+ */
 export async function POST(req: Request) {
-  if (!adminConfigured) {
-    return Response.json({ ok: false, error: "not-configured" }, { status: 501 });
-  }
-
-  const uid = await verifyRequestUid(req);
-  if (!uid) {
-    return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
-
-  const limit = rateLimit(`x-avatar:${uid}`, AVATAR_LIMIT, AVATAR_WINDOW_MS);
+  const uid = adminConfigured ? await verifyRequestUid(req) : null;
+  const limit = uid
+    ? rateLimit(`x-avatar:${uid}`, AVATAR_LIMIT, AVATAR_WINDOW_MS)
+    : rateLimit(`x-avatar-ip:${clientIp(req)}`, ANON_AVATAR_LIMIT, AVATAR_WINDOW_MS);
   if (!limit.ok) return tooManyRequests(limit);
 
   const { handle } = (await req.json().catch(() => ({}))) as { handle?: string };

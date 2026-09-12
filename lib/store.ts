@@ -341,7 +341,9 @@ export async function signUp(
   email: string,
   password: string,
   displayName?: string,
-  avatar?: File
+  avatar?: File,
+  /** Already normalized by lib/xhandle. Empty or absent means none given. */
+  xHandle?: string
 ) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   const name = displayName?.trim();
@@ -355,6 +357,7 @@ export async function signUp(
       displayName: name || email.trim().split("@")[0],
       role: "buyer" as Role,
       createdAt: Date.now(),
+      ...(xHandle ? { xHandle } : {}),
     },
     { merge: true }
   );
