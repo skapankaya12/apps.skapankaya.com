@@ -3,7 +3,7 @@ import { copy } from "@/lib/brand";
 import { getApprovedListings } from "@/lib/listings.server";
 import { BrowseExperience } from "@/components/BrowseExperience";
 import { PreLaunchNotice } from "@/components/PreLaunchNotice";
-import { ButtonLink, Section, Badge } from "@/components/ui";
+import { ButtonLink, Section } from "@/components/ui";
 import { GradientWave } from "@/components/ui/gradient-wave";
 
 export const revalidate = 300;
@@ -50,25 +50,18 @@ export default async function HomePage() {
               pitch gets the full section width. */}
           <div className="grid items-center gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="mx-auto max-w-4xl text-center animate-fade-up">
-              {/* White rather than the accent tint: the badge now sits on the
-                  gradient wash, and --accent-soft is close enough to it to
-                  read as a smudge. `!` because the tone's own background is a
-                  utility of equal weight. */}
-              <Badge tone="accent" className="mb-3 bg-white!">
-                 Buy once · own it forever · no subscription
-              </Badge>
-              {/* Two deliberate lines: the headline, then the accent clause.
-                  `block` on the span pins that break instead of leaving it to
-                  the balancer, which was splitting mid-phrase ("built by /
-                  one person"). text-balance still earns its keep on narrow
-                  screens, where line one cannot fit either way. The {" "} stays
-                  for whoever drops the `block` — see the SWC whitespace gotcha. */}
               <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl 2xl:text-5xl">
-                {copy.heroHeadline}{" "}
-                <span className="block text-[var(--accent)]">{copy.heroHeadlineAccent}</span>
+                {copy.heroHeadline}
               </h1>
+              {/* The accent is the logo's blue to violet, the same run of
+                  colours the emails letter one span at a time. On the web
+                  background-clip does it in one go. The {" "} is the SWC
+                  whitespace gotcha. */}
               <p className="mx-auto mt-3 max-w-lg text-balance text-[var(--muted)]">
-                {copy.heroSub}
+                {copy.heroSub}{" "}
+                <span className="bg-gradient-to-r from-[#2f8bff] to-[#6a4bf0] bg-clip-text font-semibold text-transparent">
+                  {copy.heroSubAccent}
+                </span>
               </p>
               {/* Split the room before anything else. A buyer's page is this
                   one, so theirs jumps to the catalogue below; a seller's is

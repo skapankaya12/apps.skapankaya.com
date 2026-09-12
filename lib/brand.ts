@@ -8,8 +8,14 @@
  * links and search snippets advertising an older pitch. Change it here and
  * every one of those moves together.
  */
-const PITCH =
-  "A marketplace for small software tools made by solo builders. Pay once, run it yourself, keep it for good. No subscriptions.";
+const HERO_HEADLINE =
+  "A marketplace for self-hosted software tools made by solo developers.";
+const HERO_SUB = "Pay once, run it yourself, keep it for good.";
+/** Drawn in the logo's blue to violet gradient on the hero. */
+const HERO_SUB_ACCENT = "No subscriptions.";
+
+/** The hero's headline and sub-line read as one sentence, so they cannot drift. */
+const PITCH = `${HERO_HEADLINE} ${HERO_SUB} ${HERO_SUB_ACCENT}`;
 
 /**
  * Where the marketplace is in its life, in one sentence.
@@ -61,10 +67,10 @@ export const brand = {
 
 /** Longer marketing copy, kept here so it's easy to iterate on the message. */
 export const copy = {
-  heroHeadline: "small software tools by one person,",
-  heroHeadlineAccent: "owned by you.",
-  /** Same sentence as brand.description — see PITCH. */
-  heroSub: PITCH,
+  /** Headline, sub and accent together are brand.description — see PITCH. */
+  heroHeadline: HERO_HEADLINE,
+  heroSub: HERO_SUB,
+  heroSubAccent: HERO_SUB_ACCENT,
   missionTitle: "Why this exists",
   missionBody:
     "Every useful tool starts as someone's idea..a fix they built for their own problem. Most of those ideas never get sold; too niche to market, so they sit on a laptop. But the small thing someone already built might be exactly what solves your problem. Instead of paying $40 a month for a huge platform you use one feature of, find the one tool made for just that thing and own it for good.",

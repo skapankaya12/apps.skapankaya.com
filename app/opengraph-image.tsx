@@ -36,41 +36,14 @@ export default function Image() {
           <div
             style={{
               display: "flex",
-              alignSelf: "flex-start",
-              background: "#eef0ff",
-              color: "#4f46e5",
-              borderRadius: 999,
-              padding: "10px 24px",
-              fontSize: 26,
-              fontWeight: 600,
-            }}
-          >
-            Buy once · own it forever · no subscription
-          </div>
-          {/*
-            A column, not a wrapping row: the headline gets one line and the
-            accent clause the next, matching the hero. As a wrapping row the
-            first clause broke mid-phrase ("...by one / person,").
-            62px is sized so that clause fits the 1056px of content width at
-            Satori's fallback face, which is wider than Manrope.
-          */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              marginTop: 40,
               fontSize: 62,
               fontWeight: 800,
               lineHeight: 1.15,
               letterSpacing: -2,
+              color: "#101014",
             }}
           >
-            <div style={{ display: "flex", color: "#101014" }}>
-              {copy.heroHeadline}
-            </div>
-            <div style={{ display: "flex", color: "#4f46e5" }}>
-              {copy.heroHeadlineAccent}
-            </div>
+            {copy.heroHeadline}
           </div>
           {/*
             The same sub-line as the hero, read from `copy` rather than written
@@ -81,14 +54,25 @@ export default function Image() {
           <div
             style={{
               display: "flex",
+              flexWrap: "wrap",
               marginTop: 26,
-              fontSize: 30,
+              fontSize: 34,
               color: "#5b5b66",
               lineHeight: 1.4,
               maxWidth: 1000,
             }}
           >
-            {copy.heroSub}
+            <span>{copy.heroSub}&nbsp;</span>
+            <span
+              style={{
+                fontWeight: 700,
+                backgroundImage: "linear-gradient(90deg, #2f8bff, #6a4bf0)",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              {copy.heroSubAccent}
+            </span>
           </div>
         </div>
 
