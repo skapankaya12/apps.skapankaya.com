@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="2026-08-01"
+      updated="2026-09-12"
       intro="The short version: we collect an email address, whatever you chose to publish on a listing, and a record of what you bought or sold. There is no analytics, no tracking pixel and no advertising network on this site."
     >
       <Clause heading="1. Who is responsible">
@@ -37,8 +37,8 @@ export default function PrivacyPage() {
         <p>
           <strong className="text-[var(--foreground)]">If you sell.</strong> The
           contents of your listing: title, description, screenshots, demo video,
-          your uploaded package, and the support email, bio and website you
-          choose to publish. Bear in mind a listing is public — only put in it
+          your uploaded package, and the support email, bio, website, photo and
+          X handle you choose to publish. A listing is public, so put in it only
           what you want the world to read.
         </p>
         <p>
@@ -61,9 +61,26 @@ export default function PrivacyPage() {
           that email, or use the contact form, to be taken off the list.
         </p>
         <p>
+          <strong className="text-[var(--foreground)]">Emails we send you.</strong>{" "}
+          Account emails that come with using the site: a welcome when you
+          become a seller, review decisions, receipts and sale notices. If you
+          sell, we may also send you a few tips about getting your tools listed,
+          for example when your account has no listing a few days after you
+          join. Every tip has an unsubscribe link, and unsubscribing never stops
+          your account emails.
+        </p>
+        <p>
+          <strong className="text-[var(--foreground)]">Saved items.</strong>{" "}
+          The tools you save are stored with your account, so they follow you
+          between devices. Only you can see what you saved; a listing only ever
+          shows how many people saved it.
+        </p>
+        <p>
           <strong className="text-[var(--foreground)]">On your own device.</strong>{" "}
-          Your cart and saved items are kept in your browser&apos;s local
-          storage, not on our servers. Clearing your browser data clears them.
+          Your cart, and the text of a listing you are still writing, are kept
+          in your browser&apos;s local storage, not on our servers. Clearing
+          your browser data clears them. Files you add to a listing are
+          different: they upload as soon as you pick them, before you submit.
         </p>
       </Clause>
 
@@ -84,7 +101,10 @@ export default function PrivacyPage() {
           To perform our contract with you: running your account, delivering what
           you bought, paying sellers. To meet legal obligations: tax and
           accounting records, and seller reporting under DAC7. And on legitimate
-          interest: keeping the marketplace safe from fraud and abuse.
+          interest: keeping the marketplace safe from fraud and abuse, and
+          sending sellers the occasional tip that helps them finish what they
+          signed up to do, which you can stop at any time from the link in the
+          email.
         </p>
         <p>
           The launch list is different: that one runs on your consent, given by
@@ -109,7 +129,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong className="text-[var(--foreground)]">Resend</strong> —
-            transactional email (receipts, review decisions, sale notices).
+            sending our email (account emails, and tips to sellers).
           </li>
           <li>
             <strong className="text-[var(--foreground)]">Vercel</strong> — hosting.

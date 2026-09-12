@@ -116,9 +116,12 @@ There is **no `.firebaserc`**, deliberately. `--project` is mandatory on every
 `firebase deploy` so a staging command cannot silently hit production.
 
 **Env vars used in code but missing from `.env.example`:** `WAITLIST_WEBHOOK_URL`,
-`PRODUCTHUNT_TOKEN`, `GITHUB_API_TOKEN`, and the two optional welcome-email
-switches `SELLER_WELCOME_EMAIL` (`off` stops it) and `SELLER_WELCOME_FROM`.
-Worth adding.
+`PRODUCTHUNT_TOKEN`, `GITHUB_API_TOKEN`, the two optional welcome-email
+switches `SELLER_WELCOME_EMAIL` (`off` stops it) and `SELLER_WELCOME_FROM`, and
+the lifecycle cron's `CRON_SECRET` (required, or the cron refuses to run),
+`LIFECYCLE_EMAILS` (`live` sends; anything else is a dry run) and the optional
+`EMAIL_LINK_SECRET` (signs unsubscribe links; derived from the Admin key when
+unset). Worth adding.
 
 ### Mail: three services, three jobs
 
@@ -220,6 +223,11 @@ root A record is what keeps the apex redirecting to Vercel.
   optional X handle with "Use my X photo", which fills that same photo slot and
   saves the handle to the new account.
 - `/api/notify/welcome` sends the seller welcome email. See §6, flow 0.
+- `/api/cron/lifecycle` is the daily lifecycle run, scheduled in `vercel.json`
+  (09:00 UTC). See §6, flow 0b.
+- `/api/email/unsubscribe` takes a signed link (`lib/emailLinks.server.ts`).
+  GET only shows a confirm button and POST does it, because mail scanners open
+  every link in a message; POST is also Gmail's one-click unsubscribe.
 - `/docs/*` is seller and buyer documentation. `/terms` `/privacy` `/refunds`
   are legal, all still marked draft.
 
@@ -261,7 +269,8 @@ Firestore collections: **`users`, `listings`, `purchases`, `categories`,
 `handles`, `bookmarks`, `freeTools`, `emailLog`.**
 
 `emailLog/{uid}` records which one-time emails an account has been sent
-(today only `sellerWelcomeAt`). **Server-only:** there is no rule for it, so
+(`sellerWelcomeAt`, `noListingNudgeAt`) and whether it has unsubscribed from
+lifecycle mail (`optOut`, `optOutAt`). **Server-only:** there is no rule for it, so
 clients can neither read nor write it and nobody can clear it to be sent the
 same email again. It is deliberately not a field on `users`, which its owner
 can write. Any later lifecycle email records itself here too.
@@ -337,6 +346,18 @@ Three roles: `buyer`, `seller`, `admin`.
    `The Solo Market <hello@thesolomarket.com>`, replies to hello@,
    subject "guess what? happy to have you!". Accounts that were already sellers
    before 12 September never trigger it.
+0b. **The daily lifecycle run.** Vercel Cron calls `/api/cron/lifecycle` once
+   a day with `CRON_SECRET`. Today it sends one email, the no-listing tip
+   (`design/emails/no-listing.html`): to a seller three days past becoming one
+   (dated by `emailLog.sellerWelcomeAt`, else the account's `createdAt`) with no
+   document in `listings` under their sellerId in any status, who has not had
+   it and has not unsubscribed. Every fact is read at run time, so submitting a
+   listing is what cancels it. **It is a dry run unless `LIFECYCLE_EMAILS=live`**:
+   nothing goes to sellers and the admin is emailed the list of who would have
+   been sent it. Live, each send is claimed in `emailLog` first and released on
+   failure, capped at 50 a run, and carries List-Unsubscribe headers. The admin
+   email only goes out on days somebody is due. Tested dry against staging on
+   12 September (3 due, nothing sent); never run live.
 1. **Listing.** Seller fills `/dashboard/new`. **Every file uploads the moment
    it is picked**, with its own progress bar, straight from the browser to
    Storage under their own uid. The listing id is reserved at mount so the
@@ -428,12 +449,15 @@ Three roles: `buyer`, `seller`, `admin`.
   plainly what it does and does not check, which is what keeps it honest, but it
   sits four clicks from copy promising that every submission is scanned. See the
   first item in this section: fixing that copy got more urgent, not less.
-- **The welcome email's real path has not been run end to end.** The design was
-  sent to a real inbox with `scripts/send-welcome-test.ts` (which attaches the
-  images inline and writes nothing), and the route refuses callers without a
-  valid token. Promotion to seller on a deployed site, the `emailLog` claim and
-  the hosted images have not been exercised together. The quickest check is a
-  new account on production choosing "sell".
+- **The welcome email's automatic path is barely exercised.** The design has
+  reached real inboxes through `scripts/send-seller-email.ts` (test mode
+  attaches images inline, `--live` sends exactly what the site sends; neither
+  writes to Firestore), and Ryan, the one seller from before it existed, was
+  sent it by hand with `--live` on 12 September. Promotion to seller on
+  production then a delivered welcome is worth confirming once in Resend's
+  log. Because the hand send wrote nothing, **the lifecycle cron dates Ryan
+  from his account's `createdAt`**, so a live run would send him the
+  no-listing tip straight away if he still has none; the dry run will show it.
 - **Production sent no email at all until 12 September.** `EMAIL_FROM` had never
   been set in Vercel Production (only Preview), and `lib/email.ts` sends only
   when both it and `RESEND_API_KEY` exist, silently. So no new-listing notice,
@@ -443,9 +467,12 @@ Three roles: `buyer`, `seller`, `admin`.
   the Google Sheet.
   `vercel env ls production` lists what is set; this folder is linked to the
   Vercel project (`.vercel/`, gitignored) as of 12 September.
-- **`/privacy` does not mention the welcome email.** It lists the mail it sends
-  as receipts, review decisions and sale notices. A one-time account email sits
-  under the same basis, but the list should say so. Sevval's call.
+- **`/privacy` was brought up to date on 12 September.** It now names the
+  emails (account emails, and tips to sellers with an unsubscribe) and their
+  basis, the seller photo and X handle, and corrects two things that had gone
+  false: saved items live with the account since 26 August, not in the
+  browser, and a listing's files upload before it is submitted. Still a draft
+  awaiting a lawyer, like the rest of the legal pages.
 - **"Fully unlocked" is now a listing rule** (no in-app payments, license keys,
   or an account needed to use it), stated in the `/docs/selling` table, the
   `/sell` lists and the welcome email. Nothing checks it but review.
@@ -494,8 +521,12 @@ Each nudge fires only while a seller is stuck at a step and cancels itself when
 they move, read from live Firestore state by one daily cron. Decided on 12
 September: **a Monday digest to Sevval** is the next one wanted; lifecycle mail
 comes from hello@; the engine runs **dry for a week** (logging what it would
-send) before it sends anything. Not yet chosen: the "no listing after 3 days"
-and "rejected, not resubmitted" nudges. Not possible as scoped: "stuck in
+send) before it sends anything. **Built 12 September: the engine (§6, flow 0b)
+and its first email, the "no listing after 3 days" tip,** written as helpful
+listing tips with a single button, at Sevval's request. Not yet chosen: the
+"rejected, not resubmitted" nudge. `/privacy` covers it as of the same day, so going
+live is only the switch: set `LIFECYCLE_EMAILS=live` once in Vercel Production
+and every later run sends by itself. Not possible as scoped: "stuck in
 draft", because drafts live in the seller's localStorage and the server never
 sees one. Anything recurring needs a working unsubscribe first; the welcome
 has none because it is one-time.
