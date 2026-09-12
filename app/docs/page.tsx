@@ -74,7 +74,7 @@ export default function DocsIndexPage() {
             Run an app you bought →
           </span>
           <span className="mt-1 block text-sm text-[var(--muted)]">
-            One command, or let a free AI assistant set it up for you.
+            One command, or let an AI assistant set it up for you.
           </span>
         </Link>
       </div>

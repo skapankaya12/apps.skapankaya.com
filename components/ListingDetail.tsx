@@ -60,7 +60,7 @@ const SETUP_COPY: Record<SetupMode, ReactNode> = {
     <>
       <Badge tone="accent" className="mb-3">Guided setup</Badge>
       <p className="text-sm text-[var(--muted)]">
-        No coding needed. Open the downloaded folder in a free AI assistant
+        No coding needed. Open the downloaded folder in an AI assistant
         (like Claude or Cursor) and say{" "}
         <span className="rounded bg-[var(--foreground)] px-1.5 py-0.5 font-mono text-xs text-[var(--background)]">
           set this up and run it

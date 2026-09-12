@@ -26,7 +26,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Do I need to be technical?",
-    a: "No. Every tool ships with a setup guide, and tools marked “Guided setup” are designed so a free AI assistant (like Claude or Cursor) can install and start them for you. You open the folder and say “set this up and run it.”",
+    a: "No. Every tool ships with a setup guide, and tools marked “Guided setup” are designed so an AI assistant (like Claude or Cursor) can install and start them for you. You open the folder and say “set this up and run it.”",
   },
   {
     q: "What if it doesn't run on my computer?",

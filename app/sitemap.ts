@@ -14,7 +14,7 @@ export const revalidate = 300;
  * fetched the sitemap, which is exactly how a site teaches Google to ignore
  * its lastmod values. Bump this by hand when the marketing pages change.
  */
-const STATIC_LAST_MODIFIED = new Date("2026-08-26");
+const STATIC_LAST_MODIFIED = new Date("2026-09-11");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = brand.url;

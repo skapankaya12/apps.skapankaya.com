@@ -55,8 +55,8 @@ export default function Page() {
       <p>
         <strong>Buyers</strong>{" "}are people who need one specific thing done and
         would rather own the tool for it than rent a large platform. Many
-        aren&apos;t developers at all — the tools are built to be run by a
-        free AI assistant if the buyer would rather not touch a terminal.
+        aren&apos;t developers at all — the tools are built to be run by an
+        AI assistant if the buyer would rather not touch a terminal.
       </p>
 
       <H2 id="the-journey">The journey of a tool</H2>
@@ -88,7 +88,7 @@ export default function Page() {
         </li>
         <li>
           <strong>The buyer runs it</strong>{" "}on their own machine — either the
-          one command in the setup guide, or by opening the folder in a free AI
+          one command in the setup guide, or by opening the folder in an AI
           assistant and asking it to set the tool up. See{" "}
           <Link href={docPath("running-apps")}>Running an app you bought</Link>.
         </li>

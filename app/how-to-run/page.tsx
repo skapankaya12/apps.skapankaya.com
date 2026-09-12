@@ -23,7 +23,7 @@ const howToLd = {
   "@type": "HowTo",
   name: `How to run any app you buy on ${brand.name}`,
   description:
-    "Every app is a small folder you download and run on your own computer. Two ways to do it: one command, or let a free AI assistant set it up for you.",
+    "Every app is a small folder you download and run on your own computer. Two ways to do it: one command, or let an AI assistant set it up for you.",
   totalTime: "PT2M",
   step: [
     {
@@ -39,7 +39,7 @@ const howToLd = {
     {
       "@type": "HowToStep",
       name: "Run it — yourself or with an AI assistant",
-      text: "If you're comfortable with a terminal, run the one command from the guide. If you'd rather not, open the folder in a free AI assistant such as Claude or Cursor and say \"set this up and run it\" — it reads the guide and does the rest.",
+      text: "If you're comfortable with a terminal, run the one command from the guide. If you'd rather not, open the folder in an AI assistant such as Claude or Cursor and say \"set this up and run it\" — it reads the guide and does the rest.",
     },
   ],
 };

@@ -81,7 +81,7 @@ export const DOCS: Doc[] = [
     title: "Running an app you bought",
     navLabel: "Running an app",
     summary:
-      "For buyers: what you actually download, the two ways to run it (one command or a free AI assistant), runtimes explained, and what to do if it won't start.",
+      "For buyers: what you actually download, the two ways to run it (one command or an AI assistant), runtimes explained, and what to do if it won't start.",
     audience: "buyers",
     minutes: 5,
   },

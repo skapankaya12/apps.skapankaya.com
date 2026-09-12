@@ -63,7 +63,7 @@ ${brand.name} is a marketplace for small, finished software. At launch, a buyer 
 1. A seller submits a tool: source package, demo video, screenshots, price and a setup guide.
 2. Every submission is reviewed before it can be listed. Nothing goes live automatically.
 3. At launch, a buyer will pay once and download the package immediately. Buying is not open yet.
-4. The buyer runs it on their own machine — either with the single command in the included guide, or by opening the folder in a free AI assistant and asking it to set the tool up.
+4. The buyer runs it on their own machine — either with the single command in the included guide, or by opening the folder in an AI assistant and asking it to set the tool up.
 5. Purchases will be re-downloadable from the buyer's library at any time, and will be covered by a 14-day money-back guarantee.
 
 ## What is and isn't sold here

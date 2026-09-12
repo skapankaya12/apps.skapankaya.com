@@ -134,7 +134,7 @@ export default function Page() {
         </li>
         <li>
           <strong>Setup method</strong>{" "}— <em>One command</em>{" "}(the buyer runs a
-          single command) or <em>AI-assisted</em>{" "}(a free assistant sets it up
+          single command) or <em>AI-assisted</em>{" "}(an AI assistant sets it up
           from your <code>SETUP.md</code>). Pick the one your tool actually
           supports.
         </li>

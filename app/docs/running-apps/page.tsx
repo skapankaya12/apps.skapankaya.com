@@ -46,7 +46,7 @@ export default function Page() {
 
       <H2 id="ai-assisted">B) The AI-assisted way (no coding)</H2>
       <p>
-        Never touched a terminal? Let a free AI assistant do the whole setup. You
+        Never touched a terminal? Let an AI assistant do the whole setup. You
         do this once, then every tool you ever buy works the same way.
       </p>
       <ol>

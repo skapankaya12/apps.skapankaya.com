@@ -157,7 +157,7 @@ export default function Page() {
         </li>
         <li>
           <strong>AI-assisted.</strong>{" "}Written so a buyer can open the folder in
-          a free assistant like Claude Code or Cursor, say &ldquo;set this up and
+          an assistant like Claude Code or Cursor, say &ldquo;set this up and
           run it&rdquo;, and have it work. This is what makes non-technical buyers
           possible — write the steps for a careful assistant to follow.
         </li>
