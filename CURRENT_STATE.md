@@ -356,8 +356,16 @@ Three roles: `buyer`, `seller`, `admin`.
    nothing goes to sellers and the admin is emailed the list of who would have
    been sent it. Live, each send is claimed in `emailLog` first and released on
    failure, capped at 50 a run, and carries List-Unsubscribe headers. The admin
-   email only goes out on days somebody is due. Tested dry against staging on
-   12 September (3 due, nothing sent); never run live.
+   email only goes out on days somebody is due. **Live since 12 September**
+   (`LIFECYCLE_EMAILS=live` in Production): the first run was triggered by
+   hand that afternoon and sent the tip to 15 sellers, none failed; since then
+   it runs by itself each morning. Ryan (ryan@registermysite.com) was put on a
+   3-day hold the same day because he had been welcomed by hand that morning.
+   Admin controls on the same secret: `GET ?list=1` shows who is due without
+   sending, `POST {"skip":[...],"hold":[...],"holdDays":n}` opts test accounts
+   out for good or holds someone. `CRON_SECRET` was created from the CLI and is
+   readable with `vercel env pull --environment=production`; the Firebase Admin
+   keys are marked sensitive and are not, which is why these controls exist.
 1. **Listing.** Seller fills `/dashboard/new`. **Every file uploads the moment
    it is picked**, with its own progress bar, straight from the browser to
    Storage under their own uid. The listing id is reserved at mount so the
@@ -524,9 +532,8 @@ comes from hello@; the engine runs **dry for a week** (logging what it would
 send) before it sends anything. **Built 12 September: the engine (§6, flow 0b)
 and its first email, the "no listing after 3 days" tip,** written as helpful
 listing tips with a single button, at Sevval's request. Not yet chosen: the
-"rejected, not resubmitted" nudge. `/privacy` covers it as of the same day, so going
-live is only the switch: set `LIFECYCLE_EMAILS=live` once in Vercel Production
-and every later run sends by itself. Not possible as scoped: "stuck in
+"rejected, not resubmitted" nudge. `/privacy` covers it as of the same day, and it
+went live that afternoon (§6, flow 0b). Not possible as scoped: "stuck in
 draft", because drafts live in the seller's localStorage and the server never
 sees one. Anything recurring needs a working unsubscribe first; the welcome
 has none because it is one-time.
