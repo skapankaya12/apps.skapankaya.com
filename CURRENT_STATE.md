@@ -151,7 +151,7 @@ root A record is what keeps the apex redirecting to Vercel.
 
 | File | Purpose |
 |---|---|
-| `store.ts` | **The main data layer, about 1,460 lines.** Firestore + Auth wrapped so components call synchronous getters (`getApprovedListings()`). `onSnapshot` listeners keep in-memory caches live and call `emit()` so subscribers re-render. Cart and bookmarks are localStorage, not Firestore. |
+| `store.ts` | **The main data layer, about 1,460 lines.** Firestore + Auth wrapped so components call synchronous getters (`getApprovedListings()`). `onSnapshot` listeners keep in-memory caches live and call `emit()` so subscribers re-render. The cart is localStorage; saves (bookmarks) moved to Firestore on 26 August, see §5. |
 | `types.ts` | `Listing`, `AppUser`, `Purchase`, `CategoryDef`, `Role`, `Runtime`, `SetupMode`, plus `DEFAULT_CATEGORIES`. Read this before touching any data shape. |
 | `listings.server.ts` | Admin SDK reads, memoized with React `cache()`. This is what makes listing pages server-render. Without it the catalogue was invisible to AI crawlers. |
 | `firebase.ts` / `firebaseAdmin.ts` | Client SDK / Admin SDK (lazy, guarded on `adminConfigured`). |
@@ -202,6 +202,10 @@ root A record is what keeps the apex redirecting to Vercel.
   storage.rules and a server-side write would step around the uid binding that
   is the only control on that path. Same reasoning as `/api/import/asset`.
   Goes through unavatar.io, since X's own user lookup left the free tier.
+  Answers signed-out callers too, because signup calls it before an account
+  exists: it can only fetch one fixed host for a validated handle, so a token
+  only decides whether the rate limit counts the account (20 an hour) or the
+  IP (10). Sign in with X itself stays declined, see §8.
 - `/api/seller/stats` answers with the caller's own saves, sales and earnings.
   Both underlying collections are private in the rules (a save belongs to the
   person who made it, a purchase to its buyer), so these aggregates exist
@@ -212,7 +216,9 @@ root A record is what keeps the apex redirecting to Vercel.
   whether somebody is here to buy or to sell (above the Google button, because
   Google cannot tell signing up from signing in). It also takes an optional
   photo, uploaded straight after the account exists since the avatar path is
-  scoped to a uid that does not exist until then.
+  scoped to a uid that does not exist until then. Choosing sell also shows an
+  optional X handle with "Use my X photo", which fills that same photo slot and
+  saves the handle to the new account.
 - `/api/notify/welcome` sends the seller welcome email. See §6, flow 0.
 - `/docs/*` is seller and buyer documentation. `/terms` `/privacy` `/refunds`
   are legal, all still marked draft.
@@ -328,7 +334,7 @@ Three roles: `buyer`, `seller`, `admin`.
    stranger), and claims `emailLog/{uid}` in a transaction before sending, so
    two tabs cannot both send. A Resend failure releases the claim, so it is
    retried on the next promotion rather than lost. It comes from
-   `Sevval from The Solo Market <hello@thesolomarket.com>`, replies to hello@,
+   `The Solo Market <hello@thesolomarket.com>`, replies to hello@,
    subject "guess what? happy to have you!". Accounts that were already sellers
    before 12 September never trigger it.
 1. **Listing.** Seller fills `/dashboard/new`. **Every file uploads the moment
@@ -428,6 +434,15 @@ Three roles: `buyer`, `seller`, `admin`.
   valid token. Promotion to seller on a deployed site, the `emailLog` claim and
   the hosted images have not been exercised together. The quickest check is a
   new account on production choosing "sell".
+- **Production sent no email at all until 12 September.** `EMAIL_FROM` had never
+  been set in Vercel Production (only Preview), and `lib/email.ts` sends only
+  when both it and `RESEND_API_KEY` exist, silently. So no new-listing notice,
+  review decision or welcome ever left the live site. Added and redeployed that
+  day. **`CONTACT_WEBHOOK_URL` is still missing from Production**, so the
+  contact form on the live site answers "not configured" and nothing reaches
+  the Google Sheet.
+  `vercel env ls production` lists what is set; this folder is linked to the
+  Vercel project (`.vercel/`, gitignored) as of 12 September.
 - **`/privacy` does not mention the welcome email.** It lists the mail it sends
   as receipts, review decisions and sale notices. A one-time account email sits
   under the same basis, but the list should say so. Sevval's call.

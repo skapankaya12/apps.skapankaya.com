@@ -21,13 +21,14 @@ function money(cents: number): string {
  * and design/emails/build-template.mjs compiles that into
  * lib/emails/sellerWelcome.ts. Edit the HTML, re-run the script.
  *
- * It comes from a person, not noreply, because it asks for replies. Images
- * load from public/email/ on the live site, so a new image there only shows
- * up in mail once it is deployed.
+ * It comes from hello@, not noreply, because it asks for replies; the name
+ * shown is just the brand (Sevval's call, 12 September). SELLER_WELCOME_FROM
+ * overrides the whole sender without a code change. Images load from
+ * public/email/ on the live site, so a new image there only shows up in mail
+ * once it is deployed.
  */
 export const SELLER_WELCOME_FROM =
-  process.env.SELLER_WELCOME_FROM ||
-  `Sevval from ${brand.name} <hello@${brand.domain}>`;
+  process.env.SELLER_WELCOME_FROM || `${brand.name} <hello@${brand.domain}>`;
 export const SELLER_WELCOME_REPLY_TO = `hello@${brand.domain}`;
 
 export function sellerWelcomeEmail(imageBase = `${brand.url}/email/`) {
