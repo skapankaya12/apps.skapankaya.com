@@ -17,7 +17,6 @@ import {
   type Runtime,
   type SetupMode,
 } from "@/lib/types";
-import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, StatusBadge } from "@/components/ui";
 import { Field, inputClass } from "@/components/ui/form";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
@@ -100,9 +99,6 @@ function EditForm({
   const [setupMode, setSetupMode] = useState<SetupMode>(listing.setupMode);
   const [price, setPrice] = useState((listing.priceCents / 100).toFixed(2));
   const [version, setVersion] = useState(listing.version);
-  const [sellerBio, setSellerBio] = useState(listing.sellerBio ?? "");
-  const [sellerEmail, setSellerEmail] = useState(listing.sellerEmail ?? "");
-  const [sellerWebsite, setSellerWebsite] = useState(listing.sellerWebsite ?? "");
 
   const [existingShots, setExistingShots] = useState<string[]>(listing.screenshots);
   const [shotFiles, setShotFiles] = useState<File[]>([]);
@@ -136,10 +132,6 @@ function EditForm({
   if (!tagline.trim()) missing.push("tagline");
   if (description.trim().length <= 20) missing.push("a longer description");
   if (!(priceNum >= 15 && priceNum <= 250)) missing.push("a price between $15 and $250");
-  if (!sellerEmail.trim() || !sellerEmail.includes("@")) missing.push("a support email");
-  if (sellerWebsite.trim() && !safeHttpsUrl(sellerWebsite)) {
-    missing.push("a valid https:// website link");
-  }
   const valid = missing.length === 0;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -181,14 +173,9 @@ function EditForm({
         screenshots: [...existingShots, ...newShotUrls].slice(0, 5),
         demoVideo: demoUrl,
         posterImage: posterUrl,
-        // Empty string, not undefined: the client is configured with
-        // ignoreUndefinedProperties, so an undefined field is dropped from the
-        // update rather than written — which on an edit form means clearing a
-        // bio appears to save and then silently keeps the old one. "" reads as
-        // absent everywhere these are consumed.
-        sellerBio: sellerBio.trim(),
-        sellerEmail: sellerEmail.trim(),
-        sellerWebsite: safeHttpsUrl(sellerWebsite) ?? "",
+        // The old per-listing seller fields (sellerBio, sellerEmail,
+        // sellerWebsite) are left out on purpose, so whatever an older listing
+        // stored stays as the fallback the listing page reads.
       });
 
       setShotFiles([]);
@@ -422,39 +409,15 @@ function EditForm({
           {demoError && <p className="mt-1.5 text-xs text-[var(--danger)]">{demoError}</p>}
         </Field>
 
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5">
-          <h2 className="text-sm font-semibold">About the seller (shown to buyers)</h2>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">
-            The blurb and contact details on the listing page. Who the seller
-            <em> is</em> — and where their payouts go — isn&apos;t editable here.
-          </p>
-          <div className="mt-4 space-y-6">
-            <Field label="Short bio">
-              <textarea
-                value={sellerBio}
-                onChange={(e) => setSellerBio(e.target.value)}
-                rows={3}
-                className={`${inputClass} resize-y`}
-              />
-            </Field>
-            <Field label="Support email">
-              <input
-                value={sellerEmail}
-                onChange={(e) => setSellerEmail(e.target.value)}
-                type="email"
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Website" hint="Optional. Must be https://.">
-              <input
-                value={sellerWebsite}
-                onChange={(e) => setSellerWebsite(e.target.value)}
-                placeholder="https://"
-                className={inputClass}
-              />
-            </Field>
-          </div>
-        </div>
+        {/* The seller's bio, support email and website moved from every
+            listing onto their account on 26 August 2026. This form used to
+            ask for the per-listing copies and require a support email, which
+            listings made since then never have, so no edit could be saved. */}
+        <p className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 text-xs text-[var(--muted)]">
+          The seller&apos;s bio, support email and website come from their
+          account, not from the listing, so the seller edits them there. Who the
+          seller is and where their payouts go can&apos;t be changed here.
+        </p>
 
         {/* The package is the product. See adminUpdateListing for why swapping
             it from here would break every buyer's download. */}
