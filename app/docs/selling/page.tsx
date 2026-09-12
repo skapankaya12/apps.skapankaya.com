@@ -55,6 +55,10 @@ export default function Page() {
               <td>Readable source with disclosed network calls</td>
               <td>Malware, data harvesters, obfuscated / hidden-behaviour tools</td>
             </tr>
+            <tr>
+              <td>Fully unlocked the moment it&apos;s bought</td>
+              <td>In-app payments, license keys, or an account needed to use it</td>
+            </tr>
           </tbody>
         </table>
       </div>

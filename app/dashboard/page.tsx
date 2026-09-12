@@ -296,7 +296,7 @@ function PayoutsCard({ user }: { user: AppUser }) {
       // listing early doesn't read it as the site being broken.
       if (data.error === "not-configured") {
         setNotice(
-          "Payouts open in September, before the public launch. You can list your tool now and connect your bank then — nothing can be sold until you do."
+          "Payouts open in November, before the public launch. You can list your tool now and connect your bank then. Nothing can be sold until you do."
         );
       } else {
         setError("Couldn't start payout setup. Please try again.");

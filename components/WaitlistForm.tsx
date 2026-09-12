@@ -54,7 +54,7 @@ export function WaitlistForm() {
   if (state === "done") {
     return (
       <p className="mt-4 rounded-lg bg-[var(--accent-soft)] px-3 py-2.5 text-sm text-[var(--foreground)]">
-        You&apos;re on the list. We&apos;ll email you when it opens in September.
+        You&apos;re on the list. We&apos;ll email you when it opens in November.
       </p>
     );
   }

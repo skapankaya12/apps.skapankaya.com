@@ -31,6 +31,7 @@ const CAN_SELL = [
   "Automations, agents, converters, generators, scrapers, dashboards, utilities",
   "Your own original code (or code you're licensed to resell)",
   "Self-contained tools that disclose their network calls, shipped as readable source or as a signed installer",
+  "Tools that are fully unlocked the moment they're bought",
 ];
 const CANT_SELL = [
   "SaaS, subscriptions, or anything that runs on your servers",
@@ -39,6 +40,7 @@ const CANT_SELL = [
   "Code that isn't yours, or that breaks someone's license",
   "Malware, data harvesters, or anything that hides what it actually does",
   "Anything illegal, or that phishes buyers for credentials or keys",
+  "In-app payments, license keys, or an account needed to use it",
 ];
 
 export default async function SellPage() {
