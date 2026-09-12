@@ -8,14 +8,22 @@
  * links and search snippets advertising an older pitch. Change it here and
  * every one of those moves together.
  */
-const HERO_HEADLINE =
-  "A marketplace for self-hosted software tools made by solo developers.";
-const HERO_SUB = "Pay once, run it yourself, keep it for good.";
+const HERO_HEADLINE = "A marketplace for self-hosted software,";
+/** The headline's second row. `accent` is drawn in the logo's gradient. */
+const HERO_BYLINE = { before: "made", accent: "by", after: "solo developers." } as const;
+const HERO_SUB = "Pay once, run it on your own computer, not in someone else's cloud.";
 /** Drawn in the logo's blue to violet gradient on the hero. */
 const HERO_SUB_ACCENT = "No subscriptions.";
 
 /** The hero's headline and sub-line read as one sentence, so they cannot drift. */
-const PITCH = `${HERO_HEADLINE} ${HERO_SUB} ${HERO_SUB_ACCENT}`;
+const PITCH = [
+  HERO_HEADLINE,
+  HERO_BYLINE.before,
+  HERO_BYLINE.accent,
+  HERO_BYLINE.after,
+  HERO_SUB,
+  HERO_SUB_ACCENT,
+].join(" ");
 
 /**
  * Where the marketplace is in its life, in one sentence.
@@ -67,8 +75,9 @@ export const brand = {
 
 /** Longer marketing copy, kept here so it's easy to iterate on the message. */
 export const copy = {
-  /** Headline, sub and accent together are brand.description — see PITCH. */
+  /** Headline, byline, sub and accent together are brand.description — see PITCH. */
   heroHeadline: HERO_HEADLINE,
+  heroByline: HERO_BYLINE,
   heroSub: HERO_SUB,
   heroSubAccent: HERO_SUB_ACCENT,
   missionTitle: "Why this exists",

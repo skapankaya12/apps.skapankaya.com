@@ -33,17 +33,35 @@ export default function Image() {
         }}
       >
         <div style={{ display: "flex", flexDirection: "column" }}>
+          {/* Two rows, matching the hero: the headline, then the byline with
+              its accent word in the logo gradient. 56px is sized so row one
+              fits the 1056px of content width at Satori's fallback face,
+              which is wider than Manrope; at 62px it wrapped. */}
           <div
             style={{
               display: "flex",
-              fontSize: 62,
+              flexDirection: "column",
+              fontSize: 56,
               fontWeight: 800,
               lineHeight: 1.15,
               letterSpacing: -2,
               color: "#101014",
             }}
           >
-            {copy.heroHeadline}
+            <div style={{ display: "flex" }}>{copy.heroHeadline}</div>
+            <div style={{ display: "flex" }}>
+              <span>{copy.heroByline.before}&nbsp;</span>
+              <span
+                style={{
+                  backgroundImage: "linear-gradient(90deg, #2f8bff, #6a4bf0)",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }}
+              >
+                {copy.heroByline.accent}
+              </span>
+              <span>&nbsp;{copy.heroByline.after}</span>
+            </div>
           </div>
           {/*
             The same sub-line as the hero, read from `copy` rather than written

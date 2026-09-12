@@ -13,6 +13,13 @@ export const metadata: Metadata = {
 };
 
 /**
+ * The logo's blue to violet, the same run of colours the emails letter one
+ * span at a time. On the web background-clip does it in one go.
+ */
+const logoGradientText =
+  "bg-gradient-to-r from-[#2f8bff] to-[#6a4bf0] bg-clip-text text-transparent";
+
+/**
  * Landing page = pitch + product, nothing else. Everything explanatory
  * (why this exists, how it works, selling, FAQ, contact) lives on /about
  * so the listings get the space here.
@@ -50,18 +57,20 @@ export default async function HomePage() {
               pitch gets the full section width. */}
           <div className="grid items-center gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="mx-auto max-w-4xl text-center animate-fade-up">
-              <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl 2xl:text-5xl">
-                {copy.heroHeadline}
-              </h1>
-              {/* The accent is the logo's blue to violet, the same run of
-                  colours the emails letter one span at a time. On the web
-                  background-clip does it in one go. The {" "} is the SWC
+              {/* Two deliberate rows: `block` pins the break before the byline
+                  instead of leaving it to the balancer. The {" "}s are the SWC
                   whitespace gotcha. */}
-              <p className="mx-auto mt-3 max-w-lg text-balance text-[var(--muted)]">
-                {copy.heroSub}{" "}
-                <span className="bg-gradient-to-r from-[#2f8bff] to-[#6a4bf0] bg-clip-text font-semibold text-transparent">
-                  {copy.heroSubAccent}
+              <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl 2xl:text-5xl">
+                {copy.heroHeadline}{" "}
+                <span className="block">
+                  {copy.heroByline.before}{" "}
+                  <span className={logoGradientText}>{copy.heroByline.accent}</span>{" "}
+                  {copy.heroByline.after}
                 </span>
+              </h1>
+              <p className="mx-auto mt-3 max-w-2xl text-balance text-[var(--muted)]">
+                {copy.heroSub}{" "}
+                <span className={`${logoGradientText} font-semibold`}>{copy.heroSubAccent}</span>
               </p>
               {/* Split the room before anything else. A buyer's page is this
                   one, so theirs jumps to the catalogue below; a seller's is

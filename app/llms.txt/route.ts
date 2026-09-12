@@ -47,7 +47,7 @@ export async function GET() {
 
 **Status: pre-launch.** ${brand.name} is open to solo builders and is collecting listings now. Tools cannot be bought yet. Buying opens at the public launch, and there is a notify list on the home page. Everything below describes how the marketplace works, which for buying means how it will work once it opens.
 
-${brand.name} is a marketplace for small, finished software. At launch, a buyer will pay once, download the tool, and own it forever: no subscription, no account required to run it, no expiry. Every tool runs on the buyer's own computer rather than in the cloud, so their data never leaves their machine.
+${brand.name} is a marketplace for self-hosted software, made by solo developers. At launch, a buyer will pay once, download the tool, and own it forever: no subscription, no account required to run it, no expiry. Every tool runs on the buyer's own computer rather than in the cloud, so their data never leaves their machine.
 
 ## Who it is for
 
