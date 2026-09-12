@@ -544,6 +544,7 @@ export async function setRole(role: Role) {
     throw new Error("Admin access can't be self-assigned.");
   }
   await updateDoc(doc(db, "users", currentUser.uid), { role });
+  if (role === "seller") void notifySellerWelcome();
 }
 
 /**
@@ -571,6 +572,7 @@ export async function becomeSeller(): Promise<void> {
   const snap = await getDoc(uref);
   if (!snap.exists() || snap.data().role !== "buyer") return;
   await updateDoc(uref, { role: "seller" as Role });
+  void notifySellerWelcome();
 }
 
 /* ---------------------------------------------------------------------------
@@ -736,6 +738,20 @@ export async function refreshPayoutStatus(): Promise<void> {
   const token = await getIdToken();
   if (!token) return;
   await fetch("/api/stripe/status", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => {});
+}
+
+/**
+ * Best-effort: tell the server this account just became a seller, so it can
+ * send the welcome email. The server decides whether to (role, once per
+ * account); calling it twice is harmless. Never throws.
+ */
+export async function notifySellerWelcome(): Promise<void> {
+  const token = await getIdToken();
+  if (!token) return;
+  await fetch("/api/notify/welcome", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   }).catch(() => {});

@@ -1,5 +1,7 @@
 import { emailShell, escapeHtml } from "@/lib/email";
 import { COMMISSION_RATE } from "@/lib/stripe";
+import { brand } from "@/lib/brand";
+import { SELLER_WELCOME_HTML } from "@/lib/emails/sellerWelcome";
 
 /* ---------------------------------------------------------------------------
    All transactional email copy lives here — one place to edit the wording.
@@ -9,6 +11,30 @@ import { COMMISSION_RATE } from "@/lib/stripe";
 
 function money(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
+}
+
+/**
+ * To a new seller, once, when their account becomes a seller account.
+ *
+ * The exception to "all copy lives here": this one is a designed email, so its
+ * words and layout live in design/emails/welcome.html, where it is previewed,
+ * and design/emails/build-template.mjs compiles that into
+ * lib/emails/sellerWelcome.ts. Edit the HTML, re-run the script.
+ *
+ * It comes from a person, not noreply, because it asks for replies. Images
+ * load from public/email/ on the live site, so a new image there only shows
+ * up in mail once it is deployed.
+ */
+export const SELLER_WELCOME_FROM =
+  process.env.SELLER_WELCOME_FROM ||
+  `Sevval from ${brand.name} <hello@${brand.domain}>`;
+export const SELLER_WELCOME_REPLY_TO = `hello@${brand.domain}`;
+
+export function sellerWelcomeEmail(imageBase = `${brand.url}/email/`) {
+  return {
+    subject: "guess what? happy to have you!",
+    html: SELLER_WELCOME_HTML.replaceAll("{{IMG}}", imageBase),
+  };
 }
 
 /** To the admin: a seller submitted a new listing for review. */

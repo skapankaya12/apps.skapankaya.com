@@ -25,6 +25,10 @@ type SendArgs = {
   text?: string;
   /** Set the Reply-To (e.g. a buyer's address on a support thread). */
   replyTo?: string;
+  /** Override EMAIL_FROM, for mail that comes from a person rather than noreply. */
+  from?: string;
+  /** Inline images, referenced from the HTML as cid:<contentId>. */
+  attachments?: { filename: string; content: string; contentId: string }[];
 };
 
 /** Send one email. Returns true on success, false if unconfigured or failed. */
@@ -38,12 +42,21 @@ export async function sendEmail(args: SendArgs): Promise<boolean> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM,
+        from: args.from ?? process.env.EMAIL_FROM,
         to: Array.isArray(args.to) ? args.to : [args.to],
         subject: args.subject,
         html: args.html,
         ...(args.text ? { text: args.text } : {}),
         ...(args.replyTo ? { reply_to: args.replyTo } : {}),
+        ...(args.attachments
+          ? {
+              attachments: args.attachments.map((a) => ({
+                filename: a.filename,
+                content: a.content,
+                content_id: a.contentId,
+              })),
+            }
+          : {}),
       }),
     });
     if (!res.ok) {
