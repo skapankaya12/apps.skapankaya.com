@@ -2,6 +2,7 @@ import { emailShell, escapeHtml } from "@/lib/email";
 import { COMMISSION_RATE } from "@/lib/stripe";
 import { brand } from "@/lib/brand";
 import { SELLER_WELCOME_HTML } from "@/lib/emails/sellerWelcome";
+import { SELLER_NO_LISTING_HTML } from "@/lib/emails/sellerNoListing";
 
 /* ---------------------------------------------------------------------------
    All transactional email copy lives here — one place to edit the wording.
@@ -35,6 +36,25 @@ export function sellerWelcomeEmail(imageBase = `${brand.url}/email/`) {
   return {
     subject: "guess what? happy to have you!",
     html: SELLER_WELCOME_HTML.replaceAll("{{IMG}}", imageBase),
+  };
+}
+
+/**
+ * To a seller with no listing three days after becoming one. Designed in
+ * design/emails/no-listing.html, same as the welcome, and sent by the daily
+ * lifecycle cron (app/api/cron/lifecycle). Unlike the welcome it is not an
+ * account email, so it carries a per-person unsubscribe link.
+ */
+export function sellerNoListingEmail(
+  imageBase = `${brand.url}/email/`,
+  unsubscribeUrl = `${brand.url}/api/email/unsubscribe`
+) {
+  return {
+    subject: "your first listing, the short version",
+    html: SELLER_NO_LISTING_HTML.replaceAll("{{IMG}}", imageBase).replaceAll(
+      "{{UNSUBSCRIBE}}",
+      unsubscribeUrl.replaceAll("&", "&amp;")
+    ),
   };
 }
 

@@ -29,6 +29,8 @@ type SendArgs = {
   from?: string;
   /** Inline images, referenced from the HTML as cid:<contentId>. */
   attachments?: { filename: string; content: string; contentId: string }[];
+  /** Extra headers, e.g. List-Unsubscribe on anything that is not an account email. */
+  headers?: Record<string, string>;
 };
 
 /** Send one email. Returns true on success, false if unconfigured or failed. */
@@ -48,6 +50,7 @@ export async function sendEmail(args: SendArgs): Promise<boolean> {
         html: args.html,
         ...(args.text ? { text: args.text } : {}),
         ...(args.replyTo ? { reply_to: args.replyTo } : {}),
+        ...(args.headers ? { headers: args.headers } : {}),
         ...(args.attachments
           ? {
               attachments: args.attachments.map((a) => ({
