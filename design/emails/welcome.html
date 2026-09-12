@@ -99,6 +99,31 @@
                 </td>
               </tr>
 
+              <!--if:VERIFY-->
+              <!-- Confirm the email, only while the account is unverified. This
+                   replaces Firebase's own verification email for sellers, so
+                   they get one message at signup rather than two. -->
+              <tr>
+                <td class="em-pad em-font" style="padding:32px 48px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1.5px solid #4f46e5;border-radius:16px;">
+                    <tr>
+                      <td class="em-font" style="padding:20px 24px 22px;">
+                        <p style="margin:0 0 4px;font-size:16px;line-height:24px;font-weight:700;color:#101014;">first, confirm your email</p>
+                        <p style="margin:0 0 14px;font-size:15px;line-height:23px;color:#4a4a56;">one click, and your account is all set.</p>
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td bgcolor="#4f46e5" style="background:#4f46e5;border-radius:999px;">
+                              <a href="https://thesolomarket.firebaseapp.com/__/auth/action?mode=verifyEmail&amp;oobCode=SAMPLE&amp;continueUrl=https%3A%2F%2Fwww.thesolomarket.com%2Fbrowse" data-slot-href="VERIFY_URL" class="em-font" style="display:inline-block;padding:10px 20px;font-size:14px;line-height:18px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">Confirm my email</a>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!--/if:VERIFY-->
+
               <!-- What the marketplace lists, as a quote box: the rules every
                    listing must meet, then examples of what fits. The rules and
                    the kinds of tool follow /docs/selling ("What you can sell")

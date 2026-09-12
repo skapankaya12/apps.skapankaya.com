@@ -3,7 +3,8 @@
  *
  *   npx tsx --env-file=.env.local scripts/send-seller-email.ts <email> <to...> [--live]
  *
- *   <email>   welcome | no-listing | rejected | approved (the last two with sample content)
+ *   <email>   welcome | welcome-verify | verify | no-listing | rejected | approved
+ *             (the confirm buttons and the last two use sample content)
  *   --live    send exactly what the site sends: the real subject, and images
  *             loaded from the live site. Use it for a real person, e.g. a
  *             seller who joined before an email existed.
@@ -23,12 +24,19 @@ import {
   sellerNoListingEmail,
   sellerRejectedEmail,
   sellerApprovedEmail,
+  verifyEmail,
   SELLER_WELCOME_FROM,
   SELLER_WELCOME_REPLY_TO,
 } from "../lib/emailTemplates";
 
+/** Stands in for a real verification link in tests: real ones verify an account. */
+const SAMPLE_VERIFY_URL = "https://www.thesolomarket.com/login";
+
 const TEMPLATES: Record<string, (imageBase?: string) => { subject: string; html: string }> = {
-  welcome: sellerWelcomeEmail,
+  welcome: (imageBase) => sellerWelcomeEmail(imageBase),
+  // The welcome as a brand-new, unverified seller gets it: with the confirm block.
+  "welcome-verify": (imageBase) => sellerWelcomeEmail(imageBase, SAMPLE_VERIFY_URL),
+  verify: (imageBase) => verifyEmail(SAMPLE_VERIFY_URL, imageBase),
   "no-listing": sellerNoListingEmail,
   // A sample rejection, to see the design with a formatted note in it.
   rejected: (imageBase) =>

@@ -8,6 +8,7 @@ import {
   becomeSeller,
   requestPasswordReset,
   signInWithGoogle,
+  requestVerificationEmail,
 } from "@/lib/store";
 import { brand } from "@/lib/brand";
 import { validateAvatar, AVATAR_ACCEPT } from "@/lib/media";
@@ -244,7 +245,16 @@ function LoginInner() {
       else await signIn(email.trim(), password);
       // After the account exists, never before: the role lives on a document
       // that sign-up has only just written.
-      if (wantsSeller()) await becomeSeller();
+      const verificationSent = wantsSeller() ? await becomeSeller() : false;
+      // A new account needs its address confirmed. A new seller's welcome
+      // carries that button; anyone else, or a seller whose welcome could not
+      // go, gets the verification email on its own. Best-effort: the account
+      // exists either way, and the banner can resend.
+      if (mode === "signup" && !verificationSent) {
+        void requestVerificationEmail().catch((err) =>
+          console.error("[signup] verification email:", err)
+        );
+      }
       router.push(destination());
     } catch (err: unknown) {
       setError(friendlyAuthError(err));

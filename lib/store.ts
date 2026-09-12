@@ -20,7 +20,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  sendEmailVerification,
   sendPasswordResetEmail,
   updateProfile,
   updatePassword,
@@ -361,8 +360,10 @@ export async function signUp(
     },
     { merge: true }
   );
-  // Fire off the verification email (link-based; Firebase hosts the handler).
-  await sendEmailVerification(cred.user);
+  // No verification email from here any more: Firebase's own cannot be
+  // designed, so the signup form asks the server for ours once it knows which
+  // one applies (the seller welcome carries the link; everyone else gets
+  // requestVerificationEmail). See app/login/page.tsx.
 
   // The photo goes last, and deliberately after the user document rather than
   // before it. storage.rules binds an avatar to its owner's uid, so there is
@@ -396,11 +397,26 @@ export async function getIdToken(): Promise<string | null> {
   return auth.currentUser ? auth.currentUser.getIdToken() : null;
 }
 
+/**
+ * Ask the server to send our designed verification email to the signed-in,
+ * still-unverified user (app/api/auth/verification). The link in it is made by
+ * Firebase; only the email around it is ours. Throws on failure so a caller
+ * can say so.
+ */
+export async function requestVerificationEmail(): Promise<void> {
+  if (!auth.currentUser || auth.currentUser.emailVerified) return;
+  const token = await getIdToken();
+  if (!token) return;
+  const res = await fetch("/api/auth/verification", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`verification email failed (${res.status})`);
+}
+
 /** Re-send the verification email to the current, still-unverified user. */
 export async function resendVerification(): Promise<void> {
-  if (auth.currentUser && !auth.currentUser.emailVerified) {
-    await sendEmailVerification(auth.currentUser);
-  }
+  await requestVerificationEmail();
 }
 
 /**
@@ -564,18 +580,22 @@ export async function setRole(role: Role) {
  * the cache for the same reason as the uid, and an admin pressing the same
  * button must not write themselves down to seller.
  */
-export async function becomeSeller(): Promise<void> {
+/**
+ * Resolves to whether the welcome that went out carried the "confirm your
+ * email" button, so the signup form knows not to send a second email for it.
+ */
+export async function becomeSeller(): Promise<boolean> {
   const fbUser = auth.currentUser;
-  if (!fbUser) return;
+  if (!fbUser) return false;
   // Google does not distinguish signing up from signing in, so this can run
   // before the account document exists at all. Create it here rather than
   // returning empty-handed and racing the listener that would have created it.
   await ensureUserDoc(fbUser);
   const uref = doc(db, "users", fbUser.uid);
   const snap = await getDoc(uref);
-  if (!snap.exists() || snap.data().role !== "buyer") return;
+  if (!snap.exists() || snap.data().role !== "buyer") return false;
   await updateDoc(uref, { role: "seller" as Role });
-  void notifySellerWelcome();
+  return notifySellerWelcome();
 }
 
 /* ---------------------------------------------------------------------------
@@ -749,15 +769,22 @@ export async function refreshPayoutStatus(): Promise<void> {
 /**
  * Best-effort: tell the server this account just became a seller, so it can
  * send the welcome email. The server decides whether to (role, once per
- * account); calling it twice is harmless. Never throws.
+ * account); calling it twice is harmless. Never throws. Resolves to whether
+ * the welcome carried the email-verification button.
  */
-export async function notifySellerWelcome(): Promise<void> {
+export async function notifySellerWelcome(): Promise<boolean> {
   const token = await getIdToken();
-  if (!token) return;
-  await fetch("/api/notify/welcome", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  }).catch(() => {});
+  if (!token) return false;
+  try {
+    const res = await fetch("/api/notify/welcome", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const body = (await res.json().catch(() => ({}))) as { verification?: boolean };
+    return body.verification === true;
+  } catch {
+    return false;
+  }
 }
 
 /**

@@ -5,6 +5,7 @@ import { SELLER_WELCOME_HTML } from "@/lib/emails/sellerWelcome";
 import { SELLER_NO_LISTING_HTML } from "@/lib/emails/sellerNoListing";
 import { SELLER_REJECTED_HTML } from "@/lib/emails/sellerRejected";
 import { SELLER_APPROVED_HTML } from "@/lib/emails/sellerApproved";
+import { VERIFY_EMAIL_HTML } from "@/lib/emails/verifyEmail";
 import { noteToEmailHtml } from "@/lib/noteEmail";
 
 /* ---------------------------------------------------------------------------
@@ -15,6 +16,18 @@ import { noteToEmailHtml } from "@/lib/noteEmail";
 
 function money(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
+}
+
+/** Keep or drop a {{#NAME}}...{{/NAME}} block from a generated template. */
+function section(html: string, name: string, keep: boolean): string {
+  const open = `{{#${name}}}`;
+  const close = `{{/${name}}}`;
+  const a = html.indexOf(open);
+  const b = html.indexOf(close);
+  if (a < 0 || b < 0) return html;
+  return keep
+    ? html.slice(0, a) + html.slice(a + open.length, b) + html.slice(b + close.length)
+    : html.slice(0, a) + html.slice(b + close.length);
 }
 
 /**
@@ -35,10 +48,33 @@ export const SELLER_WELCOME_FROM =
   process.env.SELLER_WELCOME_FROM || `${brand.name} <hello@${brand.domain}>`;
 export const SELLER_WELCOME_REPLY_TO = `hello@${brand.domain}`;
 
-export function sellerWelcomeEmail(imageBase = `${brand.url}/email/`) {
+/**
+ * `verifyUrl`, when given, shows the "first, confirm your email" block: the
+ * welcome doubles as the verification email for a new seller, so they get one
+ * message at signup rather than two. Omitted once the address is verified.
+ */
+export function sellerWelcomeEmail(imageBase = `${brand.url}/email/`, verifyUrl?: string) {
   return {
     subject: "guess what? happy to have you!",
-    html: SELLER_WELCOME_HTML.replaceAll("{{IMG}}", imageBase),
+    html: section(SELLER_WELCOME_HTML, "VERIFY", Boolean(verifyUrl))
+      .replaceAll("{{IMG}}", imageBase)
+      .replaceAll("{{VERIFY_URL}}", escapeHtml(verifyUrl ?? "")),
+  };
+}
+
+/**
+ * Email verification for an account that is not getting the seller welcome:
+ * buyers at signup, and anyone pressing "resend" on the verify banner.
+ * Designed in design/emails/verify.html. Replaces Firebase's own, undesignable
+ * verification email; the link inside is still Firebase's (lib/verification.server).
+ */
+export function verifyEmail(verifyUrl: string, imageBase = `${brand.url}/email/`) {
+  const url = escapeHtml(verifyUrl);
+  return {
+    subject: "confirm your email for The Solo Market",
+    html: VERIFY_EMAIL_HTML.replaceAll("{{IMG}}", imageBase)
+      .replaceAll("{{VERIFY_URL}}", url)
+      .replaceAll("{{VERIFY_URL_TEXT}}", url),
   };
 }
 
@@ -81,18 +117,6 @@ export function sellerRejectedEmail(a: {
       .replaceAll("{{EDIT_URL}}", escapeHtml(a.editUrl))
       .replace("{{NOTE}}", noteToEmailHtml(a.note)),
   };
-}
-
-/** Keep or drop a {{#NAME}}...{{/NAME}} block from a generated template. */
-function section(html: string, name: string, keep: boolean): string {
-  const open = `{{#${name}}}`;
-  const close = `{{/${name}}}`;
-  const a = html.indexOf(open);
-  const b = html.indexOf(close);
-  if (a < 0 || b < 0) return html;
-  return keep
-    ? html.slice(0, a) + html.slice(a + open.length, b) + html.slice(b + close.length)
-    : html.slice(0, a) + html.slice(b + close.length);
 }
 
 /** The words a seller's share links fill in. Kept here so they are edited once. */

@@ -8,8 +8,9 @@ when it is time. If you notice something here that has gone stale, say so in
 chat and leave the file alone until she asks. A doc that rewrites itself every
 session is a doc nobody can trust.
 
-Last updated: 12 September 2026, at Sevval's request (the seller welcome email
-and how mail actually leaves the building, launch moved to November, the "fully
+Last updated: 12 September 2026, at Sevval's request (**seller emails done for
+the seller-only phase**, see "Emails: where they stand" in §8; the seller
+welcome and how mail actually leaves the building, launch moved to November, the "fully
 unlocked" listing rule, the "free AI assistant" wording removed, and what
 shipped between 27 August and 6 September: signup asking buy or sell, the
 homepage split, footer badges. See §8).
@@ -134,8 +135,19 @@ Checked against public DNS on 12 September. DNS lives at **Namecheap**
 | Receiving (anything @thesolomarket.com, including hello@) | **Google Workspace** | root MX is `smtp.google.com` |
 | Images inside emails | Vercel, the site itself | plain files in `public/email/`, so a new one only shows in mail once deployed |
 
-Firebase sends its own auth mail (verification, password reset) and the contact
-form goes to a Google Sheet; neither touches Resend.
+Firebase still sends the password-reset email, and the contact form goes to a
+Google Sheet; neither touches Resend. **Email verification no longer comes
+from Firebase** (since 12 September): its body cannot be designed in the
+console, so the site asks the Admin SDK for the link alone
+(`lib/verification.server.ts`) and sends it in its own email. A new seller gets
+it inside the welcome ("first, confirm your email"); anyone else gets
+`design/emails/verify.html` from `/api/auth/verification`, which is also what
+the verify banner's "resend" calls. Firebase throttles link generation
+project-wide after a burst (`TOO_MANY_ATTEMPTS_TRY_LATER`); the route answers
+that as a 429. The link's "continue" address must be an Authorized domain in
+Firebase Auth or Firebase refuses it, in which case the link is made without
+one: on 12 September `staging.thesolomarket.com` was not authorized in the
+staging project. Production's list was not checked.
 
 Authentication records, all live as of 12 September: DKIM for Resend
 (`resend._domainkey`) and for Google (`google._domainkey`); SPF for Resend on
@@ -356,7 +368,11 @@ Three roles: `buyer`, `seller`, `admin`.
    retried on the next promotion rather than lost. It comes from
    `The Solo Market <hello@thesolomarket.com>`, replies to hello@,
    subject "guess what? happy to have you!". Accounts that were already sellers
-   before 12 September never trigger it.
+   before 12 September never trigger it. While the address is unverified the
+   welcome carries the confirm-your-email block, and says so in its response;
+   the signup form sends the standalone verification email only when it did
+   not (a buyer, or a seller whose welcome could not go). Google accounts are
+   verified already and get neither.
 0b. **The daily lifecycle run.** Vercel Cron calls `/api/cron/lifecycle` once
    a day with `CRON_SECRET`. Today it sends one email, the no-listing tip
    (`design/emails/no-listing.html`): to a seller three days past becoming one
@@ -530,6 +546,42 @@ one-sentence change to `/privacy` first, and that is Sevval's call.**
 Note the small-numbers problem is sharper here than for the sphere: a sphere is
 ambiguous, but "2 sellers" under "the marketplace is growing" argues against
 joining. A "founding sellers" framing works honestly at any size.
+
+### Emails: where they stand (12 September 2026)
+
+**Done for the seller-only phase, by Sevval's call. Revisit before the external
+(buyer) launch.** Every designed email lives in `design/emails/*.html`, is
+previewed with `emailpreview`, compiled by `build-template.mjs`, and can be sent
+to anyone by hand with `scripts/send-seller-email.ts`.
+
+| # | Email | To | Trigger | State |
+|---|---|---|---|---|
+| 1 | Welcome (with "confirm your email" while unverified) | new seller | becoming a seller | designed, live |
+| 2 | Confirm your email | buyer; anyone pressing resend | signup, verify banner | designed, live |
+| 3 | No listing yet tip | seller 3 days in, nothing submitted | daily cron | designed, live |
+| 4 | Rejected, with the review note | seller | admin rejects | designed, live |
+| 5 | Approved, with share links and photo nudge | seller | admin approves | designed, live |
+| 6 | New listing to review | admin | seller submits | plain, live |
+| 7 | Receipt | buyer | purchase | plain, never sent (no buyers yet) |
+| 8 | You made a sale | seller | purchase | plain, never sent |
+| 9 | New sale | admin | purchase | plain, never sent |
+
+Also the lifecycle run's own summary to the admin (plain), and Firebase's
+password-reset email (undesigned, Firebase's).
+
+**To do before the external launch:**
+- Redesign 7, 8 and 9 in the same style; they are the first emails a buyer ever
+  gets, and they still carry em dashes. 6 is admin-only and can stay plain.
+- Password reset: the same trick as verification
+  (`generatePasswordResetLink`) if it should look like the rest.
+- The launch email to the waitlist, which `/privacy` limits to exactly one
+  message.
+- Payout setup incomplete, and first sale as its own email, once Stripe is live.
+- Buyer lifecycle: day 3 "did it run?", update available, day 11 refund window.
+- Seller lifecycle still unchosen: rejected and not resubmitted. The Monday
+  digest to Sevval was chosen and not built.
+- Firebase Auth authorized domains (§3), and DMARC from `p=none` to
+  `p=quarantine`.
 
 ### Next up, ahead of everything else
 

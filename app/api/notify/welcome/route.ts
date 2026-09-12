@@ -12,6 +12,8 @@ import {
   SELLER_WELCOME_REPLY_TO,
 } from "@/lib/emailTemplates";
 import { rateLimit, tooManyRequests } from "@/lib/rateLimit";
+import { emailVerificationLink } from "@/lib/verification.server";
+import { siteOrigin } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -36,12 +38,18 @@ const WELCOME_WINDOW_MS = 60 * 60 * 1000;
  *   if Resend fails, so a failure is retried on the next promotion rather than
  *   lost.
  *
+ * While the address is unverified, the welcome also carries the "confirm your
+ * email" button, so a new seller gets one email at signup instead of the
+ * welcome plus a verification email. The response says whether it did
+ * (`verification`), so the signup form can send the plain verification email
+ * instead when it did not (already welcomed, or the send failed).
+ *
  * SELLER_WELCOME_EMAIL=off switches it off without a deploy.
  */
 export async function POST(req: Request) {
   if (!adminConfigured) return Response.json({ ok: false }, { status: 200 });
   if (process.env.SELLER_WELCOME_EMAIL === "off") {
-    return Response.json({ ok: false, reason: "disabled" });
+    return Response.json({ ok: false, reason: "disabled", verification: false });
   }
 
   const uid = await verifyRequestUid(req);
@@ -56,8 +64,9 @@ export async function POST(req: Request) {
     return Response.json({ ok: false, reason: "not-a-seller" }, { status: 409 });
   }
 
-  const email = (await getAdminAuth().getUser(uid)).email;
-  if (!email) return Response.json({ ok: false, reason: "no-email" });
+  const account = await getAdminAuth().getUser(uid);
+  const email = account.email;
+  if (!email) return Response.json({ ok: false, reason: "no-email", verification: false });
 
   const logRef = db.collection("emailLog").doc(uid);
   const claimed = await db.runTransaction(async (tx) => {
@@ -66,15 +75,22 @@ export async function POST(req: Request) {
     tx.set(logRef, { sellerWelcomeAt: FieldValue.serverTimestamp() }, { merge: true });
     return true;
   });
-  if (!claimed) return Response.json({ ok: true, reason: "already-sent" });
+  if (!claimed) return Response.json({ ok: true, reason: "already-sent", verification: false });
+
+  const verifyUrl = account.emailVerified
+    ? undefined
+    : await emailVerificationLink(email, `${siteOrigin(req)}/dashboard/new`).catch((err) => {
+        console.error("[welcome] could not make a verification link:", err);
+        return undefined;
+      });
 
   const ok = await sendEmail({
     to: email,
     from: SELLER_WELCOME_FROM,
     replyTo: SELLER_WELCOME_REPLY_TO,
-    ...sellerWelcomeEmail(),
+    ...sellerWelcomeEmail(undefined, verifyUrl),
   });
   if (!ok) await logRef.update({ sellerWelcomeAt: FieldValue.delete() });
 
-  return Response.json({ ok });
+  return Response.json({ ok, verification: ok && Boolean(verifyUrl) });
 }

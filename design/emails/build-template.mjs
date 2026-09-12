@@ -24,6 +24,7 @@ const EMAILS = [
   { html: "no-listing.html", ts: "sellerNoListing.ts", name: "SELLER_NO_LISTING_HTML", about: "The nudge to a seller with no listing three days in." },
   { html: "rejected.html", ts: "sellerRejected.ts", name: "SELLER_REJECTED_HTML", about: "The rejection email, carrying the admin's review note." },
   { html: "approved.html", ts: "sellerApproved.ts", name: "SELLER_APPROVED_HTML", about: "The approval email: live, share it, and a photo nudge." },
+  { html: "verify.html", ts: "verifyEmail.ts", name: "VERIFY_EMAIL_HTML", about: "Email verification, for accounts that are not sellers." },
 ];
 
 const here = new URL(".", import.meta.url);
