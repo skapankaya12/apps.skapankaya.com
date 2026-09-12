@@ -7,10 +7,12 @@
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
-<title>A note on your listing</title>
+<title>Your tool is live</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
 <!--
-  Rejection email to a seller, carrying the admin's review note. Design mockup.
+  Approval email to a seller: live, share it, and a photo nudge. Design mockup.
+  Blocks between "if" comment markers are sent only when they apply (a note
+  from the review; the seller having no photo).
   Sample content (the title, the note, the edit link) sits inside "slot"
   comment markers; build-template.mjs swaps each for a placeholder that is
   filled per listing at send time.
@@ -55,7 +57,7 @@
 
 <!-- Preheader -->
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f4f4f6;">
-  a couple of changes before <!--slot:TITLE-->PDF Merger Pro<!--/slot--> can go live
+  <!--slot:TITLE-->PDF Merger Pro<!--/slot--> passed review and is live on The Solo Market &#127881;
   &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
 </div>
 
@@ -74,7 +76,7 @@
               <tr>
                 <td class="em-pad em-font" style="padding:44px 48px 4px;">
                   <h1 class="em-h1" style="margin:0 0 18px;font-size:32px;line-height:38px;font-weight:800;letter-spacing:-0.025em;color:#101014;">
-                    <span style="color:#6a4bf0;">h</span><span style="color:#6254f2;">i</span> <span style="color:#595df4;">t</span><span style="color:#5166f6;">h</span><span style="color:#4870f9;">e</span><span style="color:#4079fb;">r</span><span style="color:#3782fd;">e</span><span style="color:#2f8bff;">,</span> a quick note on your listing
+                    <span style="color:#6a4bf0;">h</span><span style="color:#6254f2;">i</span> <span style="color:#595df4;">t</span><span style="color:#5166f6;">h</span><span style="color:#4870f9;">e</span><span style="color:#4079fb;">r</span><span style="color:#3782fd;">e</span><span style="color:#2f8bff;">,</span> you&rsquo;re live!
                   </h1>
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
@@ -83,7 +85,7 @@
                           it's Sevval from <strong style="font-weight:800;"><span style="color:#2f8bff;">T</span><span style="color:#3486fe;">h</span><span style="color:#3980fc;">e</span> <span style="color:#3e7bfb;">S</span><span style="color:#4376fa;">o</span><span style="color:#4870f9;">l</span><span style="color:#4c6bf8;">o</span> <span style="color:#5166f6;">M</span><span style="color:#5660f5;">a</span><span style="color:#5b5bf4;">r</span><span style="color:#6056f2;">k</span><span style="color:#6550f1;">e</span><span style="color:#6a4bf0;">t</span></strong>.
                         </p>
                         <p style="margin:0;font-size:16px;line-height:26px;color:#3a3a48;">
-                          I reviewed <strong style="color:#101014;"><!--slot:TITLE-->PDF Merger Pro<!--/slot--></strong> and it&rsquo;s not quite ready to go live yet. here&rsquo;s what to change:
+                          I reviewed <strong style="color:#101014;"><!--slot:TITLE-->PDF Merger Pro<!--/slot--></strong> and it passed. it&rsquo;s now live on the marketplace &#127881;
                         </p>
                       </td>
                       <td class="em-col em-hero-admin" valign="bottom" align="center" style="padding-left:24px;">
@@ -95,56 +97,24 @@
                 </td>
               </tr>
 
-              <!-- The review note. {{NOTE}} is the admin's own words from the
-                   review console, as HTML already made safe by the sender. The
-                   box is the one the welcome's rules use; the label says whose
-                   words these are. -->
+              <!-- See it live: her jumping illustration, the one button -->
               <tr>
                 <td class="em-pad em-font" style="padding:30px 48px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f7ff;border:1px solid #e1e7fd;border-radius:16px;">
-                    <tr>
-                      <td class="em-font" style="padding:20px 24px 22px;font-size:15px;line-height:24px;color:#101014;">
-                        <p style="margin:0 0 10px;font-size:11px;line-height:16px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;color:#4f46e5;">from the review</p>
-                        <!--slot:NOTE--><p style="margin:0 0 12px;">thanks for sending this in, the tool itself looks really useful. two things before it can go live:</p>
-<ul style="margin:0 0 12px;padding-left:20px;">
-<li style="margin:0 0 6px;">the demo video stops before the merge finishes, so buyers never see the result. could you record it again until the merged PDF opens?</li>
-<li style="margin:0;">SETUP.md is missing from the zip. the package needs manifest.json, README.md, SETUP.md, LICENSE.md and src/.</li>
-</ul>
-<p style="margin:0 0 8px;">here&rsquo;s where the demo cuts off:</p>
-<div style="margin:0 0 4px;height:150px;border:1.5px dashed #c9d2fb;border-radius:10px;background:#ffffff;text-align:center;line-height:150px;font-size:13px;color:#8f8f9c;">your screenshot shows here</div><!--/slot-->
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-
-              <!-- Reassurance -->
-              <tr>
-                <td class="em-pad em-font" style="padding:24px 48px 0;">
-                  <p style="margin:0;font-size:15px;line-height:24px;color:#4a4a56;">
-                    <strong style="color:#101014;">this isn&rsquo;t a no.</strong> most tools come back after one small fix, and sending it again costs nothing.
-                  </p>
-                </td>
-              </tr>
-
-              <!-- The one button, as in no-listing.html -->
-              <tr>
-                <td class="em-pad em-font" style="padding:28px 48px 0;">
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="border-top:1px solid #ececef;border-bottom:1px solid #ececef;padding:24px 0;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                           <tr>
                             <td class="em-col" width="180" valign="top">
-                              <img class="em-step-img" src="img/step-build.jpg" width="180" height="120" alt="" style="display:block;border:0;width:180px;height:120px;border-radius:11px;">
+                              <img class="em-step-img" src="img/step-approved.jpg" width="180" height="120" alt="" style="display:block;border:0;width:180px;height:120px;border-radius:11px;">
                             </td>
                             <td class="em-col em-col-text em-font" valign="top" style="padding:2px 0 0 22px;">
-                              <p style="margin:0 0 6px;font-size:17px;line-height:23px;font-weight:800;letter-spacing:-0.01em;color:#101014;">fix it and send it back</p>
-                              <p style="margin:0;font-size:15px;line-height:23px;color:#4a4a56;">your listing keeps everything you already added, so it&rsquo;s usually a quick edit.</p>
+                              <p style="margin:0 0 6px;font-size:17px;line-height:23px;font-weight:800;letter-spacing:-0.01em;color:#101014;">see it live</p>
+                              <p style="margin:0;font-size:15px;line-height:23px;color:#4a4a56;">this is exactly what buyers see when they find your tool.</p>
                               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;">
                                 <tr>
                                   <td bgcolor="#4f46e5" style="background:#4f46e5;border-radius:999px;">
-                                    <a href="https://www.thesolomarket.com/dashboard" data-slot-href="EDIT_URL" class="em-font" style="display:inline-block;padding:10px 20px;font-size:14px;line-height:18px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">Edit your listing</a>
+                                    <a href="https://www.thesolomarket.com/app/pdf-merger-pro" data-slot-href="LISTING_URL" class="em-font" style="display:inline-block;padding:10px 20px;font-size:14px;line-height:18px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">View your listing</a>
                                   </td>
                                 </tr>
                               </table>
@@ -157,11 +127,76 @@
                 </td>
               </tr>
 
+              <!--if:NOTE-->
+              <!-- A note from the review, only when one was written on approval. -->
+              <tr>
+                <td class="em-pad em-font" style="padding:28px 48px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f7ff;border:1px solid #e1e7fd;border-radius:16px;">
+                    <tr>
+                      <td class="em-font" style="padding:20px 24px 10px;font-size:15px;line-height:24px;color:#101014;">
+                        <p style="margin:0 0 10px;font-size:11px;line-height:16px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;color:#4f46e5;">from the review</p>
+                        <!--slot:NOTE--><p style="margin:0 0 12px;">loved the demo, it shows the whole thing working in under a minute. nice work!</p><!--/slot-->
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!--/if:NOTE-->
+
+              <!-- Share it. Plain share links, no API and no login: each opens
+                   the network's own composer with the words and the listing
+                   link filled in, and the listing's OG image makes the card. -->
+              <tr>
+                <td class="em-pad em-font" style="padding:28px 48px 0;">
+                  <p style="margin:0 0 6px;font-size:17px;line-height:23px;font-weight:800;letter-spacing:-0.01em;color:#101014;">tell people it&rsquo;s out</p>
+                  <p style="margin:0 0 16px;font-size:15px;line-height:24px;color:#4a4a56;">the first buyers usually come from your own corner: the people who follow you and already have the problem your tool solves.</p>
+                  <!-- What will be posted, so nobody is surprised by the composer -->
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #ececef;border-radius:14px;">
+                    <tr>
+                      <td class="em-font" style="padding:14px 16px;font-size:15px;line-height:23px;color:#101014;">
+                        hey! now you can find me on thesolomarket.com &#127881;<br>
+                        <span style="color:#4f46e5;"><!--slot:LISTING_URL_SHORT-->thesolomarket.com/app/pdf-merger-pro<!--/slot--></span>
+                      </td>
+                    </tr>
+                  </table>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;">
+                    <tr>
+                      <td bgcolor="#101014" style="background:#101014;border-radius:999px;">
+                        <a href="https://x.com/intent/post?text=hey%21%20now%20you%20can%20find%20me%20on%20thesolomarket.com%20%F0%9F%8E%89&amp;url=https%3A%2F%2Fwww.thesolomarket.com%2Fapp%2Fpdf-merger-pro" data-slot-href="SHARE_X" class="em-font" style="display:inline-block;padding:10px 20px;font-size:14px;line-height:18px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">Share on &#120143;</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <p style="margin:12px 0 0;font-size:13px;line-height:20px;color:#6b6b76;">
+                    or share it on <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fwww.thesolomarket.com%2Fapp%2Fpdf-merger-pro" data-slot-href="SHARE_LINKEDIN" style="color:#4f46e5;text-decoration:underline;">LinkedIn</a>, <a href="https://bsky.app/intent/compose?text=hey%21%20now%20you%20can%20find%20me%20on%20thesolomarket.com%20%F0%9F%8E%89%20https%3A//www.thesolomarket.com/app/pdf-merger-pro" data-slot-href="SHARE_BLUESKY" style="color:#4f46e5;text-decoration:underline;">Bluesky</a> or <a href="https://www.threads.net/intent/post?text=hey%21%20now%20you%20can%20find%20me%20on%20thesolomarket.com%20%F0%9F%8E%89%20https%3A//www.thesolomarket.com/app/pdf-merger-pro" data-slot-href="SHARE_THREADS" style="color:#4f46e5;text-decoration:underline;">Threads</a>
+                  </p>
+                </td>
+              </tr>
+
+              <!--if:NO_PHOTO-->
+              <!-- Only for a seller with no photo yet: the builders wall on /sell
+                   shows faces, and theirs is missing. A text link, not a button. -->
+              <tr>
+                <td class="em-pad em-font" style="padding:28px 48px 0;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f7ff;border:1px solid #e1e7fd;border-radius:16px;">
+                    <tr>
+                      <td class="em-col" width="150" valign="middle" style="padding:14px 0 14px 14px;">
+                        <img class="em-step-img" src="img/step-wall.jpg" width="150" height="100" alt="" style="display:block;border:0;width:150px;height:100px;border-radius:10px;">
+                      </td>
+                      <td class="em-col em-col-text em-font" valign="middle" style="padding:14px 18px 14px 18px;font-size:14px;line-height:22px;color:#4a4a56;">
+                        <strong style="display:block;font-size:15px;color:#101014;margin-bottom:2px;">one more thing: your seat on the wall</strong>
+                        you don&rsquo;t have a photo yet. add one in <a href="https://www.thesolomarket.com/account" style="color:#4f46e5;text-decoration:underline;">account settings</a> and you&rsquo;ll show up on the builders wall.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!--/if:NO_PHOTO-->
+
               <!-- Closing -->
               <tr>
                 <td class="em-pad em-font" style="padding:28px 48px 8px;">
                   <p style="margin:0;font-size:16px;line-height:26px;color:#101014;">
-                    if anything in the note isn&rsquo;t clear, just reply to this email and I&rsquo;ll explain.
+                    congrats again! if you have any questions, just reply to this email.
                   </p>
                 </td>
               </tr>

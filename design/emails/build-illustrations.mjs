@@ -5,8 +5,8 @@
 // Every step image is 720x480, shown at 180x120 on desktop and up to 360x240
 // on phones (2x either way), JPEG, so mail clients never meet an SVG.
 //
-// Three are Sevval's own illustrations, kept at full size in ./source/ and
-// only resized here. Drop a new PNG into ./source/ under the same name and
+// All of them are Sevval's own illustrations, kept at full size in ./source/
+// and only resized here. Drop a new PNG into ./source/ under the same name and
 // re-run to replace one. A step with no source file falls back to a drawing
 // below, made to match her style (light lavender ground, navy line work,
 // small blue and violet spark marks) until she makes the real one.
@@ -78,7 +78,7 @@ const docs = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"
 
 const drawn = { "step-docs": docs };
 
-for (const name of ["step-docs", "step-review", "step-wall", "step-build"]) {
+for (const name of ["step-docs", "step-review", "step-wall", "step-build", "step-approved"]) {
   const src = `${SRC}${name}.png`;
   const input = existsSync(src) ? src : drawn[name] && Buffer.from(drawn[name]);
   if (!input) {

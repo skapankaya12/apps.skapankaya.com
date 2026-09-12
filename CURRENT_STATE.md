@@ -237,8 +237,9 @@ root A record is what keeps the apex redirecting to Vercel.
 
 Where emails are designed, outside the app so nothing in it ships as a page.
 `welcome.html` (the seller welcome), `no-listing.html` (the lifecycle tip) and
-`rejected.html` (the rejection, whose sample title, note and link sit in slot
-markers the build swaps for placeholders) are previewed with the `emailpreview` entry
+`rejected.html` and `approved.html` (whose sample title, note and links sit in
+slot markers the build swaps for placeholders, and whose optional blocks sit in
+"if" markers the sender keeps or drops) are previewed with the `emailpreview` entry
 in `.claude/launch.json` (a static server on port 4410; `img/` is a symlink to
 `public/email/`). Two scripts:
 
@@ -387,8 +388,14 @@ Three roles: `buyer`, `seller`, `admin`.
    `NoteEditor`, and `/api/notify/review` emails the seller. A rejection sends
    the designed email (`design/emails/rejected.html`, subject "a quick note on
    {title}", from hello@) with the note as its body and an "Edit your listing"
-   button to `/dashboard/new?edit={id}`; approval still sends the short plain
-   notice. Nothing is sent for listings rejected before 12 September. An admin edit does **not** reset status, so a live tool
+   button to `/dashboard/new?edit={id}`. An approval sends
+   `design/emails/approved.html` (subject "{title} is live!"): a button to the
+   live listing, share links that open X, Bluesky, Threads or LinkedIn with
+   "hey! now you can find me on thesolomarket.com" and the listing link already
+   filled in (plain share URLs, no API or login; `shareLinks` and `SHARE_TEXT`
+   in `lib/emailTemplates.ts`), the review note only if one was written, and a
+   builders-wall photo nudge only if the seller has no photo. Nothing is sent
+   for decisions made before 12 September. An admin edit does **not** reset status, so a live tool
    stays live.
 2b. **Seller edits.** A seller can edit a live listing. Whether that costs them
    their place on the marketplace depends on what changed: presentation (title,

@@ -1,12 +1,13 @@
 import { verifyRequestUid, getAdminDb, adminConfigured } from "@/lib/firebaseAdmin";
 import { sendEmail } from "@/lib/email";
 import {
-  reviewDecisionSellerEmail,
+  sellerApprovedEmail,
   sellerRejectedEmail,
   SELLER_WELCOME_FROM,
   SELLER_WELCOME_REPLY_TO,
 } from "@/lib/emailTemplates";
 import { siteOrigin } from "@/lib/stripe";
+import { brand } from "@/lib/brand";
 
 export const runtime = "nodejs";
 
@@ -50,30 +51,32 @@ export async function POST(req: Request) {
   if (!sellerEmail) return Response.json({ ok: false }, { status: 200 });
 
   const origin = siteOrigin(req);
-  // A rejection gets the designed email with the note as its body, from
-  // hello@ so the seller can reply to it. Approval keeps the short notice.
-  const ok =
+  // Both decisions get a designed email from hello@, so the seller can reply.
+  // A rejection carries the note as its body. An approval carries it only if
+  // the admin wrote one (the review console fills in "Passed all checks."
+  // otherwise), share links, and a photo nudge when the seller has no photo.
+  const title = listing.title ?? "your tool";
+  const content =
     decision === "rejected"
-      ? await sendEmail({
-          to: sellerEmail,
-          from: SELLER_WELCOME_FROM,
-          replyTo: SELLER_WELCOME_REPLY_TO,
-          ...sellerRejectedEmail({
-            title: listing.title ?? "your tool",
-            note: note?.trim() || "Did not pass review.",
-            editUrl: `${origin}/dashboard/new?edit=${encodeURIComponent(listingId)}`,
-          }),
+      ? sellerRejectedEmail({
+          title,
+          note: note?.trim() || "Did not pass review.",
+          editUrl: `${origin}/dashboard/new?edit=${encodeURIComponent(listingId)}`,
         })
-      : await sendEmail({
-          to: sellerEmail,
-          ...reviewDecisionSellerEmail({
-            decision,
-            title: listing.title ?? "Your tool",
-            note,
-            listingUrl: `${origin}/app/${listing.slug ?? ""}`,
-            dashboardUrl: `${origin}/dashboard`,
-          }),
+      : sellerApprovedEmail({
+          title,
+          // The public listing page, on the canonical origin: these links get
+          // posted to social networks, so they must never be a preview URL.
+          listingUrl: `${brand.url}/app/${listing.slug ?? ""}`,
+          note: note?.trim() && note.trim() !== "Passed all checks." ? note : undefined,
+          hasPhoto: Boolean(sellerSnap.data()?.avatarUrl),
         });
+  const ok = await sendEmail({
+    to: sellerEmail,
+    from: SELLER_WELCOME_FROM,
+    replyTo: SELLER_WELCOME_REPLY_TO,
+    ...content,
+  });
 
   return Response.json({ ok });
 }

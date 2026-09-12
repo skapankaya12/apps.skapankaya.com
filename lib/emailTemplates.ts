@@ -4,6 +4,7 @@ import { brand } from "@/lib/brand";
 import { SELLER_WELCOME_HTML } from "@/lib/emails/sellerWelcome";
 import { SELLER_NO_LISTING_HTML } from "@/lib/emails/sellerNoListing";
 import { SELLER_REJECTED_HTML } from "@/lib/emails/sellerRejected";
+import { SELLER_APPROVED_HTML } from "@/lib/emails/sellerApproved";
 import { noteToEmailHtml } from "@/lib/noteEmail";
 
 /* ---------------------------------------------------------------------------
@@ -82,6 +83,71 @@ export function sellerRejectedEmail(a: {
   };
 }
 
+/** Keep or drop a {{#NAME}}...{{/NAME}} block from a generated template. */
+function section(html: string, name: string, keep: boolean): string {
+  const open = `{{#${name}}}`;
+  const close = `{{/${name}}}`;
+  const a = html.indexOf(open);
+  const b = html.indexOf(close);
+  if (a < 0 || b < 0) return html;
+  return keep
+    ? html.slice(0, a) + html.slice(a + open.length, b) + html.slice(b + close.length)
+    : html.slice(0, a) + html.slice(b + close.length);
+}
+
+/** The words a seller's share links fill in. Kept here so they are edited once. */
+export const SHARE_TEXT = "hey! now you can find me on thesolomarket.com \u{1F389}";
+
+/**
+ * Links that open each network's own composer with the post filled in. No API
+ * and no login on our side; the listing page's OG image makes the preview card.
+ * LinkedIn's share URL takes only the link, so it gets no text.
+ */
+export function shareLinks(listingUrl: string) {
+  const text = encodeURIComponent(SHARE_TEXT);
+  const url = encodeURIComponent(listingUrl);
+  const both = encodeURIComponent(`${SHARE_TEXT} ${listingUrl}`);
+  return {
+    x: `https://x.com/intent/post?text=${text}&url=${url}`,
+    bluesky: `https://bsky.app/intent/compose?text=${both}`,
+    threads: `https://www.threads.net/intent/post?text=${both}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+  };
+}
+
+/**
+ * To a seller whose listing was approved: it is live, a button to see it,
+ * share links with the post written for them, the review note if one was
+ * written, and a nudge to add a photo for the builders wall if they have none.
+ * Designed in design/emails/approved.html. An account email, no unsubscribe.
+ */
+export function sellerApprovedEmail(a: {
+  title: string;
+  listingUrl: string;
+  /** The review note, if it says more than the default. */
+  note?: string;
+  hasPhoto: boolean;
+  imageBase?: string;
+}) {
+  const share = shareLinks(a.listingUrl);
+  let html = SELLER_APPROVED_HTML;
+  html = section(html, "NOTE", Boolean(a.note?.trim()));
+  html = section(html, "NO_PHOTO", !a.hasPhoto);
+  return {
+    subject: `${a.title} is live!`,
+    html: html
+      .replaceAll("{{IMG}}", a.imageBase ?? `${brand.url}/email/`)
+      .replaceAll("{{TITLE}}", escapeHtml(a.title))
+      .replaceAll("{{LISTING_URL}}", escapeHtml(a.listingUrl))
+      .replaceAll("{{LISTING_URL_SHORT}}", escapeHtml(a.listingUrl.replace(/^https:\/\/(www\.)?/, "")))
+      .replaceAll("{{SHARE_X}}", escapeHtml(share.x))
+      .replaceAll("{{SHARE_BLUESKY}}", escapeHtml(share.bluesky))
+      .replaceAll("{{SHARE_THREADS}}", escapeHtml(share.threads))
+      .replaceAll("{{SHARE_LINKEDIN}}", escapeHtml(share.linkedin))
+      .replace("{{NOTE}}", a.note ? noteToEmailHtml(a.note) : ""),
+  };
+}
+
 /** To the admin: a seller submitted a new listing for review. */
 export function newListingAdminEmail(a: {
   title: string;
@@ -96,38 +162,6 @@ export function newListingAdminEmail(a: {
        <p><strong>${escapeHtml(a.title)}</strong> — ${money(a.priceCents)}<br/>
        by ${escapeHtml(a.sellerName)}</p>
        <p><a href="${a.reviewUrl}">Open it in the review queue →</a></p>`
-    ),
-  };
-}
-
-/** To the seller: their listing was approved or rejected (with the review note). */
-export function reviewDecisionSellerEmail(a: {
-  decision: "approved" | "rejected";
-  title: string;
-  note?: string;
-  listingUrl: string;
-  dashboardUrl: string;
-}) {
-  const noteHtml = a.note?.trim()
-    ? `<div style="background:#f7f7f8;border-radius:12px;padding:12px"><p style="margin:0 0 8px"><strong>Note from review:</strong></p>${noteToEmailHtml(a.note)}</div>`
-    : "";
-  const title = escapeHtml(a.title);
-  if (a.decision === "approved") {
-    return {
-      subject: `Approved: ${a.title} is live`,
-      html: emailShell(
-        `<p><strong>${title}</strong> passed review and is now live on the marketplace. 🎉</p>
-         ${noteHtml}
-         <p><a href="${a.listingUrl}">View your listing →</a></p>`
-      ),
-    };
-  }
-  return {
-    subject: `Update on your listing: ${a.title}`,
-    html: emailShell(
-      `<p><strong>${title}</strong> wasn't approved this time.</p>
-       ${noteHtml}
-       <p>You can edit it and resubmit from your <a href="${a.dashboardUrl}">dashboard</a>.</p>`
     ),
   };
 }

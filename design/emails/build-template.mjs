@@ -10,7 +10,11 @@
 // (e.g. {{UNSUBSCRIBE}}) is left for the sender to fill per person. Sample
 // content that makes a mockup look real sits between slot markers,
 //   <!--slot:TITLE-->PDF Merger Pro<!--/slot-->
-// and becomes {{TITLE}} here, before comments are stripped. Re-run
+// and becomes {{TITLE}} here, before comments are stripped. A link does the
+// same with an attribute, so the preview still clicks through:
+//   href="https://sample" data-slot-href="LISTING_URL"  ->  href="{{LISTING_URL}}" A block that is
+// only sometimes sent sits between <!--if:NOTE--> and <!--/if:NOTE--> and
+// becomes {{#NOTE}}...{{/NOTE}}, which the sender keeps or drops. Re-run
 // after any edit to an .html file, or the site keeps sending the old design.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
@@ -19,6 +23,7 @@ const EMAILS = [
   { html: "welcome.html", ts: "sellerWelcome.ts", name: "SELLER_WELCOME_HTML", about: "The seller welcome email." },
   { html: "no-listing.html", ts: "sellerNoListing.ts", name: "SELLER_NO_LISTING_HTML", about: "The nudge to a seller with no listing three days in." },
   { html: "rejected.html", ts: "sellerRejected.ts", name: "SELLER_REJECTED_HTML", about: "The rejection email, carrying the admin's review note." },
+  { html: "approved.html", ts: "sellerApproved.ts", name: "SELLER_APPROVED_HTML", about: "The approval email: live, share it, and a photo nudge." },
 ];
 
 const here = new URL(".", import.meta.url);
@@ -27,7 +32,12 @@ await mkdir(new URL("../../lib/emails/", here), { recursive: true });
 for (const e of EMAILS) {
   const src = await readFile(new URL(e.html, here), "utf8");
   const html = src
+    // A link whose target is filled per email keeps a working sample href for
+    // the preview and names its slot beside it: href="..." data-slot-href="X".
+    .replace(/href="[^"]*"(\s+)data-slot-href="([A-Z_]+)"/g, 'href="{{$2}}"')
     .replace(/<!--slot:([A-Z_]+)-->[\s\S]*?<!--\/slot-->/g, "{{$1}}")
+    .replace(/<!--if:([A-Z_]+)-->/g, "{{#$1}}")
+    .replace(/<!--\/if:([A-Z_]+)-->/g, "{{/$1}}")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/src="img\//g, 'src="{{IMG}}')
     // Only whitespace that spans a line break: a plain space between two tags is
