@@ -259,7 +259,7 @@ export function WhatsNewPopup() {
                 focusScale={1.15}
               />
               <p className="mt-1.5 text-[12px] font-semibold leading-[20px] text-[#6b6b76]">
-                {makers.length === 1 ? "the maker" : "the makers"}
+                builders wall
               </p>
             </div>
           </div>
@@ -293,7 +293,7 @@ export function WhatsNewPopup() {
                           {item.tagline}
                         </p>
                         <span className="mt-2 inline-block text-[13px] font-bold text-[#4f46e5] group-hover:underline">
-                          View listing →
+                          View listing
                         </span>
                       </div>
                     </Link>
