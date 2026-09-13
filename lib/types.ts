@@ -35,6 +35,12 @@ export type ListingStatus =
  * Enforced in firestore.rules, which is the control; requiresReReview() in
  * lib/store.ts reads the same list so the form can say which one is about to
  * happen before the seller presses Save.
+ *
+ * The two licence key fields are here because they change what a buyer walks
+ * away with. Turning keys off on a live listing would sell a tool that asks
+ * for a key nobody hands out, and the redeem link is a URL buyers are sent to
+ * with a key in hand, so a new one gets looked at before anyone follows it.
+ * The instructions are not: rewording them is presentation.
  */
 export const REVIEW_CRITICAL_FIELDS = [
   "packagePath",
@@ -43,6 +49,8 @@ export const REVIEW_CRITICAL_FIELDS = [
   "setupMode",
   "platform",
   "version",
+  "needsLicenseKey",
+  "licenseRedeemUrl",
 ] as const;
 
 export type Runtime = "node" | "python" | "browser" | "binary" | "other";
@@ -281,6 +289,27 @@ export interface Listing {
   packagePath?: string;
   /** Apple signature check, for `setupMode: "installer"` only. */
   packageVerification?: PackageVerification;
+  /*
+    Licence keys, the AppSumo way.
+
+    Plenty of paid desktop apps are free to download and locked until a key is
+    entered, so the file alone is not the product. For those the seller hands
+    us a batch of their own keys and every buyer is given one at checkout. We
+    never make a key and never check one: we store them and hand them out.
+
+    The keys themselves live in listings/{id}/licenseKeys, which no browser can
+    read (see lib/licenseKeys.server.ts). Only these three descriptive fields
+    sit on the listing.
+  */
+  /** True when the tool needs a key the buyer gets with their purchase. */
+  needsLicenseKey?: boolean;
+  /** Shown to the buyer beside their key: where it goes and what to do. */
+  licenseInstructions?: string;
+  /**
+   * Where the key is redeemed, when that happens on the seller's website rather
+   * than inside the app. https only.
+   */
+  licenseRedeemUrl?: string;
   /** Admin note left on review (reason for rejection, or approval note). */
   reviewNote?: string;
   salesCount: number;
@@ -341,6 +370,8 @@ export interface SellerStats {
   grossByListing: Record<string, number>;
   /** Gross across everything they have sold, in cents. */
   grossCents: number;
+  /** Licence key stock per listing id, for listings that need keys. */
+  licenseKeys: Record<string, LicenseKeyStock>;
   /**
    * False when some of their sales predate `Purchase.sellerId` and so are not
    * counted here. The dashboard says the totals are partial rather than
@@ -370,7 +401,33 @@ export interface Purchase {
   /** Version the buyer downloaded; used to flag "update available". */
   purchasedVersion: string;
   stripeSessionId?: string;
+  /**
+   * The licence key this buyer was given, for a listing that needs one.
+   * Copied onto the purchase at the moment of sale, so the Library can show it
+   * forever and the buyer never depends on an email arriving.
+   */
+  licenseKey?: string;
+  /**
+   * True when the listing needed a key and none was left at the moment of sale.
+   * Only possible when two people buy the last key within seconds of each other,
+   * since checkout refuses once the stock is empty. The seller and the admin
+   * are told straight away.
+   */
+  licenseKeyPending?: boolean;
+  /** Copies of the listing's instructions and redeem link at the time of sale. */
+  licenseInstructions?: string;
+  licenseRedeemUrl?: string;
   createdAt: number;
+}
+
+/** How many of a listing's licence keys are in each state. */
+export interface LicenseKeyStock {
+  /** Not yet given to anyone. */
+  available: number;
+  /** Given to a buyer. */
+  assigned: number;
+  /** Set aside for the admin to test during review. Never sold. */
+  review: number;
 }
 
 /* ---------------------------------------------------------------------------

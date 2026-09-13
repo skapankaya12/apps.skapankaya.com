@@ -186,6 +186,8 @@ function checkoutError(code?: string): string {
       return "This is your own tool — you can't buy it.";
     case "not-available":
       return "This tool isn't available for purchase right now.";
+    case "sold-out":
+      return "This tool comes with a license key, and the maker has run out. They've been told. Please check back soon.";
     case "unauthorized":
       return "Your session expired. Please sign in again.";
     default:

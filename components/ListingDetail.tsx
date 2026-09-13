@@ -223,6 +223,16 @@ export function ListingDetail({
             <h2 className="text-lg font-semibold">How you&apos;ll run it</h2>
             <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
               {SETUP_COPY[listing.setupMode]}
+              {/* Said before anyone pays: a tool that stops at an activation
+                  screen is a different thing to buy from one that just opens. */}
+              {listing.needsLicenseKey && (
+                <p className="mt-3 text-sm text-[var(--muted)]">
+                  <span className="font-medium text-[var(--foreground)]">
+                    Needs a license key.
+                  </span>{" "}
+                  Yours comes with your purchase and stays in your library.
+                </p>
+              )}
               <Link href="/how-to-run" className="mt-4 inline-block text-sm font-medium text-[var(--accent)] hover:underline">
                 See the full how-to-run guide →
               </Link>
@@ -310,7 +320,9 @@ export function ListingDetail({
                 "Runs on your own computer",
                 "14-day money-back guarantee",
                 "Re-download anytime",
-                "No account needed",
+                // A keyed tool may well be activated through an account on the
+                // maker's side, so "no account" is not ours to promise there.
+                listing.needsLicenseKey ? "License key included" : "No account needed",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2">
                   <CheckIcon />

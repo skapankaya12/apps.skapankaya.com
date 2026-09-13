@@ -7,6 +7,8 @@ import { SELLER_REJECTED_HTML } from "@/lib/emails/sellerRejected";
 import { SELLER_APPROVED_HTML } from "@/lib/emails/sellerApproved";
 import { VERIFY_EMAIL_HTML } from "@/lib/emails/verifyEmail";
 import { noteToEmailHtml } from "@/lib/noteEmail";
+import { LICENSE_KEYS_LOW } from "@/lib/licenseKeys";
+import { safeHttpsUrl } from "@/lib/utils";
 
 /* ---------------------------------------------------------------------------
    All transactional email copy lives here — one place to edit the wording.
@@ -190,11 +192,57 @@ export function newListingAdminEmail(a: {
   };
 }
 
+/**
+ * The licence key block in a receipt. A copy for convenience: the key is on the
+ * purchase and always shown in the Library, so a lost or late email loses
+ * nothing.
+ */
+function licenseBlock(license: {
+  key: string | null;
+  instructions: string;
+  redeemUrl: string;
+}): string {
+  if (!license.key) {
+    return `<p style="background:#fff7e6;border-radius:12px;padding:12px">
+       <strong>Your license key is on its way.</strong><br/>
+       The last key for this tool went a moment before your order, so we've
+       asked the maker for more. It will appear in your library as soon as it
+       arrives, and we'll let you know.</p>`;
+  }
+  const redeem = safeHttpsUrl(license.redeemUrl);
+  return `<p style="background:#f7f7f8;border-radius:12px;padding:12px">
+     <strong>Your license key</strong><br/>
+     <code style="font-family:ui-monospace,Menlo,monospace;font-size:14px;word-break:break-all">${escapeHtml(license.key)}</code>
+     ${license.instructions ? `<br/><span style="color:#6b6b76">${escapeHtml(license.instructions)}</span>` : ""}
+     ${redeem ? `<br/><a href="${escapeHtml(redeem)}">Redeem it here</a>` : ""}
+   </p>`;
+}
+
+/** To a buyer who was waiting for a licence key, once the seller restocked. */
+export function licenseKeyArrivedEmail(a: {
+  title: string;
+  key: string;
+  instructions: string;
+  redeemUrl: string;
+  libraryUrl: string;
+}) {
+  return {
+    subject: `Your license key for ${a.title}`,
+    html: emailShell(
+      `<p>Your license key for <strong>${escapeHtml(a.title)}</strong> is here.</p>
+       ${licenseBlock({ key: a.key, instructions: a.instructions, redeemUrl: a.redeemUrl })}
+       <p>It's also saved in your <a href="${a.libraryUrl}">library</a>, next to the download.</p>`
+    ),
+  };
+}
+
 /** To the buyer: purchase receipt + how to download + the 14-day guarantee. */
 export function purchaseReceiptBuyerEmail(a: {
   title: string;
   amountCents: number;
   libraryUrl: string;
+  /** Present when the tool needs a licence key. `key` is null if none was left. */
+  license?: { key: string | null; instructions: string; redeemUrl: string };
 }) {
   return {
     subject: `Your receipt for ${a.title}`,
@@ -202,6 +250,7 @@ export function purchaseReceiptBuyerEmail(a: {
       `<p>Thanks for your purchase! Here's your receipt.</p>
        <p><strong>${escapeHtml(a.title)}</strong><br/>
        Paid: ${money(a.amountCents)}</p>
+       ${a.license ? licenseBlock(a.license) : ""}
        <p>Download it any time from your library — it's yours forever:</p>
        <p><a href="${a.libraryUrl}">Go to your library →</a></p>
        <p style="color:#6b6b76;font-size:13px">Covered by our 14-day
@@ -224,12 +273,31 @@ export function saleSellerEmail(a: {
   title: string;
   amountCents: number;
   dashboardUrl: string;
+  /** Present when the tool needs licence keys. `left` is null if unknown. */
+  keys?: { left: number | null; pending: boolean };
 }) {
   const sellerCut = Math.round(a.amountCents * (1 - COMMISSION_RATE));
+  const keys = a.keys
+    ? a.keys.pending
+      ? `<p style="background:#fdecec;border-radius:12px;padding:12px">
+           <strong>This buyer is waiting for a license key.</strong><br/>
+           You ran out at the moment they bought. Add keys from your
+           <a href="${a.dashboardUrl}">dashboard</a> and we'll send them theirs.
+           Your listing stays paused until you do.</p>`
+      : a.keys.left !== null && a.keys.left < LICENSE_KEYS_LOW
+        ? `<p style="background:#fff7e6;border-radius:12px;padding:12px">
+             <strong>${a.keys.left === 0 ? "That was your last license key." : `${a.keys.left} license ${a.keys.left === 1 ? "key" : "keys"} left.`}</strong><br/>
+             ${a.keys.left === 0 ? "Nobody can buy it until you add more." : "When they run out, nobody can buy it until you add more."}
+             Add keys from your <a href="${a.dashboardUrl}">dashboard</a>.</p>`
+        : a.keys.left !== null
+          ? `<p>License keys left: ${a.keys.left}</p>`
+          : ""
+    : "";
   return {
     subject: `You made a sale: ${a.title}`,
     html: emailShell(
       `<p>Someone just bought <strong>${escapeHtml(a.title)}</strong>. 🎉</p>
+       ${keys}
        <p>Sale: ${money(a.amountCents)}<br/>
        Your share (after the ${Math.round(COMMISSION_RATE * 100)}% fee): <strong>${money(sellerCut)}</strong></p>
        <p style="color:#6b6b76;font-size:13px">Your share is transferred to your
@@ -246,13 +314,18 @@ export function saleAdminEmail(a: {
   title: string;
   buyerEmail: string;
   amountCents: number;
+  /** True when the tool needs a key and none was left to give. */
+  keyPending?: boolean;
+  keysLeft?: number | null;
 }) {
   return {
-    subject: `New sale: ${a.title} (${money(a.amountCents)})`,
+    subject: `${a.keyPending ? "ACTION: buyer has no license key. " : ""}New sale: ${a.title} (${money(a.amountCents)})`,
     html: emailShell(
       `<p>A sale just went through.</p>
        <p><strong>${escapeHtml(a.title)}</strong> — ${money(a.amountCents)}<br/>
-       Buyer: ${escapeHtml(a.buyerEmail)}</p>`
+       Buyer: ${escapeHtml(a.buyerEmail)}</p>
+       ${a.keyPending ? `<p><strong>No license key was left for this buyer.</strong> The seller has been told. The buyer gets one automatically, by email and in their library, the moment the seller adds keys.</p>` : ""}
+       ${typeof a.keysLeft === "number" ? `<p>License keys left: ${a.keysLeft}</p>` : ""}`
     ),
   };
 }

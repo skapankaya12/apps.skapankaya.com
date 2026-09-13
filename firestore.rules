@@ -83,7 +83,8 @@ service cloud.firestore {
       // Sellers create their own listings, which must enter the review queue.
       allow create: if isSignedIn()
         && request.resource.data.sellerId == request.auth.uid
-        && request.resource.data.status == 'pending';
+        && request.resource.data.status == 'pending'
+        && redeemUrlSafe();
 
       /*
         Admins change status and notes freely. A seller gets four moves on their
@@ -113,8 +114,18 @@ service cloud.firestore {
       function reviewedPartsIntact() {
         return !changed().hasAny([
           'packagePath', 'priceCents', 'runtime', 'setupMode', 'platform',
-          'version', 'packageVerification'
+          'version', 'needsLicenseKey', 'licenseRedeemUrl', 'packageVerification'
         ]);
+      }
+      // The redeem link is where a buyer is sent with their licence key in hand,
+      // so only https ever reaches the page. Empty or absent means none.
+      function redeemUrlSafe() {
+        let d = request.resource.data;
+        return !('licenseRedeemUrl' in d)
+          || d.licenseRedeemUrl == ''
+          || (d.licenseRedeemUrl is string
+              && d.licenseRedeemUrl.size() <= 2000
+              && d.licenseRedeemUrl.matches('https://.*'));
       }
       /*
         The price band, which holds on every seller write whatever the status.
@@ -140,6 +151,7 @@ service cloud.firestore {
             && resource.data.sellerId == request.auth.uid
             && serverOwnedIntact()
             && priceInBand()
+            && redeemUrlSafe()
             && (
               // 1. Editing something that is not on sale. Unchanged behaviour:
               //    it stays in, or goes back to, the review queue.
@@ -169,6 +181,20 @@ service cloud.firestore {
             ));
 
       allow delete: if isAdmin();
+
+      /*
+        A listing's licence keys. Nobody reads or writes these from a browser,
+        admins included: each key is worth a sale, and a key visible to a client
+        is a key that can be copied. The Admin SDK behind /api/listing-keys and
+        the Stripe webhook is the only way in (lib/licenseKeys.server.ts). A
+        seller sees counts, a buyer sees the one key on their own purchase.
+
+        Denied already by default, since nothing else matches this path. Written
+        out so nobody later adds a wildcard above that quietly opens it.
+      */
+      match /licenseKeys/{keyId} {
+        allow read, write: if false;
+      }
     }
 
     match /categories/{id} {

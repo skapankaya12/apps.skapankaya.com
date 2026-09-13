@@ -44,6 +44,7 @@ import {
   type Role,
   type Category,
   type CategoryDef,
+  type LicenseKeyStock,
   REVIEW_CRITICAL_FIELDS,
 } from "./types";
 import { normalizeHandle, handleProblem } from "./handles";
@@ -804,6 +805,94 @@ export async function notifyListingSubmitted(listingId: string): Promise<void> {
   }).catch(() => {});
 }
 
+/* ---------------------------- licence keys ---------------------------- */
+
+/** What an upload of keys answers with. See app/api/listing-keys. */
+export interface LicenseKeyUpload {
+  added: number;
+  alreadyLoaded: number;
+  overLimit: number;
+  duplicates: number;
+  invalid: number;
+  stock: LicenseKeyStock;
+}
+
+async function listingKeysRequest(
+  method: "GET" | "POST" | "DELETE",
+  listingId: string,
+  body?: Record<string, unknown>
+): Promise<Response> {
+  const token = await getIdToken();
+  if (!token) throw new Error("Please sign in again.");
+  const url =
+    method === "GET"
+      ? `/api/listing-keys?listingId=${encodeURIComponent(listingId)}`
+      : "/api/listing-keys";
+  return fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: method === "GET" ? undefined : JSON.stringify({ listingId, ...body }),
+  });
+}
+
+/**
+ * Send a pasted batch of keys for a listing. The server parses it again and
+ * skips anything already loaded. Throws with a sentence a seller can act on.
+ */
+export async function uploadLicenseKeys(
+  listingId: string,
+  text: string
+): Promise<LicenseKeyUpload> {
+  const res = await listingKeysRequest("POST", listingId, { keys: text });
+  if (!res.ok) {
+    const { error } = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(
+      error === "too-many"
+        ? "That's more than 1,000 keys. Paste them in smaller batches."
+        : error === "rate-limited"
+          ? "Too many uploads in a row. Wait a few minutes and try again."
+          : "Couldn't save your keys. Please try again."
+    );
+  }
+  return (await res.json()) as LicenseKeyUpload;
+}
+
+/** Stock counts for one listing, or null when they could not be read. */
+export async function fetchLicenseKeyStock(
+  listingId: string
+): Promise<LicenseKeyStock | null> {
+  try {
+    const res = await listingKeysRequest("GET", listingId);
+    return res.ok ? ((await res.json()) as LicenseKeyStock) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Delete every key nobody has been given yet. Answers with the new stock. */
+export async function clearUnusedLicenseKeys(
+  listingId: string
+): Promise<LicenseKeyStock> {
+  const res = await listingKeysRequest("DELETE", listingId);
+  if (!res.ok) throw new Error("Couldn't remove the keys. Please try again.");
+  return ((await res.json()) as { stock: LicenseKeyStock }).stock;
+}
+
+/**
+ * Admin only: the key set aside for testing this listing during review. The
+ * same key every time it is asked for, and never sold. Null when none is
+ * loaded.
+ */
+export async function revealReviewKey(listingId: string): Promise<string | null> {
+  const res = await listingKeysRequest("POST", listingId, { action: "review-key" });
+  if (res.status === 409) return null;
+  if (!res.ok) throw new Error("Couldn't get a test key.");
+  return ((await res.json()) as { key: string }).key;
+}
+
 /**
  * Best-effort: tell the server an admin approved/rejected a listing so it can
  * email the seller (with the review note). Never throws.
@@ -1010,10 +1099,19 @@ export function requiresReReview(
   next: ReviewCriticalParts
 ): boolean {
   return REVIEW_CRITICAL_FIELDS.some(
-    // Normalised because an absent optional field and an explicit undefined are
-    // the same thing to a seller, and platform is absent on older listings.
-    (field) => (current[field] ?? null) !== (next[field] ?? null)
+    (field) => unset(current[field]) !== unset(next[field])
   );
+}
+
+/**
+ * Absent, undefined, false and "" all mean "not set" to a seller. platform is
+ * absent on older listings, and the licence key fields on everything written
+ * before keys existed, where the form holds them as false and "".
+ */
+function unset<T>(value: T): T | null {
+  return value === undefined || value === null || value === false || value === ""
+    ? null
+    : value;
 }
 
 /**
