@@ -11,7 +11,8 @@ session is a doc nobody can trust.
 Last updated: 13 September 2026, at Sevval's request (**licence keys**: a
 seller attaches a batch of their own keys and every buyer gets one, the
 AppSumo way; **categories** are now kinds of tool, with Other and a runs-on
-filter. Both on `staging` only. See §8, "Shipped 13 September". **This
+filter. Both on `staging` and `main`, rules deployed to both projects. See
+§8, "Shipped 13 September". **This
 reverses part of the "fully unlocked" rule**, whose published wording is now
 wrong in four places: see §7).
 
@@ -581,8 +582,11 @@ Three roles: `buyer`, `seller`, `admin`.
   staging (two racing for the last keys, a Stripe retry, a buyer left waiting
   and then fulfilled by a restock), all passing, test data deleted, no email
   sent. The form, dashboard panel, admin review panel and Library have been
-  type-checked and looked at, but **not used signed in**. The rules are
-  deployed to staging and **not to production**.
+  type-checked and looked at, but **not used signed in**, and **no real Stripe
+  Checkout has ever carried a key**. Before launch, run one test-mode purchase
+  on staging (test listing with a few keys, card 4242 4242 4242 4242) and
+  confirm the key reaches the Library and the receipt. That also proves the
+  staging webhook endpoint is registered, which nobody has checked.
 
 ---
 
@@ -771,7 +775,10 @@ version tracking behind the Library's "update available" flag.
 
 ### Shipped 13 September 2026: licence keys, and categories as kinds of tool
 
-On `staging` only (`127b695`). **Not on `main` or production yet.**
+On `staging` and `main` (`5a63998`), live on production the same day, with
+the rules deployed to both Firebase projects (Sevval pushed `main` and
+deployed production's rules herself). The production category migration is
+the one step still outstanding, below.
 
 **Licence keys, the AppSumo way.** Raised by two installer submissions in two
 days, from different makers, both free to download and locked until a key is
