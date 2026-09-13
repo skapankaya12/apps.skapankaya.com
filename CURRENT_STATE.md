@@ -8,12 +8,17 @@ when it is time. If you notice something here that has gone stale, say so in
 chat and leave the file alone until she asks. A doc that rewrites itself every
 session is a doc nobody can trust.
 
-Last updated: 12 September 2026, at Sevval's request (**seller emails done for
-the seller-only phase**, see "Emails: where they stand" in §8; the seller
-welcome and how mail actually leaves the building, launch moved to November, the "fully
-unlocked" listing rule, the "free AI assistant" wording removed, and what
-shipped between 27 August and 6 September: signup asking buy or sell, the
-homepage split, footer badges. See §8).
+Last updated: 13 September 2026, at Sevval's request (**licence keys**: a
+seller attaches a batch of their own keys and every buyer gets one, the
+AppSumo way; **categories** are now kinds of tool, with Other and a runs-on
+filter. Both on `staging` only. See §8, "Shipped 13 September". **This
+reverses part of the "fully unlocked" rule**, whose published wording is now
+wrong in four places: see §7).
+
+Before that: 12 September 2026 (seller emails done for the seller-only phase,
+the seller welcome and how mail leaves the building, launch moved to November,
+the "fully unlocked" listing rule, the "free AI assistant" wording removed,
+signup asking buy or sell, the homepage split, footer badges).
 
 Before that: 26 August 2026 (seller experience, the /sell rebuild, the
 AI-readiness fixes, /free, three articles), amended 6 September with four
@@ -186,6 +191,7 @@ root A record is what keeps the apex redirecting to Vercel.
 | `saves.ts` / `saves.server.ts` | The public save-count threshold, and the server-side aggregation that counts saves without exposing who made them. Split in two so a client component can read the threshold without importing the Admin SDK. |
 | `uploads.ts` | The `Slot` type and `useUploadSlot`, behind the listing form's upload-on-pick. One shared id counter, because two slots with the same id make React drop one. |
 | `articles.ts` | The blog. Nine articles as a hardcoded array. Not a CMS. `Block` now has an inline `Rich` form so a paragraph or list item can hold links; a bare string is still valid, which is why the older articles needed no edit. |
+| `licenseKeys.ts` / `licenseKeys.server.ts` | Licence keys (§5, §8). `licenseKeys.ts` is pure: parsing a pasted batch (one per line, repeats and junk counted, never case-folded), the limits, and `licenseFieldsForWrite`, which only writes the three listing fields when they mean something so an edit to an older live listing is not refused by the rules. `.server.ts` is the Admin SDK half and **the only code that ever reads a key**: add, count, claim inside a transaction, set one aside for review, clear unused, and fulfil buyers left waiting. |
 | `freeTools.server.ts` / `freeTools.ts` | The /free directory. Admin SDK reads for the public page, client SDK writes for the submit form and the review queue. Split for the same reason as `saves.*`. Not part of `store.ts`: one server component reads it and one admin screen edits it, so a live listener on every page would be a subscription nobody consumes. |
 | `seed.ts`, `hooks.ts`, `utils.ts`, `categories.server.ts` | Seed data, `useUser`/`useStoreValue`, `safeHttpsUrl`/`isImageSrc`, server-side category labels. |
 | `import/` | URL import feature (new, see §8). `safeFetch.ts` is the SSRF guard, `html.ts` parses OG and JSON-LD, `github.ts` and `producthunt.ts` are per-source adapters, `classify.ts` maps topics to categories. |
@@ -228,7 +234,12 @@ root A record is what keeps the apex redirecting to Vercel.
   person who made it, a purchase to its buyer), so these aggregates exist
   server-side or not at all. Scoped to the caller: listing ids are read back
   from Firestore and purchases matched on `sellerId`, never taken from the
-  request.
+  request. Also carries licence key stock for each listing that needs keys.
+- `/api/listing-keys` is the only door to a listing's licence keys. GET counts,
+  POST `{ keys }` adds a pasted batch (and hands keys to any buyer left
+  waiting), DELETE removes the unused ones: the listing's seller or an admin.
+  POST `{ action: "review-key" }` is admin only and sets one key aside to test.
+  Nothing ever returns a seller's keys to them.
 - `/login` doubles as signup. Signup is two columns and asks, beside the form,
   whether somebody is here to buy or to sell (above the Google button, because
   Google cannot tell signing up from signing in). It also takes an optional
@@ -280,13 +291,33 @@ link, screenshot), screenshots uploaded the moment they are pasted, dropped or
 picked, a Write/Preview toggle, and an Expand view with the text beside the note
 as the seller will see it. `FooterBadges.tsx` is the strip of launch-board and directory badges under the
 footer, a seamless marquee; adding one is a line in its `BADGES` array.
+`LicenseKeys.tsx` holds the key paste summary (form and dashboard) and the
+dashboard's stock panel with Add keys and Remove unused.
 
 ---
 
 ## 5. Data model and roles
 
 Firestore collections: **`users`, `listings`, `purchases`, `categories`,
-`handles`, `bookmarks`, `freeTools`, `emailLog`.**
+`handles`, `bookmarks`, `freeTools`, `emailLog`**, plus one subcollection,
+**`listings/{id}/licenseKeys`**.
+
+`listings/{id}/licenseKeys/{sha256 of the key}` is one licence key: `key`,
+`status` (`available`, `assigned`, or `review` for the one set aside for the
+admin, never sold), `purchaseId` once given out. **Closed to every browser in
+the rules, admins included**; only `lib/licenseKeys.server.ts` reads it. The
+id being a hash of the key is what makes loading a key twice, or selling one
+twice, impossible. On the listing only three descriptive fields sit:
+`needsLicenseKey`, `licenseInstructions`, `licenseRedeemUrl` (https only, in
+the rules). On `Purchase`: `licenseKey`, copied at the moment of sale so the
+Library shows it forever, `licenseKeyPending` when none was left, and copies
+of the instructions and redeem link. Listings without `needsLicenseKey` are
+exactly as before; nothing was migrated.
+
+`Listing.otherCategory` is the seller's own name for their category when they
+pick `other` (`OTHER_CATEGORY` in `lib/types.ts`, 30 characters). It is what
+the listing's badge, JSON-LD and share image say; the browse chip still reads
+"Other". A name that keeps turning up is the cue to add a real category.
 
 `emailLog/{uid}` records which one-time emails an account has been sent
 (`sellerWelcomeAt`, `noListingNudgeAt`) and whether it has unsubscribed from
@@ -417,7 +448,9 @@ Three roles: `buyer`, `seller`, `admin`.
    their place on the marketplace depends on what changed: presentation (title,
    description, price, screenshots, demo) saves in place and stays live, while
    anything in `REVIEW_CRITICAL_FIELDS` (package, **price**, runtime, setup
-   mode, platform, version) goes back to the queue. The form says which before
+   mode, platform, version, and since 13 September `needsLicenseKey` and
+   `licenseRedeemUrl`) goes back to the queue. Adding or removing keys is not
+   an edit to the listing and never costs its place. The form says which before
    they press the button, and the admin is only emailed when something actually
    entered the queue. **firestore.rules is the control here, not the client.**
 
@@ -429,11 +462,17 @@ Three roles: `buyer`, `seller`, `admin`.
 2c. **Takedown.** A seller takes a tool off sale from the dashboard. Status only:
    the rules refuse a visibility change that moves any other field.
 3. **Buying.** `/api/stripe/checkout` reads `priceCents` from Firestore, never
-   from the client, and blocks non-approved listings, self-purchase, and sellers
-   without `charges_enabled`.
+   from the client, and blocks non-approved listings, self-purchase, sellers
+   without `charges_enabled`, and a listing that needs keys and has none left
+   (`sold-out`).
 4. **Webhook.** `checkout.session.completed` is the only wired event. Verifies
    the signature against the raw body, idempotent by session id, records the
-   purchase and sends three emails.
+   purchase and sends three emails. **Since 13 September the purchase, its
+   licence key and the sales count are one transaction**, so a crash can no
+   longer leave a paid buyer without a key that a retry then skips. Two sales
+   racing for the last key: the second gets `licenseKeyPending`, the seller and
+   admin are told, and the seller's next restock delivers it with an email
+   ("Your license key for...").
 5. **Download.** `/api/download` binds `packagePath` to the seller's own uid
    folder and checks buyer, seller or admin. Buyers can download while the
    listing is approved or `unlisted` (a seller's own takedown), not once it is
@@ -521,6 +560,29 @@ Three roles: `buyer`, `seller`, `admin`.
 - **"Fully unlocked" is now a listing rule** (no in-app payments, license keys,
   or an account needed to use it), stated in the `/docs/selling` table, the
   `/sell` lists and the welcome email. Nothing checks it but review.
+  **Partly reversed on 13 September by licence keys, and the published wording
+  has not caught up.** It still says "no license keys" in four places:
+  `app/sell/page.tsx` (the can't-list), `app/docs/selling/page.tsx` (the
+  table), `design/emails/welcome.html` (rebuild with `build-template.mjs` after
+  editing, or the old text keeps sending) and, harmlessly, "fully unlocked once
+  bought" in `design/emails/no-listing.html`. Suggested and **awaiting
+  Sevval's wording**: can list "Tools that are fully unlocked once bought. If
+  yours needs a license key, the key comes with every purchase."; can't list
+  "In-app payments, paid upgrades, or anything that asks the buyer to pay
+  again." Open question alongside it: keyed apps' own activation screens often
+  carry a Buy button to the maker's checkout, which buyers here do not need.
+  `BUSINESS_MODEL.md` §7 says ignore that kind of leakage at this size.
+- **A licence key cannot be taken back.** A refunded buyer keeps the key they
+  were shown; only the seller can disable it in their own licensing system.
+  Nothing tells the seller which key to disable, because refunds do not exist
+  in code at all yet (the item above). Build that into the refund flow.
+- **Licence keys have been run end to end only on the server.** On 13
+  September three signed test payments went through the real webhook against
+  staging (two racing for the last keys, a Stripe retry, a buyer left waiting
+  and then fulfilled by a restock), all passing, test data deleted, no email
+  sent. The form, dashboard panel, admin review panel and Library have been
+  type-checked and looked at, but **not used signed in**. The rules are
+  deployed to staging and **not to production**.
 
 ---
 
@@ -565,13 +627,24 @@ to anyone by hand with `scripts/send-seller-email.ts`.
 | 7 | Receipt | buyer | purchase | plain, never sent (no buyers yet) |
 | 8 | You made a sale | seller | purchase | plain, never sent |
 | 9 | New sale | admin | purchase | plain, never sent |
+| 10 | Your license key is here | buyer left waiting for a key | seller restocks | plain, never sent |
+
+Since 13 September 7, 8 and 9 carry licence key blocks for listings that need
+keys: the buyer's key in the receipt (or "on its way"), keys left and a
+low-stock or buyer-waiting warning to the seller, and an `ACTION:` subject to
+the admin when a buyer got none.
 
 Also the lifecycle run's own summary to the admin (plain), and Firebase's
 password-reset email (undesigned, Firebase's).
 
 **To do before the external launch:**
-- Redesign 7, 8 and 9 in the same style; they are the first emails a buyer ever
-  gets, and they still carry em dashes. 6 is admin-only and can stay plain.
+- Redesign 7, 8, 9 and 10 in the same style; they are the first emails a buyer
+  ever gets, and they still carry em dashes. 6 is admin-only and can stay
+  plain. **Keep the licence key blocks** in 7, 8 and 9 when redesigning.
+- Change the welcome email's "Fully unlocked" line once Sevval words it (§7).
+- Optional, not chosen: an "out of keys" lifecycle nudge. The sale email warns
+  as stock runs down, but a seller who clears their unused keys is told only by
+  the red line on their dashboard.
 - Password reset: the same trick as verification
   (`generatePasswordResetLink`) if it should look like the rest.
 - The launch email to the waitlist, which `/privacy` limits to exactly one
@@ -695,6 +768,65 @@ actually asks.
 and mutable forever, which is the package-overwrite hole reintroduced through the
 front door. It also breaks delivery, "own forever" when a link dies, and the
 version tracking behind the Library's "update available" flag.
+
+### Shipped 13 September 2026: licence keys, and categories as kinds of tool
+
+On `staging` only (`127b695`). **Not on `main` or production yet.**
+
+**Licence keys, the AppSumo way.** Raised by two installer submissions in two
+days, from different makers, both free to download and locked until a key is
+entered. For apps like that the file is not the product, so asking the maker to
+remove the key means asking them to give the app away; the first one asked
+said as much. Sevval chose the simple AppSumo model: the seller hands over a
+batch of their own keys and checkout gives each buyer one. We never make or
+check a key. (AppSumo's other model, an API where the marketplace tells the
+maker's system about every sale and refund, was not built.)
+
+- **Seller:** a "License key" section on the listing form (tick box, how to use
+  the key, optional https redeem link for keys entered on the maker's website,
+  the keys one per line). Keys are never kept in the draft, go up after the
+  listing is saved, and are required only when a listing first starts needing
+  them. The dashboard shows stock with Add keys and Remove unused, red under 5.
+  The acknowledgment gains "Every license key I give is unused, sold nowhere
+  else, and will activate", the only control on a seller reusing keys.
+- **Admin:** the review page shows stock, what buyers are told, and "Reveal a
+  test key", which sets that key aside for good (`status: review`) because
+  activating it may spend its only activation. The checklist gains a key item.
+- **Buyer:** "Needs a license key. Yours comes with your purchase" under How
+  you'll run it, "License key included" in the buy box in place of "No account
+  needed" (a keyed tool may activate through an account on the maker's side),
+  the key in the receipt and permanently in the Library with a Copy button.
+- **Existing listings are untouched** and count as not needing keys. Opting in
+  changes a review-critical field, so a live listing that turns keys on goes
+  back to the queue, deliberately.
+- How it is stored, the flows and what is still open: §5, §6 items 3 and 4,
+  and §7 (the "fully unlocked" wording, refunds, not yet used signed in).
+
+**Categories as kinds of tool** (built by another session on 12 September,
+committed with this). Departments became kinds of tool: Files & converters,
+Desktop & workspace, Writing & notes, Design & media, Learning & practice,
+Finance & administration, Clients & growth, Data & automation, Developer
+tools, Games & toys, Home & life, and **Other**, where the seller names their
+own (§5). Browse gains a **Runs on** row (macOS, Windows, Linux), each row
+counting within the other's choice; portable runtimes show under all three.
+Link import guesses the new set.
+
+Moving the data is `scripts/migrate-categories.ts`, a dry run unless `--apply`:
+
+- **Staging: applied 13 September.** Its `categories` collection was empty, so
+  it already read the new set from code; one listing was re-filed.
+- **Production: not done.** Sevval customised the list there, so it has to be
+  rewritten, and only staging credentials are on this machine. Either run the
+  script with a production service-account key
+  (`--env-file=.env.production.local`), dry run first, since it lists every
+  listing it would move; two live listings belong somewhere other than where
+  the mapping sends them, one in `files` and one in `desktop`, and are named
+  with `--set <slug>=<category>`. Or make the same changes by hand in
+  `/admin/categories`. The script assumes
+  production's "Learning & Development" is stored as `learning-and-development`;
+  if not, it stops before writing anything and names it. **Deploy the code to
+  production first, then migrate**, so the live site never points at a category
+  it does not know.
 
 ### Shipped 12 September 2026: the seller welcome email, and copy
 
