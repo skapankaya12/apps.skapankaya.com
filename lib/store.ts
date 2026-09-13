@@ -49,6 +49,7 @@ import {
 } from "./types";
 import { normalizeHandle, handleProblem } from "./handles";
 import { uploadAvatar } from "./storage";
+import { listedAtOnApproval } from "./whatsNew";
 
 /* ---------------------------------------------------------------------------
    Data store, backed by Firestore + Firebase Auth.
@@ -1221,14 +1222,19 @@ export async function adminUpdateListing(
 }
 
 export async function reviewListing(
-  id: string,
+  listing: Pick<Listing, "id" | "listedAt" | "createdAt">,
   decision: "approved" | "rejected",
   reviewNote: string
 ): Promise<void> {
-  await updateDoc(doc(db, "listings", id), {
+  const now = Date.now();
+  // The first approval dates the listing for the "new this week" popup.
+  const listedAt =
+    decision === "approved" ? listedAtOnApproval(listing, now) : undefined;
+  await updateDoc(doc(db, "listings", listing.id), {
     status: decision,
     reviewNote,
-    updatedAt: Date.now(),
+    updatedAt: now,
+    ...(listedAt ? { listedAt } : {}),
   });
 }
 

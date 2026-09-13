@@ -84,6 +84,7 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.sellerId == request.auth.uid
         && request.resource.data.status == 'pending'
+        && !('listedAt' in request.resource.data)
         && redeemUrlSafe();
 
       /*
@@ -104,9 +105,11 @@ service cloud.firestore {
         return request.resource.data.diff(resource.data).affectedKeys();
       }
       // Written only by the Stripe webhook through the Admin SDK, which
-      // bypasses these rules. No seller edit has any business touching them.
+      // bypasses these rules, or by the admin's approval (listedAt, which
+      // dates the "new this week" popup: a seller who could move it could keep
+      // their tool "new" forever). No seller edit has any business touching them.
       function serverOwnedIntact() {
-        return !changed().hasAny(['sellerId', 'salesCount', 'slug', 'createdAt']);
+        return !changed().hasAny(['sellerId', 'salesCount', 'slug', 'createdAt', 'listedAt']);
       }
       // Mirrors REVIEW_CRITICAL_FIELDS in lib/types.ts. packageVerification is
       // here too: a seller must not be able to stamp their own installer as

@@ -5,6 +5,7 @@ import { markClientReady } from "@/lib/store";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { VerifyEmailBanner } from "./VerifyEmailBanner";
+import { WhatsNewPopup } from "./WhatsNewPopup";
 
 export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="flex-1">{children}</main>
       </div>
       <Footer />
+      <WhatsNewPopup />
     </>
   );
 }

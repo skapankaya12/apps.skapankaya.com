@@ -350,7 +350,7 @@ export default function AdminReviewPage() {
         ? "Passed all checks."
         : note || "Did not pass review.";
     const finalNote = note || defaultNote;
-    reviewListing(listing!.id, decision, finalNote);
+    reviewListing(listing!, decision, finalNote);
     // Email the seller (best-effort); await so it fires before we navigate away.
     await notifyReviewDecision(listing!.id, decision, finalNote);
     router.push("/admin");

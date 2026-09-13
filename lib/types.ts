@@ -343,6 +343,13 @@ export interface Listing {
   salesCount: number;
   createdAt: number;
   updatedAt: number;
+  /**
+   * When it first went on sale: stamped by the admin's first approval and never
+   * moved after, so a live listing re-approved after an edit is not "new"
+   * again. Absent on everything approved before 13 September 2026, which reads
+   * createdAt instead. See listedAt() in lib/whatsNew.ts.
+   */
+  listedAt?: number;
 }
 
 /* ---------------------------------------------------------------------------
