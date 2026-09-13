@@ -13,6 +13,8 @@ import {
   formatPrice,
   setListingCategory,
   getCategories,
+  fetchLicenseKeyStock,
+  revealReviewKey,
 } from "@/lib/store";
 import {
   OTHER_CATEGORY,
@@ -20,9 +22,11 @@ import {
   RUNTIME_LABELS,
   SETUP_MODE_LABELS,
   type AppUser,
+  type LicenseKeyStock,
   type Listing,
   type SellerProfile,
 } from "@/lib/types";
+import { safeHttpsUrl } from "@/lib/utils";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 import { RichText } from "@/components/RichText";
@@ -38,6 +42,106 @@ const CHECKLIST = [
   "AI code scan shows no red flags (no exfiltration, no hidden shell-out)",
   "Listing is honest: real screenshots, accurate description",
 ];
+
+/** Added to the checklist for a listing that needs licence keys. */
+const KEY_CHECK = "Test key activates the app, and the listing says a key is included";
+
+/**
+ * A keyed listing's side of review: how many keys are loaded, what the buyer
+ * will be told, and one key to try.
+ *
+ * The test key is set aside for good by the server once revealed, because
+ * activating it may use up its only activation. Asking again shows the same
+ * key rather than spending another.
+ */
+function LicenseKeysReview({ listing }: { listing: Listing }) {
+  const [stock, setStock] = useState<LicenseKeyStock | null>(null);
+  const [key, setKey] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    void fetchLicenseKeyStock(listing.id).then((s) => {
+      if (alive) setStock(s);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [listing.id]);
+
+  async function reveal() {
+    setBusy(true);
+    setError("");
+    try {
+      const k = await revealReviewKey(listing.id);
+      if (!k) setError("No keys loaded, so there is nothing to test.");
+      setKey(k);
+      setStock(await fetchLicenseKeyStock(listing.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't get a test key.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const redeem = safeHttpsUrl(listing.licenseRedeemUrl);
+  const none = stock !== null && stock.available === 0 && stock.review === 0;
+
+  return (
+    <div
+      className={`mt-3 rounded-xl border p-4 text-sm ${
+        none
+          ? "border-[var(--danger)] bg-[var(--danger-soft)]"
+          : "border-[var(--border)] bg-[var(--surface-muted)]"
+      }`}
+    >
+      <p className="font-semibold">License keys</p>
+      <p className={`mt-1 ${none ? "text-[var(--danger)]" : "text-[var(--muted)]"}`}>
+        {stock === null
+          ? "Counting…"
+          : none
+            ? "No keys loaded. Approved like this, nobody could buy it."
+            : `${stock.available} ready to sell, ${stock.assigned} given to buyers${
+                stock.review ? `, ${stock.review} set aside for review` : ""
+              }.`}
+      </p>
+      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+        Buyers are told
+      </p>
+      <p className="mt-1">{listing.licenseInstructions || "(nothing written)"}</p>
+      {redeem && (
+        <p className="mt-1">
+          Redeem at{" "}
+          <a
+            href={redeem}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--accent)] hover:underline"
+          >
+            {redeem}
+          </a>
+        </p>
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <Button size="sm" variant="secondary" onClick={reveal} disabled={busy}>
+          {busy ? "…" : key ? "Test key" : "Reveal a test key"}
+        </Button>
+        {key && (
+          <code className="break-all rounded bg-[var(--surface)] px-2 py-1 font-mono text-xs">
+            {key}
+          </code>
+        )}
+      </div>
+      {key && (
+        <p className="mt-1 text-xs text-[var(--muted)]">
+          Set aside for you. It will never be sold to a buyer.
+        </p>
+      )}
+      {error && <p className="mt-1 text-xs text-[var(--danger)]">{error}</p>}
+    </div>
+  );
+}
 
 /**
  * The Apple signature verdict for a native installer.
@@ -204,7 +308,10 @@ export default function AdminReviewPage() {
   const user = useUser();
   const listing = useStoreValue(() => getListingById(params.id));
   const categories = useStoreValue(getCategories);
-  const [checks, setChecks] = useState<boolean[]>(CHECKLIST.map(() => false));
+  // One slot more than the base list, for the key check a keyed listing adds.
+  const [checks, setChecks] = useState<boolean[]>(() =>
+    [...CHECKLIST, KEY_CHECK].map(() => false)
+  );
   const [note, setNote] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
@@ -231,7 +338,8 @@ export default function AdminReviewPage() {
     );
   }
 
-  const allChecked = checks.every(Boolean);
+  const checklist = listing.needsLicenseKey ? [...CHECKLIST, KEY_CHECK] : CHECKLIST;
+  const allChecked = checklist.every((_, i) => checks[i]);
   // A screenshot still uploading sits in the note as a placeholder; deciding
   // then would send the seller "Uploading screenshot…" instead of the image.
   const uploading = noteIsUploading(note);
@@ -437,6 +545,8 @@ export default function AdminReviewPage() {
             <SignatureVerdict listing={listing} />
           )}
 
+          {listing.needsLicenseKey && <LicenseKeysReview listing={listing} />}
+
           {listing.status !== "pending" && listing.reviewNote && (
             <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -452,7 +562,7 @@ export default function AdminReviewPage() {
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
             <h3 className="font-semibold">Review checklist</h3>
             <div className="mt-4 space-y-3">
-              {CHECKLIST.map((item, i) => (
+              {checklist.map((item, i) => (
                 <label key={i} className="flex cursor-pointer items-start gap-2.5 text-sm">
                   <input
                     type="checkbox"

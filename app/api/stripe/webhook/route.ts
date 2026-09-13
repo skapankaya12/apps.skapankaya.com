@@ -8,6 +8,7 @@ import {
   saleAdminEmail,
 } from "@/lib/emailTemplates";
 import { FieldValue } from "firebase-admin/firestore";
+import { claimLicenseKey, getLicenseKeyStock } from "@/lib/licenseKeys.server";
 
 export const runtime = "nodejs";
 
@@ -41,18 +42,39 @@ export async function POST(req: Request) {
     if (session.payment_status === "paid" && m.listingId && m.buyerId) {
       // Idempotent: keyed by session id, so webhook retries don't double-record.
       const purchaseRef = db.collection("purchases").doc(session.id);
-      const existing = await purchaseRef.get();
-      if (!existing.exists) {
-        const amountCents = session.amount_total ?? 0;
-        const title = m.listingTitle ?? "your tool";
-        await purchaseRef.set({
+      const listingRef = db.collection("listings").doc(m.listingId);
+      const listingId = m.listingId;
+      const amountCents = session.amount_total ?? 0;
+      const title = m.listingTitle ?? "your tool";
+
+      /*
+        The purchase, its licence key and the sales count, in one transaction.
+
+        They used to be separate writes, which was harmless while a purchase
+        was a single row. With a key it is not: a crash between recording the
+        purchase and handing out the key would leave a paid buyer with no key,
+        and Stripe's retry would find the purchase already there and skip it.
+        Together, either all of it happened or none of it did and the retry
+        does it properly.
+      */
+      const recorded = await db.runTransaction(async (tx) => {
+        const existing = await tx.get(purchaseRef);
+        if (existing.exists) return null;
+        const listingSnap = await tx.get(listingRef);
+        const listing = listingSnap.data() as
+          | { needsLicenseKey?: boolean; licenseInstructions?: string; licenseRedeemUrl?: string }
+          | undefined;
+        const needsKey = Boolean(listing?.needsLicenseKey);
+        const key = needsKey ? await claimLicenseKey(tx, listingId, session.id) : null;
+
+        tx.set(purchaseRef, {
           buyerId: m.buyerId,
           // From the checkout session's own metadata, so it records who was
           // actually paid rather than who owns the listing today. A seller's
           // earnings are summed from these rows, not from the listing's current
           // price, which can change after a sale.
           sellerId: m.sellerId ?? "",
-          listingId: m.listingId,
+          listingId,
           listingSlug: m.listingSlug ?? "",
           listingTitle: m.listingTitle ?? "",
           sellerName: m.sellerName ?? "",
@@ -60,11 +82,39 @@ export async function POST(req: Request) {
           purchasedVersion: m.purchasedVersion ?? "1.0.0",
           stripeSessionId: session.id,
           createdAt: Date.now(),
+          // Copied onto the purchase so the buyer keeps what they were told at
+          // the moment they bought, whatever the listing says later. The Admin
+          // SDK refuses undefined, so each is written only when it exists.
+          ...(key ? { licenseKey: key } : {}),
+          ...(needsKey && !key ? { licenseKeyPending: true } : {}),
+          ...(needsKey && listing?.licenseInstructions
+            ? { licenseInstructions: listing.licenseInstructions }
+            : {}),
+          ...(needsKey && listing?.licenseRedeemUrl
+            ? { licenseRedeemUrl: listing.licenseRedeemUrl }
+            : {}),
         });
-        await db
-          .collection("listings")
-          .doc(m.listingId)
-          .update({ salesCount: FieldValue.increment(1) });
+        if (listingSnap.exists) {
+          tx.update(listingRef, { salesCount: FieldValue.increment(1) });
+        }
+        return {
+          needsKey,
+          key,
+          instructions: listing?.licenseInstructions ?? "",
+          redeemUrl: listing?.licenseRedeemUrl ?? "",
+        };
+      });
+
+      if (recorded) {
+        // Read after the sale, so the seller is told what is left once this
+        // buyer has theirs.
+        const keysLeft = recorded.needsKey
+          ? (await getLicenseKeyStock(listingId).catch(() => null))?.available ?? null
+          : null;
+        const keyPending = recorded.needsKey && !recorded.key;
+        if (keyPending) {
+          console.error(`[webhook] no licence key left for ${listingId}, purchase ${session.id}`);
+        }
 
         // Notify buyer, seller and admin (best-effort — never fail the webhook).
         try {
@@ -84,6 +134,13 @@ export async function POST(req: Request) {
                   title,
                   amountCents,
                   libraryUrl: `${origin}/library`,
+                  license: recorded.needsKey
+                    ? {
+                        key: recorded.key,
+                        instructions: recorded.instructions,
+                        redeemUrl: recorded.redeemUrl,
+                      }
+                    : undefined,
                 }),
               })
             );
@@ -96,6 +153,7 @@ export async function POST(req: Request) {
                   title,
                   amountCents,
                   dashboardUrl: `${origin}/dashboard`,
+                  keys: recorded.needsKey ? { left: keysLeft, pending: keyPending } : undefined,
                 }),
               })
             );
@@ -107,6 +165,8 @@ export async function POST(req: Request) {
                 title,
                 buyerEmail: buyerEmail || "unknown",
                 amountCents,
+                keyPending,
+                keysLeft,
               }),
             })
           );

@@ -11,6 +11,8 @@ import {
 } from "@/lib/store";
 import { Section, ButtonLink, Button, Badge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
+import { safeHttpsUrl } from "@/lib/utils";
+import type { Purchase } from "@/lib/types";
 
 export default function LibraryPage() {
   const user = useUser();
@@ -93,6 +95,7 @@ export default function LibraryPage() {
                     by {p.sellerName} · you have v{p.purchasedVersion} ·{" "}
                     {formatPrice(p.amountCents)} paid
                   </p>
+                  {(p.licenseKey || p.licenseKeyPending) && <PurchaseKey purchase={p} />}
                 </div>
                 <div className="flex gap-2">
                   <Link href="/how-to-run" className="hidden sm:block">
@@ -116,5 +119,63 @@ export default function LibraryPage() {
         </div>
       )}
     </Section>
+  );
+}
+
+/**
+ * The licence key that came with a purchase. The Library is its record: the
+ * receipt email carries a copy, but an email can be lost and this cannot.
+ */
+function PurchaseKey({ purchase }: { purchase: Purchase }) {
+  const [copied, setCopied] = useState(false);
+  const redeem = safeHttpsUrl(purchase.licenseRedeemUrl);
+
+  if (!purchase.licenseKey) {
+    return (
+      <p className="mt-3 rounded-xl border border-[var(--warning)] bg-[var(--warning-soft)] px-3 py-2 text-sm">
+        Your license key is on its way. It appears here, and by email, as soon
+        as the maker adds more.
+      </p>
+    );
+  }
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(purchase.licenseKey!);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard refused (an older browser, or permission). The key is on
+      // screen and selectable, so there is nothing more to do.
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2.5 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-[var(--muted)]">License key</span>
+        <code className="break-all font-mono text-xs">{purchase.licenseKey}</code>
+        <button
+          type="button"
+          onClick={copy}
+          className="text-xs font-medium text-[var(--accent)] hover:underline"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      {purchase.licenseInstructions && (
+        <p className="mt-1 text-xs text-[var(--muted)]">{purchase.licenseInstructions}</p>
+      )}
+      {redeem && (
+        <a
+          href={redeem}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 inline-block text-xs font-medium text-[var(--accent)] hover:underline"
+        >
+          Redeem it here
+        </a>
+      )}
+    </div>
   );
 }

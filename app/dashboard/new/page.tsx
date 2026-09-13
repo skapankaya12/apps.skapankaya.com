@@ -14,7 +14,16 @@ import {
   subscribe,
   sellerProfileReady,
   getAuthResolved,
+  uploadLicenseKeys,
+  fetchLicenseKeyStock,
 } from "@/lib/store";
+import {
+  parseLicenseKeys,
+  licenseFieldsForWrite,
+  LICENSE_INSTRUCTIONS_MAX,
+  LICENSE_KEYS_PER_UPLOAD,
+} from "@/lib/licenseKeys";
+import { safeHttpsUrl } from "@/lib/utils";
 import {
   uploadPackage,
   uploadDemoVideo,
@@ -44,6 +53,7 @@ import {
   type ListingStatus,
   type AppUser,
   type SellerProfile,
+  type LicenseKeyStock,
   PLATFORM_LABELS,
   SETUP_MODE_LABELS,
   SETUP_MODE_HINTS,
@@ -54,6 +64,7 @@ import { MarkdownEditor } from "@/components/MarkdownEditor";
 import { ImportFromUrl } from "@/components/ImportFromUrl";
 import { SellerAvatar } from "@/components/SellerAvatar";
 import { ListingDetail } from "@/components/ListingDetail";
+import { KeyPasteSummary } from "@/components/LicenseKeys";
 import type { ImportResult, SourceKind } from "@/lib/importClient";
 import { SOURCE_LABELS } from "@/lib/importClient";
 import { packageAccept, validatePackage, captureVideoPoster, validateDemo } from "@/lib/media";
@@ -168,6 +179,33 @@ function ListingForm({
   const [platform, setPlatform] = useState<Platform>(start.values.platform);
   const [price, setPrice] = useState(start.values.price);
   const [version, setVersion] = useState(start.values.version);
+  const [needsKey, setNeedsKey] = useState(start.values.needsLicenseKey);
+  const [licenseInstructions, setLicenseInstructions] = useState(
+    start.values.licenseInstructions
+  );
+  const [redeemUrl, setRedeemUrl] = useState(start.values.licenseRedeemUrl);
+  /*
+    The pasted keys. Deliberately not in the draft: a draft sits in the
+    browser's storage indefinitely, often on a shared machine, and each key is
+    worth a sale. They go to the server once, after the listing is saved.
+  */
+  const [keysText, setKeysText] = useState("");
+  const parsedKeys = parseLicenseKeys(keysText);
+  // Set when the listing saved but its keys did not, so the confirmation can
+  // say so rather than claim everything went through.
+  const [keysError, setKeysError] = useState("");
+  // Unused keys already loaded, when editing a listing that has them.
+  const [keyStock, setKeyStock] = useState<LicenseKeyStock | null>(null);
+  useEffect(() => {
+    if (!editId || !editing?.needsLicenseKey) return;
+    let alive = true;
+    void fetchLicenseKeyStock(editId).then((s) => {
+      if (alive) setKeyStock(s);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [editId, editing?.needsLicenseKey]);
   /*
     Where this listing's files go, fixed for the life of the form.
 
@@ -294,6 +332,10 @@ function ListingForm({
     status: "approved",
     version: version.trim() || "1.0.0",
     packagePath: pkg.slot?.value,
+    ...licenseFieldsForWrite(
+      { needsKey, instructions: licenseInstructions, redeemUrl },
+      editing
+    ),
     salesCount: editing?.salesCount ?? 0,
     // Zero on a new listing rather than the clock: nothing on the page renders
     // these, and reading the time during render is not something a component is
@@ -305,6 +347,7 @@ function ListingForm({
   const draft: Draft = {
     title, tagline, description, category: activeCategory, otherCategory,
     runtime, setupMode, price, version, platform,
+    needsLicenseKey: needsKey, licenseInstructions, licenseRedeemUrl: redeemUrl,
     listingId,
     packagePath: pkg.slot?.value ?? "",
     demoVideo: demo.slot?.value ?? "",
@@ -349,7 +392,8 @@ function ListingForm({
     draft holds their references, so the only thing genuinely at risk is an
     upload still in flight, which navigating away does cancel.
   */
-  const hasWork = !untouched;
+  // Pasted keys count as work: they are not in the draft, so leaving loses them.
+  const hasWork = !untouched || keysText.trim() !== "";
   const guard = (hasWork || filesBusy) && !submitted && !saving;
 
   useEffect(() => {
@@ -404,6 +448,12 @@ function ListingForm({
               : "Your listing is updated. It stays off sale until you put it back."
             : "Our team reviews every app before it goes live, usually within 1 to 2 business days. You'll see the status update on your dashboard."}
         </p>
+        {keysError && (
+          <p className="mt-6 rounded-xl border border-[var(--danger)] bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+            Your listing saved, but your license keys didn&apos;t. Add them
+            from your dashboard. {keysError}
+          </p>
+        )}
         <ButtonLink href="/dashboard" className="mt-8">Back to dashboard</ButtonLink>
       </Section>
     );
@@ -511,6 +561,10 @@ function ListingForm({
         posterImage: posterUrl,
         version: version.trim(),
         packagePath: pkg.slot!.value!,
+        ...licenseFieldsForWrite(
+          { needsKey, instructions: licenseInstructions, redeemUrl },
+          editing
+        ),
       };
 
       let landedIn: ListingStatus = "pending";
@@ -521,6 +575,17 @@ function ListingForm({
         setResultStatus(landedIn);
       } else {
         await createListing(listingId, data);
+      }
+      // After the listing exists, because the server checks the keys belong to
+      // a listing this seller owns. A failure here does not undo the listing;
+      // the confirmation says the keys still need adding.
+      if (needsKey && parsedKeys.keys.length > 0) {
+        try {
+          await uploadLicenseKeys(listingId, keysText);
+          setKeysText("");
+        } catch (err) {
+          setKeysError(err instanceof Error ? err.message : "");
+        }
       }
       // Best-effort admin notification, but only when there is actually
       // something to review. An in-place edit to a live listing never entered
@@ -660,6 +725,8 @@ function ListingForm({
       setupMode,
       platform: runtime === "binary" ? platform : undefined,
       version: version.trim(),
+      needsLicenseKey: needsKey,
+      licenseRedeemUrl: needsKey ? (safeHttpsUrl(redeemUrl) ?? "") : "",
     });
 
   // Exactly what's still blocking submission, in field order — so the button's
@@ -673,6 +740,17 @@ function ListingForm({
   if (!(priceNum >= 15 && priceNum <= 250)) missing.push("a price between $15 and $250");
   if (!/^\d+\.\d+(\.\d+)?$/.test(version.trim()))
     missing.push("a version like 1.0.0");
+  if (needsKey) {
+    if (!licenseInstructions.trim()) missing.push("how to use the license key");
+    if (redeemUrl.trim() && !safeHttpsUrl(redeemUrl))
+      missing.push("a redeem link starting with https://");
+    // Keys are asked for when a listing starts needing them. After that they
+    // are topped up from the dashboard, so an edit is not blocked on a paste.
+    if (!editing?.needsLicenseKey && parsedKeys.keys.length === 0)
+      missing.push("your license keys");
+    if (parsedKeys.keys.length > LICENSE_KEYS_PER_UPLOAD)
+      missing.push("no more than 1,000 keys at once");
+  }
   if (!isReady(pkg.slot))
     missing.push(isBusy(pkg.slot) ? "the package to finish uploading" : "a package");
   if (!isReady(demo.slot))
@@ -909,6 +987,78 @@ function ListingForm({
           </Field>
         </FormSection>
 
+        {/* Licence keys, the AppSumo way: the seller hands over a batch of
+            their own keys and each buyer is given one at checkout. For tools
+            that are free to download and locked until activated, where the
+            file alone is not what the buyer is paying for. */}
+        <FormSection title="License key">
+          <label className="flex cursor-pointer items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={needsKey}
+              onChange={(e) => setNeedsKey(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)]"
+            />
+            <span>
+              <span className="font-medium">Buyers need a license key to use it</span>
+              <span className="mt-0.5 block text-xs text-[var(--muted)]">
+                You give us a batch of keys. Each buyer gets one.
+              </span>
+            </span>
+          </label>
+
+          {needsKey && (
+            <>
+              <Field
+                label="How to use the key"
+                hint="Shown to the buyer with their key."
+              >
+                <textarea
+                  value={licenseInstructions}
+                  onChange={(e) => setLicenseInstructions(e.target.value)}
+                  maxLength={LICENSE_INSTRUCTIONS_MAX}
+                  rows={2}
+                  placeholder="Open the app and paste the key into its activation window."
+                  className={inputClass}
+                />
+              </Field>
+
+              <Field
+                label="Redeem link (optional)"
+                hint="Only if the key is entered on your website."
+              >
+                <input
+                  type="url"
+                  value={redeemUrl}
+                  onChange={(e) => setRedeemUrl(e.target.value)}
+                  placeholder="https://"
+                  spellCheck={false}
+                  className={inputClass}
+                />
+              </Field>
+
+              <Field
+                label={editing?.needsLicenseKey ? "Add more keys (optional)" : "Your keys"}
+                hint="One per line. Not saved in drafts."
+              >
+                <textarea
+                  value={keysText}
+                  onChange={(e) => setKeysText(e.target.value)}
+                  rows={5}
+                  spellCheck={false}
+                  autoComplete="off"
+                  placeholder={"XXXX-XXXX-XXXX-XXXX\nXXXX-XXXX-XXXX-XXXX"}
+                  className={`${inputClass} font-mono text-xs`}
+                />
+                <KeyPasteSummary
+                  parsed={parsedKeys}
+                  onHand={editing?.needsLicenseKey ? keyStock?.available : undefined}
+                />
+              </Field>
+            </>
+          )}
+        </FormSection>
+
         <FormSection title="Files">
           {/* Version sits with the package because that is what it describes.
               It had no input at all before: every listing was written as 1.0.0
@@ -1042,6 +1192,8 @@ function ListingForm({
             discloses all network activity. I&apos;ll provide support for it and
             honor the 14-day refund policy. I understand every submission is
             scanned and human-reviewed before it goes live.
+            {needsKey &&
+              " Every license key I give is unused, sold nowhere else, and will activate."}
           </span>
         </label>
 
@@ -1057,7 +1209,7 @@ function ListingForm({
             }`}
           >
             {returnsToReview
-              ? "You changed the price, the package or how the tool runs, so this goes back for review. It comes off sale until that's done."
+              ? "You changed the price, the package, how the tool runs or its license key setup, so this goes back for review. It comes off sale until that's done."
               : "These are presentation changes, so your listing stays exactly as it is on the marketplace while they save."}
           </p>
         )}
@@ -1402,6 +1554,10 @@ type Draft = {
   platform: Platform;
   price: string;
   version: string;
+  // The licence settings. The keys themselves are never in a draft.
+  needsLicenseKey: boolean;
+  licenseInstructions: string;
+  licenseRedeemUrl: string;
   /*
     The uploaded files, as the references they became.
 
@@ -1433,6 +1589,9 @@ const EMPTY_DRAFT: Draft = {
   platform: "macos",
   price: "15",
   version: "1.0.0",
+  needsLicenseKey: false,
+  licenseInstructions: "",
+  licenseRedeemUrl: "",
   listingId: "",
   packagePath: "",
   demoVideo: "",
@@ -1505,6 +1664,9 @@ function draftFromListing(listing: Listing): Draft {
     platform: listing.platform ?? "macos",
     price: String(listing.priceCents / 100),
     version: listing.version,
+    needsLicenseKey: Boolean(listing.needsLicenseKey),
+    licenseInstructions: listing.licenseInstructions ?? "",
+    licenseRedeemUrl: listing.licenseRedeemUrl ?? "",
     listingId: listing.id,
     packagePath: listing.packagePath ?? "",
     demoVideo: listing.demoVideo ?? "",

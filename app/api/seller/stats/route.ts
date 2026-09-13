@@ -4,6 +4,7 @@ import {
   adminConfigured,
 } from "@/lib/firebaseAdmin";
 import { getSaveCounts } from "@/lib/saves.server";
+import { getLicenseKeyStock } from "@/lib/licenseKeys.server";
 import type { SellerStats } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -41,6 +42,10 @@ export async function GET(req: Request) {
       .where("sellerId", "==", uid)
       .get();
     const listingIds = own.docs.map((d) => d.id);
+    // Counted for the listings that need keys only; everything else has none.
+    const keyed = own.docs.filter((d) => d.data().needsLicenseKey).map((d) => d.id);
+    const stocks = await Promise.all(keyed.map((id) => getLicenseKeyStock(id)));
+    const licenseKeys = Object.fromEntries(keyed.map((id, i) => [id, stocks[i]]));
 
     const sold = await db
       .collection("purchases")
@@ -66,6 +71,7 @@ export async function GET(req: Request) {
       sales: salesByListing,
       grossByListing,
       grossCents,
+      licenseKeys,
       /**
        * True while any purchase of theirs predates `sellerId` being recorded,
        * in which case the totals here are short. The dashboard says so rather

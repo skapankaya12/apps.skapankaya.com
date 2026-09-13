@@ -15,6 +15,10 @@ import type { AppUser, Listing, SellerStats } from "@/lib/types";
 import { Section, Button, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { Monogram } from "@/components/Monogram";
 import { RichText } from "@/components/RichText";
+import { LicenseKeysPanel } from "@/components/LicenseKeys";
+
+/** Stock for a keyed listing the stats did not mention: it has none yet. */
+const emptyStock = { available: 0, assigned: 0, review: 0 };
 
 export default function DashboardPage() {
   const user = useUser();
@@ -128,6 +132,12 @@ export default function DashboardPage() {
                         Not on sale. Everyone who already bought it keeps their
                         download.
                       </p>
+                    )}
+                    {l.needsLicenseKey && (
+                      <LicenseKeysPanel
+                        listingId={l.id}
+                        stock={stats ? (stats.licenseKeys?.[l.id] ?? emptyStock) : undefined}
+                      />
                     )}
                   </td>
                   <td className="px-5 py-4"><StatusBadge status={l.status} /></td>

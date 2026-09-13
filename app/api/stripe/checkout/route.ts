@@ -1,5 +1,6 @@
 import { stripe, stripeConfigured, siteOrigin, COMMISSION_RATE } from "@/lib/stripe";
 import { verifyRequestUid, getAdminDb, adminConfigured } from "@/lib/firebaseAdmin";
+import { getLicenseKeyStock } from "@/lib/licenseKeys.server";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
   const listing = listingSnap.data() as {
     slug: string; title: string; tagline?: string; priceCents: number;
     status: string; sellerId: string; sellerName?: string; version?: string;
+    needsLicenseKey?: boolean;
   };
 
   if (listing.status !== "approved") {
@@ -33,6 +35,17 @@ export async function POST(req: Request) {
   }
   if (listing.sellerId === uid) {
     return Response.json({ error: "own-listing" }, { status: 400 });
+  }
+
+  // Nobody pays for a tool that needs a key when there is no key to give them.
+  // Checked again, atomically, when the webhook hands one out: two people can
+  // both pass this for the last key, and the second is then flagged rather
+  // than silently given nothing (see app/api/stripe/webhook).
+  if (listing.needsLicenseKey) {
+    const stock = await getLicenseKeyStock(listingId);
+    if (stock.available === 0) {
+      return Response.json({ error: "sold-out" }, { status: 409 });
+    }
   }
 
   // Seller must have finished payout onboarding and be able to receive funds.
