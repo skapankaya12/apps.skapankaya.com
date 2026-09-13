@@ -4,7 +4,8 @@ import {
   getApprovedListingBySlug,
   formatPriceServer,
 } from "@/lib/listings.server";
-import { getCategoryLabelServer } from "@/lib/categories.server";
+import { getCategoriesServer } from "@/lib/categories.server";
+import { listingCategoryLabel } from "@/lib/types";
 
 /**
  * Per-listing social card: what someone sees when a tool's link is pasted into
@@ -28,7 +29,7 @@ export default async function Image({
   const title = listing?.title ?? brand.name;
   const tagline = listing?.tagline ?? brand.tagline;
   const category = listing
-    ? await getCategoryLabelServer(listing.category)
+    ? listingCategoryLabel(listing, await getCategoriesServer())
     : "";
 
   return new ImageResponse(

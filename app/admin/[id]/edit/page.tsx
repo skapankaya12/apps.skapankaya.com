@@ -11,6 +11,8 @@ import {
 import { uploadDemoVideo, uploadPoster, uploadScreenshots } from "@/lib/storage";
 import { captureVideoPoster, validateDemo } from "@/lib/media";
 import {
+  OTHER_CATEGORY,
+  OTHER_CATEGORY_MAX,
   RUNTIME_LABELS,
   TAGLINE_MAX,
   TITLE_MAX,
@@ -95,6 +97,7 @@ function EditForm({
   const [tagline, setTagline] = useState(listing.tagline);
   const [description, setDescription] = useState(listing.description);
   const [category, setCategory] = useState(listing.category);
+  const [otherCategory, setOtherCategory] = useState(listing.otherCategory ?? "");
   const [runtime, setRuntime] = useState<Runtime>(listing.runtime);
   const [setupMode, setSetupMode] = useState<SetupMode>(listing.setupMode);
   const [price, setPrice] = useState((listing.priceCents / 100).toFixed(2));
@@ -166,6 +169,7 @@ function EditForm({
         tagline: tagline.trim(),
         description: description.trim(),
         category,
+        otherCategory: category === OTHER_CATEGORY ? otherCategory.trim() : "",
         runtime,
         setupMode,
         priceCents: Math.round(priceNum * 100),
@@ -262,6 +266,16 @@ function EditForm({
               <option key={c.id} value={c.id}>{c.label}</option>
             ))}
           </select>
+          {category === OTHER_CATEGORY && (
+            <input
+              value={otherCategory}
+              onChange={(e) => setOtherCategory(e.target.value)}
+              maxLength={OTHER_CATEGORY_MAX}
+              placeholder="The seller's name for it"
+              aria-label="Category name shown on the badge"
+              className={`${inputClass} mt-2`}
+            />
+          )}
         </Field>
 
         <div className="grid gap-6 sm:grid-cols-2">

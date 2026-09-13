@@ -3,8 +3,6 @@ import { getAdminDb, adminConfigured } from "./firebaseAdmin";
 import {
   DEFAULT_CATEGORIES,
   sortCategories,
-  categoryLabel,
-  type Category,
   type CategoryDef,
 } from "./types";
 
@@ -34,8 +32,3 @@ export const getCategoriesServer = cache(async (): Promise<CategoryDef[]> => {
     return DEFAULT_CATEGORIES;
   }
 });
-
-/** Display label for a category id, resolved against the live filters. */
-export async function getCategoryLabelServer(id: Category): Promise<string> {
-  return categoryLabel(id, await getCategoriesServer());
-}

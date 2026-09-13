@@ -30,6 +30,9 @@ import {
   type Slot,
 } from "@/lib/uploads";
 import {
+  DEFAULT_CATEGORIES,
+  OTHER_CATEGORY,
+  OTHER_CATEGORY_MAX,
   RUNTIME_LABELS,
   TAGLINE_MAX,
   TITLE_MAX,
@@ -158,6 +161,7 @@ function ListingForm({
   const [tagline, setTagline] = useState(start.values.tagline);
   const [description, setDescription] = useState(start.values.description);
   const [category, setCategory] = useState<Category>(start.values.category);
+  const [otherCategory, setOtherCategory] = useState(start.values.otherCategory);
   const categories = useStoreValue(getCategories);
   const [runtime, setRuntime] = useState<Runtime>(start.values.runtime);
   const [setupMode, setSetupMode] = useState<SetupMode>(start.values.setupMode);
@@ -252,6 +256,11 @@ function ListingForm({
     categories.some((c) => c.id === category)
       ? category
       : (categories[0]?.id ?? category);
+  // Only kept while Other is picked. Written as "" otherwise, so switching a
+  // listing from Other to a real filter clears the old name rather than
+  // leaving it in the document where a later switch back would resurrect it.
+  const isOther = activeCategory === OTHER_CATEGORY;
+  const ownCategory = isOther ? otherCategory.trim() : "";
 
   /*
     The listing as it would be published, built from what is in the form.
@@ -272,6 +281,7 @@ function ListingForm({
     tagline: tagline.trim(),
     description: description.trim(),
     category: activeCategory,
+    otherCategory: ownCategory,
     priceCents: Math.round(parseFloat(price || "0") * 100),
     runtime,
     platform: runtime === "binary" ? platform : undefined,
@@ -293,8 +303,8 @@ function ListingForm({
   };
 
   const draft: Draft = {
-    title, tagline, description, category: activeCategory, runtime, setupMode,
-    price, version, platform,
+    title, tagline, description, category: activeCategory, otherCategory,
+    runtime, setupMode, price, version, platform,
     listingId,
     packagePath: pkg.slot?.value ?? "",
     demoVideo: demo.slot?.value ?? "",
@@ -488,6 +498,7 @@ function ListingForm({
         tagline: tagline.trim(),
         description: description.trim(),
         category: activeCategory,
+        otherCategory: ownCategory,
         runtime,
         platform: runtime === "binary" ? platform : undefined,
         setupMode,
@@ -657,6 +668,7 @@ function ListingForm({
   if (!title.trim()) missing.push("app name");
   if (!tagline.trim()) missing.push("tagline");
   if (description.trim().length <= 20) missing.push("a longer description (20+ characters)");
+  if (isOther && !ownCategory) missing.push("a name for your category");
   const priceNum = parseFloat(price || "0");
   if (!(priceNum >= 15 && priceNum <= 250)) missing.push("a price between $15 and $250");
   if (!/^\d+\.\d+(\.\d+)?$/.test(version.trim()))
@@ -783,7 +795,7 @@ function ListingForm({
           </Field>
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <Field label="What job does it do?" source={sourceOf("category")}>
+            <Field label="What kind of tool is it?" source={sourceOf("category")}>
               <select
                 value={activeCategory}
                 onChange={(e) => {
@@ -799,6 +811,16 @@ function ListingForm({
               <p className="mt-1.5 text-xs text-[var(--muted)]">
                 {categories.find((c) => c.id === activeCategory)?.hint}
               </p>
+              {isOther && (
+                <input
+                  value={otherCategory}
+                  onChange={(e) => setOtherCategory(e.target.value)}
+                  maxLength={OTHER_CATEGORY_MAX}
+                  placeholder="e.g. Music tools"
+                  aria-label="Name your category"
+                  className={`${inputClass} mt-2`}
+                />
+              )}
             </Field>
 
             <Field
@@ -1374,6 +1396,7 @@ type Draft = {
   tagline: string;
   description: string;
   category: Category;
+  otherCategory: string;
   runtime: Runtime;
   setupMode: SetupMode;
   platform: Platform;
@@ -1403,7 +1426,8 @@ const EMPTY_DRAFT: Draft = {
   title: "",
   tagline: "",
   description: "",
-  category: "productivity",
+  category: DEFAULT_CATEGORIES[0].id,
+  otherCategory: "",
   runtime: "node",
   setupMode: "one-command",
   platform: "macos",
@@ -1473,6 +1497,7 @@ function draftFromListing(listing: Listing): Draft {
     tagline: listing.tagline,
     description: listing.description,
     category: listing.category,
+    otherCategory: listing.otherCategory ?? "",
     runtime: listing.runtime,
     setupMode: listing.setupMode,
     // Listings predate the platform field; macOS is the only installer format

@@ -7,13 +7,13 @@ import {
   hasPublishableSlug,
   formatPriceServer,
 } from "@/lib/listings.server";
-import { getCategoryLabelServer } from "@/lib/categories.server";
+import { getCategoriesServer } from "@/lib/categories.server";
 import { ListingDetail } from "@/components/ListingDetail";
 import { resolveSellerProfile } from "@/lib/profiles.server";
 import { getSaveCount } from "@/lib/saves.server";
 import { JsonLd } from "@/components/JsonLd";
 import { stripMarkdown } from "@/lib/markdown";
-import { PLATFORM_LABELS, type Listing } from "@/lib/types";
+import { PLATFORM_LABELS, listingCategoryLabel, type Listing } from "@/lib/types";
 
 /**
  * A listing page is the marketplace's long-tail search surface: someone types
@@ -100,7 +100,7 @@ export default async function AppPage({
   if (!listing) notFound();
 
   const url = `${brand.url}/app/${listing.slug}`;
-  const category = await getCategoryLabelServer(listing.category);
+  const category = listingCategoryLabel(listing, await getCategoriesServer());
   // The seller's own profile, falling back to the details this listing was
   // written with. ListingDetail is a client component and the rules keep /users
   // private, so it has to arrive as a prop.

@@ -74,6 +74,26 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
   cross: "Windows, macOS and Linux",
 };
 
+/** The systems a buyer can filter by. A listing's `platform`, minus "cross". */
+export type System = Exclude<Platform, "cross">;
+export const SYSTEMS: System[] = ["macos", "windows", "linux"];
+
+/**
+ * Which of a buyer's systems a tool will run on, for the browse filter.
+ *
+ * Only a compiled app is tied to one system. Node, Python and browser tools run
+ * wherever their runtime does, so they answer yes on all three, the same claim
+ * the listing page's operatingSystem already publishes for them. A compiled app
+ * with no platform predates the field and keeps the same all-three default the
+ * listing page gives it, rather than vanishing from every filter.
+ */
+export function runsOn(listing: Pick<Listing, "runtime" | "platform">): System[] {
+  if (listing.runtime !== "binary" || !listing.platform || listing.platform === "cross") {
+    return SYSTEMS;
+  }
+  return [listing.platform];
+}
+
 /**
  * The only installer format accepted today.
  *
@@ -85,10 +105,13 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
 export const INSTALLER_EXTENSIONS = [".dmg"] as const;
 
 /**
- * Categories are framed around the professional context / department a tool
- * serves ("Sales", "Marketing", "Finance"), not the kind of file it touches.
- * A buyer browses the way they think about their own work, and the same tool
- * makes sense whatever their industry.
+ * Categories say what kind of tool something is ("Files & converters",
+ * "Games & toys", "Finance & administration"), not which department would
+ * buy it. They used to be departments (Sales, Marketing, HR...), which read as
+ * a B2B catalogue and left a wallpaper app or a speaking game with nowhere to
+ * go but "Personal & fun". A maker reads the chip row to decide whether their
+ * tool belongs here, so the list is as much a statement to sellers as a filter
+ * for buyers.
  *
  * A category is a slug, not a closed union: the browse filters live in the
  * `categories` collection in Firestore, where an admin adds, renames and
@@ -249,6 +272,11 @@ export interface Listing {
   tagline: string;
   description: string;
   category: Category;
+  /**
+   * The seller's own name for the category, when `category` is OTHER_CATEGORY.
+   * Shown on the listing's badge in place of "Other". Empty or absent otherwise.
+   */
+  otherCategory?: string;
   /** Price in the smallest currency unit (cents). */
   priceCents: number;
   runtime: Runtime;
@@ -442,17 +470,48 @@ export const FREE_TOOL_DESCRIPTION_MAX = 240;
  * and takes over from there.
  */
 export const DEFAULT_CATEGORIES: CategoryDef[] = [
-  { id: "sales", label: "Sales", hint: "Outreach, CRM helpers, lead lists, quotes and pipelines", order: 0 },
-  { id: "marketing", label: "Marketing", hint: "Content, social, SEO, email and campaign tools", order: 1 },
-  { id: "finance", label: "Finance & accounting", hint: "Invoices, expenses, bookkeeping and reporting", order: 2 },
-  { id: "operations", label: "Operations", hint: "Files, workflows, scheduling and back-office admin", order: 3 },
-  { id: "people", label: "HR & people", hint: "Hiring, onboarding, time-off and team admin", order: 4 },
-  { id: "design", label: "Design & creative", hint: "Images, video, mockups and brand assets", order: 5 },
-  { id: "developers", label: "Developers", hint: "Code, automation and developer utilities", order: 6 },
-  { id: "productivity", label: "Productivity", hint: "Focus, notes, time tracking and getting things done", order: 7 },
-  { id: "data", label: "Data & analytics", hint: "Cleaning, converting, analysing and visualising data", order: 8 },
-  { id: "personal", label: "Personal & fun", hint: "Habits, hobbies, home and just-for-fun tools", order: 9 },
+  { id: "files", label: "Files & converters", hint: "Convert, compress, rename and organise files", order: 0 },
+  { id: "desktop", label: "Desktop & workspace", hint: "Wallpapers, widgets, menu bar, tabs and focus", order: 1 },
+  { id: "writing", label: "Writing & notes", hint: "Notes, to-dos, journals and writing", order: 2 },
+  { id: "design", label: "Design & media", hint: "Images, video, audio, icons and mockups", order: 3 },
+  { id: "learning", label: "Learning & practice", hint: "Study, languages, speaking and practice", order: 4 },
+  { id: "finance", label: "Finance & administration", hint: "Invoices, budgets, taxes, HR and paperwork", order: 5 },
+  { id: "growth", label: "Clients & growth", hint: "Sales, outreach, marketing, SEO and social", order: 6 },
+  { id: "data", label: "Data & automation", hint: "Spreadsheets, scrapers, agents and scripted chores", order: 7 },
+  { id: "developers", label: "Developer tools", hint: "Code, terminal and developer utilities", order: 8 },
+  { id: "games", label: "Games & toys", hint: "Games and things made for fun", order: 9 },
+  { id: "home", label: "Home & life", hint: "Habits, health, recipes, hobbies and home", order: 10 },
+  { id: "other", label: "Other", hint: "None of these fit? Name it yourself.", order: 11 },
 ];
+
+/**
+ * The one category id with a meaning in code: the seller names it themselves.
+ *
+ * A fixed list always misses something, and a maker whose tool fits nowhere
+ * should not have to file it under a wrong label to submit. Their words go in
+ * Listing.otherCategory and are what the listing's badge shows; the browse chip
+ * still reads "Other". A name that keeps turning up is the signal to add it as
+ * a real filter in /admin/categories.
+ *
+ * Its document can be renamed or reordered like any other, but deleting it
+ * makes the name field disappear from the form, since it only shows for this id.
+ */
+export const OTHER_CATEGORY = "other";
+/** A few words for a badge, not a sentence. */
+export const OTHER_CATEGORY_MAX = 30;
+
+/**
+ * What a listing's category badge says: the seller's own name for it when they
+ * chose Other, the filter's label otherwise.
+ */
+export function listingCategoryLabel(
+  listing: Pick<Listing, "category" | "otherCategory">,
+  categories: CategoryDef[]
+): string {
+  const own = listing.otherCategory?.trim();
+  if (listing.category === OTHER_CATEGORY && own) return own;
+  return categoryLabel(listing.category, categories);
+}
 
 /** Chip order: the admin's `order`, then label so it never depends on doc ids. */
 export function sortCategories(categories: CategoryDef[]): CategoryDef[] {

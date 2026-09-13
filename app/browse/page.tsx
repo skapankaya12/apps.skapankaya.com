@@ -11,7 +11,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Browse tools",
   description:
-    "Every tool on the marketplace: small, finished software you buy once, own forever, and run on your own computer. Filter by the work you do — sales, finance, marketing, operations, design and more.",
+    "Every tool on the marketplace: small, finished software you buy once, own forever, and run on your own computer. Filter by the kind of tool and the system it runs on.",
   alternates: { canonical: "/browse" },
 };
 

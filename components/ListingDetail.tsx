@@ -18,7 +18,7 @@ import {
 } from "@/lib/store";
 import {
   RUNTIME_LABELS,
-  categoryLabel,
+  listingCategoryLabel,
   type Listing,
   type SetupMode,
   type SellerProfile,
@@ -191,7 +191,7 @@ export function ListingDetail({
 
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <VerifiedBadge />
-            <Badge tone="neutral">{categoryLabel(listing.category, categories)}</Badge>
+            <Badge tone="neutral">{listingCategoryLabel(listing, categories)}</Badge>
             <Badge tone="neutral">{RUNTIME_LABELS[listing.runtime]}</Badge>
             <Badge tone="neutral">v{listing.version}</Badge>
           </div>

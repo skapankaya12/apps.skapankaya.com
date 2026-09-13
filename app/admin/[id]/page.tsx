@@ -15,6 +15,7 @@ import {
   getCategories,
 } from "@/lib/store";
 import {
+  OTHER_CATEGORY,
   PLATFORM_LABELS,
   RUNTIME_LABELS,
   SETUP_MODE_LABELS,
@@ -376,6 +377,16 @@ export default function AdminReviewPage() {
                 </option>
               ))}
             </select>
+            {/* Public text the seller typed, shown as the listing's badge, so
+                it gets read here like the title. Fixable in Edit listing. */}
+            {listing.category === OTHER_CATEGORY && (
+              <span className="text-sm text-[var(--muted)]">
+                Badge reads{" "}
+                <strong className="text-[var(--foreground)]">
+                  {listing.otherCategory?.trim() || "Other"}
+                </strong>
+              </span>
+            )}
             {savingCategory && (
               <span className="text-sm text-[var(--muted)]">Saving…</span>
             )}

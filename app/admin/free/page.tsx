@@ -13,6 +13,7 @@ import {
 import {
   categoryLabel,
   DEFAULT_CATEGORIES,
+  OTHER_CATEGORY,
   FREE_TOOL_TITLE_MAX,
   FREE_TOOL_DESCRIPTION_MAX,
   type CategoryDef,
@@ -225,11 +226,13 @@ export default function AdminFreeToolsPage() {
               value={draft.category}
               onChange={(e) => setDraft({ ...draft, category: e.target.value })}
             >
-              {(categories.length ? categories : DEFAULT_CATEGORIES).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
+              {(categories.length ? categories : DEFAULT_CATEGORIES)
+                .filter((c) => c.id !== OTHER_CATEGORY)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
             </select>
           </Field>
         </FormSection>

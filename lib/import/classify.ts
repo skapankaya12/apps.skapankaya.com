@@ -4,31 +4,40 @@ import type { Category, Runtime } from "@/lib/types";
    Turning a source's own vocabulary into ours.
 
    GitHub has topics, Product Hunt has its topic list, and neither maps onto the
-   department-shaped categories in lib/types. These tables are the translation,
-   and they are deliberately a guess we show rather than a decision we make:
-   both values land in a <select> the seller can correct in one click, so a near
-   miss costs nothing and a hit saves a scroll through ten options.
+   kind-of-tool categories in lib/types. These tables are the translation, and
+   they are deliberately a guess we show rather than a decision we make: both
+   values land in a <select> the seller can correct in one click, so a near
+   miss costs nothing and a hit saves a scroll through a dozen options.
+
+   Never guesses "other". That one exists for the seller to name, and a guess
+   would file a tool under a blank name nobody chose.
 --------------------------------------------------------------------------- */
 
 /**
  * Ordered most specific first — the first match wins.
  *
  * Order carries real weight. "invoice" is finance even though an invoicing tool
- * is also sales software, and "analytics" is data even though marketers live in
- * it. Whichever rule sits higher is the tie-break, so the specific, unambiguous
- * words are placed above the broad ones on purpose.
+ * is also sales software, "video converter" is files even though it touches
+ * video, and "analytics" is data even though marketers live in it. Whichever
+ * rule sits higher is the tie-break, so the specific, unambiguous words are
+ * placed above the broad ones on purpose.
  */
 const CATEGORY_RULES: [Category, RegExp][] = [
-  ["finance", /\b(invoic|account(ing|s)?|expense|budget|tax|bookkeep|payroll-tax|billing|payment|ledger|receipt)\b/i],
-  ["people", /\b(hr|hiring|recruit\w*|onboarding|payroll|employee|applicant|resume|cv)\b/i],
-  ["sales", /\b(sales|crm|lead[s-]?gen\w*|leads|outreach|prospect\w*|pipeline|quote|deal)\b/i],
-  ["marketing", /\b(marketing|seo|newsletter|campaign|copywrit\w*|advertis\w*|social[- ]?media|growth|email-marketing)\b/i],
-  ["data", /\b(data|analytics|csv|sql|database|etl|scrap\w*|visuali[sz]\w*|dataset|json|spreadsheet|excel|chart|convert\w*|transcod\w*|encod\w*|compress\w*)\b/i],
-  ["design", /\b(design|ui|ux|figma|image|photo|video|graphic|icon|font|typography|animation|color|3d|creative|screenshot|mockup)\b/i],
+  ["finance", /\b(invoic\w*|account(ing|s)?|expense|budget|tax|bookkeep\w*|billing|payment|ledger|receipt|hr|hiring|recruit\w*|payroll|employee|applicant|paperwork)\b/i],
+  ["growth", /\b(sales|crm|lead[s-]?gen\w*|leads|outreach|prospect\w*|pipeline|proposals?|marketing|seo|newsletter|campaign|copywrit\w*|advertis\w*|social[- ]?media|growth|email-marketing)\b/i],
+  ["learning", /\b(learn\w*|study|studying|flashcards?|languages?|vocabulary|quiz\w*|education\w*|tutor\w*|practi[cs]e|speaking|pronunciation)\b/i],
+  ["games", /\b(games?|gaming|puzzles?|toys?|arcade|fun)\b/i],
+  // Not a bare "files": "your files never leave your machine" is in half the
+  // pitches on a self-hosted marketplace, whatever the tool does.
+  ["files", /\b(file[- ]?(manag\w*|convert\w*|organi[sz]\w*|renam\w*)|convert\w*|transcod\w*|encod\w*|compress\w*|renam\w*|pdf|zip|archiv\w*|backup|sync)\b/i],
+  ["desktop", /\b(desktop|wallpapers?|widgets?|menu ?bar|launcher|window|dock|new ?tab|tabs|screensaver|focus|pomodoro|productivity|time-?track\w*)\b/i],
+  // Above data, because "your data stays on your machine" is in the pitch of
+  // every self-hosted notes app and says nothing about what the tool does.
+  ["writing", /\b(notes?|todo|to-do|journal\w*|diary|writing|writer|markdown|calendar|reminders?)\b/i],
+  ["data", /\b(data|analytics|csv|sql|database|etl|scrap\w*|visuali[sz]\w*|dataset|json|spreadsheet|excel|chart|workflow|automat\w*|agents?|bots?|scheduling)\b/i],
+  ["design", /\b(design|ui|ux|figma|image|photo|video|audio|music|podcast|graphic|icon|font|typography|animation|color|3d|creative|screenshot|mockup)\b/i],
   ["developers", /\b(cli|developer|dev-?tools?|api|sdk|git|github|devops|docker|terminal|shell|code|programming|compiler|linter|debug\w*|testing|framework|library)\b/i],
-  ["operations", /\b(workflow|automation|scheduling|backup|sync|logistics|inventory|ops|file-?manage\w*|document\w*)\b/i],
-  ["personal", /\b(game|fun|habit|health|fitness|recipe|cooking|home|hobby|music|travel|personal|pet)\b/i],
-  ["productivity", /\b(productivity|notes?|todo|task|calendar|time-?track\w*|focus|markdown|writing|organi[sz]\w*|reminder)\b/i],
+  ["home", /\b(habits?|health|fitness|recipes?|cooking|home|hobby|hobbies|travel|personal|pets?|family|garden\w*|meditat\w*)\b/i],
 ];
 
 /**

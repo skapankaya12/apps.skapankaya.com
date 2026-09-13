@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useStoreValue, useUser } from "@/lib/hooks";
 import { getListings, getCategories, formatPrice, fetchUserCount } from "@/lib/store";
-import { categoryLabel } from "@/lib/types";
+import { listingCategoryLabel } from "@/lib/types";
 import { Section, ButtonLink, Badge, StatusBadge } from "@/components/ui";
 import { AdminUsersPanel } from "@/components/AdminUsersPanel";
 import { Monogram } from "@/components/Monogram";
@@ -98,7 +98,7 @@ export default function AdminPage() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{l.title}</span>
-                  <Badge tone="neutral">{categoryLabel(l.category, categories)}</Badge>
+                  <Badge tone="neutral">{listingCategoryLabel(l, categories)}</Badge>
                 </div>
                 <p className="text-sm text-[var(--muted)]">
                   {l.tagline} · by {l.sellerName} · {formatPrice(l.priceCents)}
@@ -162,7 +162,7 @@ export default function AdminPage() {
                     </td>
                     <td className="px-5 py-3 text-[var(--muted)]">{l.sellerName}</td>
                     <td className="px-5 py-3 text-[var(--muted)]">
-                      {categoryLabel(l.category, categories)}
+                      {listingCategoryLabel(l, categories)}
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={l.status} /></td>
                     <td className="px-5 py-3 tabular-nums">{l.salesCount}</td>

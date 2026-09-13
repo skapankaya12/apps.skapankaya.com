@@ -124,9 +124,9 @@ export default function Page() {
           locally. Be concrete about what the buyer gets.
         </li>
         <li>
-          <strong>Category</strong>{" "}— the kind of work it serves (Sales,
-          Finance, Developers, and so on), so buyers browsing by their job find
-          it.
+          <strong>Category</strong>{" "}— the kind of tool it is (Files and
+          converters, Games and toys, Developer tools, and so on). If none fits,
+          pick Other and name it yourself.
         </li>
         <li>
           <strong>Runtime</strong>{" "}— Node.js, Python, Browser, Desktop app, or

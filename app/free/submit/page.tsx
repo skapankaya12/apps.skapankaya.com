@@ -10,6 +10,7 @@ import { uploadFreeToolPreview } from "@/lib/storage";
 import { createFreeTool } from "@/lib/freeTools";
 import {
   DEFAULT_CATEGORIES,
+  OTHER_CATEGORY,
   FREE_TOOL_TITLE_MAX,
   FREE_TOOL_DESCRIPTION_MAX,
 } from "@/lib/types";
@@ -33,7 +34,12 @@ export default function SubmitFreeToolPage() {
   const user = useUser();
   const router = useRouter();
   const categories = useStoreValue(getCategories);
-  const options = categories.length ? categories : DEFAULT_CATEGORIES;
+  // Other is left out: it exists so a seller can name their own category,
+  // and a directory entry has no field for that, so it would only ever read
+  // "Other" on the card.
+  const options = (categories.length ? categories : DEFAULT_CATEGORIES).filter(
+    (c) => c.id !== OTHER_CATEGORY
+  );
   const authResolved = useStoreValue(getAuthResolved);
 
   const [url, setUrl] = useState("");

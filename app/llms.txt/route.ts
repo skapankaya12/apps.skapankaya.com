@@ -76,7 +76,7 @@ Not sold: SaaS or anything that runs on the seller's servers, non-software goods
 
 - [${brand.name}](${site}/) — the front page: what the marketplace is, who it is for, today's catalogue and the notify list.
 - [Documentation](${site}/docs) — the full marketplace manual for buyers and sellers (see Documentation below).
-- [Browse every tool](${site}/browse) — the full catalogue, filterable by the kind of work it serves.
+- [Browse every tool](${site}/browse) — the full catalogue, filterable by the kind of tool and the system it runs on.
 - [About](${site}/about) — why the marketplace exists, how buying works, pricing for sellers, FAQ.
 - [Free tools](${site}/free) — a checked directory of free and open source tools that live on their makers' own sites.
 - [Sell your tool](${site}/sell) — what can be listed and how to submit it.

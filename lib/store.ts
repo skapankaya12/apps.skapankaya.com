@@ -1078,6 +1078,7 @@ export type AdminListingEdit = Pick<
   | "tagline"
   | "description"
   | "category"
+  | "otherCategory"
   | "runtime"
   | "setupMode"
   | "priceCents"
