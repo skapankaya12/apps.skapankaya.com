@@ -68,6 +68,59 @@ export const ARTICLE_TAGS: ArticleTag[] = [
 
 export const articles: Article[] = [
   {
+    slug: "ai-cannot-recommend-what-it-cannot-compare",
+    title: "The model cannot recommend what it cannot compare",
+    excerpt:
+      "Your software can be online, indexed and perfectly real, and still never appear when someone asks ChatGPT what to use. The problem is often not that the model cannot find it. It is that the model cannot tell when to choose it.",
+    tag: "Playbooks",
+    author: "The Solo Market",
+    date: "2026-09-25",
+    // The opening paragraph is the excerpt, which the page shows as the
+    // standfirst, so the body starts at the second one.
+    body: [
+      { type: "p", text: "A person will watch the demo, click through the screenshots and fill in the gaps. An answer engine has a shorter job: turn a request into a shortlist it can defend. If your page says you are fast, powerful and built for modern teams, it has learned almost nothing." },
+      { type: "h2", text: "A landing page is not a product record" },
+      { type: "p", text: "Most small software pages are written to create interest. They describe the feeling of using the product, then hide the useful facts across pricing, documentation and a FAQ nobody reaches." },
+      { type: "p", text: "An AI recommendation starts with those useful facts." },
+      { type: "p", text: "Someone asking for “a Mac tool that converts large files locally without uploading them” has already supplied the comparison:" },
+      { type: "ul", items: [
+        "The job: convert files.",
+        "The system: macOS.",
+        "The constraint: large files.",
+        "The privacy requirement: local processing.",
+        "The deal-breaker: no upload.",
+      ]},
+      { type: "p", text: "If those five things are stated plainly, the tool is a candidate. If they are buried under “transform your workflow,” the model has to guess. It has other candidates." },
+      { type: "quote", text: "The easier your tool is to compare, the easier it is to recommend." },
+      { type: "h2", text: "The shortlist has to come from somewhere" },
+      { type: "p", text: [{ href: "https://openai.com/index/buy-it-in-chatgpt/", text: "OpenAI says" }, " its shopping results are selected for relevance, with signals such as availability, price and quality used when comparing sellers. ", { href: "https://www.shopify.com/news/spring-26-edition-dev", text: "Shopify's Catalog API" }, " takes the same problem and makes product information structured, current and queryable for agents."] },
+      { type: "p", text: "There is no published universal formula for independent software. The underlying job is still familiar: match a need to products, remove the ones that fail the constraints, and explain what remains." },
+      { type: "p", text: "For a small tool, that means making a few things impossible to misunderstand:" },
+      { type: "ul", items: [
+        "what exact job it does;",
+        "who it is for;",
+        "what it runs on;",
+        "what it costs and whether that payment repeats;",
+        "what data leaves the machine;",
+        "what setup it needs;",
+        "what it deliberately does not do.",
+      ]},
+      { type: "p", text: "The last one matters more than it looks. A narrow limitation gives the rest of the description a shape. A tool that admits it only runs on Apple silicon is easier to place than one that claims to work for everyone." },
+      { type: "h2", text: "Your own page is only one witness" },
+      { type: "p", text: "Your website is where the complete answer should live. It is also you describing yourself." },
+      { type: "p", text: "A second relevant source gives the product context outside its own sales page: a category, neighbouring tools, a consistent price and another description of the same job. That might be documentation, a review, a comparison or a marketplace listing." },
+      { type: "p", text: ["This is the part small makers tend to skip. They finish the tool, publish one page and wait for search engines and answer engines to reconstruct the rest. ", { href: "https://thestackhouse.io/", text: "The Stack House" }, " works on this gap as an AI visibility problem: whether a product exists online is one question; whether an AI system has enough consistent evidence to retrieve and recommend it is another."] },
+      { type: "p", text: "A marketplace helps because its structure repeats. Every listing answers roughly the same questions, which makes products easier to place beside one another. That does not guarantee an AI mention. It gives the model another clean place to understand what the tool is." },
+      { type: "h2", text: "Write the sentence the agent needs" },
+      { type: "p", text: "Start with one sentence containing the job, buyer and constraint:" },
+      { type: "p", text: "“A one-time Mac app for converting large media files locally, with no account and no uploads.”" },
+      { type: "p", text: "That sentence has almost none of the language software companies enjoy writing. It also contains nearly everything a buyer needs to decide whether to keep reading." },
+      { type: "p", text: ["Then make the rest agree with it. The title, visible copy, structured data, marketplace listing and documentation should not describe five slightly different products. The machine-readable half of your site will drift if you let it. ", { href: "/blog/get-found-by-ai-answer-engines-2026", text: "We learned that one ourselves" }, "."] },
+      { type: "p", text: "AI visibility is still unpredictable, and anyone promising a guaranteed recommendation is selling confidence they do not have. Clarity is less exciting. It is also the part you can fix this afternoon." },
+      { type: "p", text: "The model cannot recommend what it cannot compare. Give it less to invent." },
+    ],
+  },
+  {
     slug: "creativity-is-the-new-coding-2026",
     title: "Creativity is the new coding: how anyone can build an app in 2026",
     excerpt:
