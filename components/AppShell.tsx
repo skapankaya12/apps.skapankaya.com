@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { CATALOGUE_PAUSED } from "@/lib/brand";
 import { markClientReady } from "@/lib/store";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
@@ -26,7 +27,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="flex-1">{children}</main>
       </div>
       <Footer />
-      <WhatsNewPopup />
+      {/* Its cards carry the same broken images. */}
+      {!CATALOGUE_PAUSED && <WhatsNewPopup />}
     </>
   );
 }

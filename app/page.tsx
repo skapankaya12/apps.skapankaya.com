@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { copy } from "@/lib/brand";
+import { CATALOGUE_PAUSED, copy } from "@/lib/brand";
 import { getApprovedListings } from "@/lib/listings.server";
 import { BrowseExperience } from "@/components/BrowseExperience";
+import { CataloguePause } from "@/components/CataloguePause";
 import { PreLaunchNotice } from "@/components/PreLaunchNotice";
 import { ButtonLink, Section } from "@/components/ui";
 import { GradientWave } from "@/components/ui/gradient-wave";
@@ -28,7 +29,7 @@ const logoGradientText =
  * the HTML for crawlers, then <BrowseExperience> goes live on hydration.
  */
 export default async function HomePage() {
-  const listings = await getApprovedListings();
+  const listings = CATALOGUE_PAUSED ? [] : await getApprovedListings();
 
   return (
     <>
@@ -89,21 +90,27 @@ export default async function HomePage() {
         </Section>
       </div>
 
-      {/* Listings */}
-      <Section className="py-7">
-        <div id="apps" className="mb-5 flex flex-wrap items-end justify-between gap-3 scroll-mt-24">
-          <h2 className="text-xl font-semibold tracking-tight">Find your solution</h2>
-          <div className="flex gap-2">
-            <ButtonLink href="/about" variant="ghost" size="sm">
-              How this works
-            </ButtonLink>
-            <ButtonLink href="/sell" variant="secondary" size="sm">
-              Sell your tool
-            </ButtonLink>
+      {/* Listings, or the statement in their place while storage is down */}
+      {CATALOGUE_PAUSED ? (
+        <Section className="py-7">
+          <CataloguePause onHome />
+        </Section>
+      ) : (
+        <Section className="py-7">
+          <div id="apps" className="mb-5 flex flex-wrap items-end justify-between gap-3 scroll-mt-24">
+            <h2 className="text-xl font-semibold tracking-tight">Find your solution</h2>
+            <div className="flex gap-2">
+              <ButtonLink href="/about" variant="ghost" size="sm">
+                How this works
+              </ButtonLink>
+              <ButtonLink href="/sell" variant="secondary" size="sm">
+                Sell your tool
+              </ButtonLink>
+            </div>
           </div>
-        </div>
-        <BrowseExperience initial={listings} />
-      </Section>
+          <BrowseExperience initial={listings} />
+        </Section>
+      )}
 
       {/* Single quiet prompt for anyone who didn't find their tool */}
       <Section className="pb-16">

@@ -37,6 +37,16 @@ const PITCH = [
  * On launch day this constant and every reference to it come out together. See
  * LAUNCH_CHECKLIST.md for the full list of pre-launch copy to remove.
  */
+/**
+ * Hides every listing behind <CataloguePause> while Firebase Storage on the
+ * production project is switched off (its billing account was closed on or
+ * before 19 October 2026, and every screenshot, demo and package answered 402).
+ * The listings themselves are untouched in Firestore; this only stops the site
+ * showing cards whose images cannot load. Set back to false once billing is
+ * restored and the storage URLs answer 200 again.
+ */
+export const CATALOGUE_PAUSED = true;
+
 const STATUS_NOTE =
   "Pre-launch: the marketplace is collecting listings from solo builders, and tools cannot be bought until the public launch.";
 

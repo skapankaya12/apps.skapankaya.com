@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { brand } from "@/lib/brand";
+import { brand, CATALOGUE_PAUSED } from "@/lib/brand";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
 import { JsonLd } from "@/components/JsonLd";
 import { BrowseExperience } from "@/components/BrowseExperience";
+import { CataloguePause } from "@/components/CataloguePause";
 import { Section } from "@/components/ui";
 
 export const revalidate = 300;
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
  * reads ?q= itself so this page can stay statically prerendered.
  */
 export default async function BrowsePage() {
-  const listings = await getApprovedListings();
+  const listings = CATALOGUE_PAUSED ? [] : await getApprovedListings();
 
   /*
    * The catalogue, as a catalogue.
@@ -72,8 +73,14 @@ export default async function BrowsePage() {
           </Link>
         </p>
       </div>
-      <BrowseExperience initial={listings} />
-      <JsonLd data={catalogueLd} />
+      {CATALOGUE_PAUSED ? (
+        <CataloguePause />
+      ) : (
+        <>
+          <BrowseExperience initial={listings} />
+          <JsonLd data={catalogueLd} />
+        </>
+      )}
     </Section>
   );
 }
