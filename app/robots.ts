@@ -16,6 +16,10 @@ import { brand } from "@/lib/brand";
  * fetches once, sees the directive, and drops them cleanly. Keeping them out
  * of here is the point; don't "tidy up" by adding them back.
  *
+ * /video-prompts/prompts/ is disallowed for a different reason: those files are
+ * other people's prompts, shown on /video-prompts with their author named. The
+ * page is ours to rank; the prompt text is not ours to present as our content.
+ *
  * Crawl budget isn't a concern at this size (~24 known URLs).
  *
  * DELIBERATE: there is no rule for GPTBot, ClaudeBot, PerplexityBot,
@@ -31,7 +35,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/api/"],
+      disallow: ["/admin", "/api/", "/video-prompts/prompts/"],
     },
     sitemap: `${brand.url}/sitemap.xml`,
     host: brand.url,

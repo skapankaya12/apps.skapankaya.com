@@ -79,6 +79,7 @@ Not sold: SaaS or anything that runs on the seller's servers, non-software goods
 - [Browse every tool](${site}/browse) — the full catalogue, filterable by the kind of tool and the system it runs on.
 - [About](${site}/about) — why the marketplace exists, how buying works, pricing for sellers, FAQ.
 - [Free tools](${site}/free) — a checked directory of free and open source tools that live on their makers' own sites.
+- [Product video prompts](${site}/video-prompts) — launch films, ads and demos made by asking an AI to write the video as code, each credited to its maker and linked to the prompt behind it.
 - [Sell your tool](${site}/sell) — what can be listed and how to submit it.
 - [How to run a tool](${site}/how-to-run) — the two-minute setup guide, including the AI-assisted path for non-technical buyers.
 - [Blogs](${site}/blog) — articles for indie makers and independent professionals.

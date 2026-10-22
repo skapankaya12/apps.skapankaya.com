@@ -15,6 +15,7 @@ const navItems = [
   { href: "/about", label: "About" },
   { href: "/browse", label: "Browse" },
   { href: "/free", label: "Free / Open Source tools" },
+  { href: "/video-prompts", label: "Video prompts" },
   { href: "/blog", label: "Blogs" },
   // The seller CTA sits last because it is a button rather than a link. See
   // the LiquidMetalButton branch below.
