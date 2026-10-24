@@ -54,11 +54,11 @@ const SIDE_FACTS: Record<AccountKind, { label: string; body: string }[]> = {
  * lands somewhere else after sign-in is a ready-made phishing flow ("your
  * session expired, sign in again" on a lookalike page). Anything that isn't a
  * single-slash relative path — absolute URLs, protocol-relative `//evil.com`,
- * backslash tricks — falls back to /browse.
+ * backslash tricks — falls back to /marketplace.
  */
 function safeNext(raw: string | null): string {
-  if (!raw || !raw.startsWith("/")) return "/browse";
-  if (raw.startsWith("//") || raw.startsWith("/\\")) return "/browse";
+  if (!raw || !raw.startsWith("/")) return "/marketplace";
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return "/marketplace";
   return raw;
 }
 
@@ -173,7 +173,7 @@ function LoginInner() {
    * need a seller account.
    */
   function destination(): string {
-    if (sellIntent && !wantsSeller()) return "/browse";
+    if (sellIntent && !wantsSeller()) return "/marketplace";
     return next;
   }
 

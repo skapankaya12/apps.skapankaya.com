@@ -108,7 +108,7 @@ export default async function ArticlePage({
           your own computer.
         </p>
         <Link
-          href="/browse"
+          href="/marketplace"
           className="mt-3 inline-block text-sm font-medium text-[var(--accent)] hover:underline"
         >
           Browse the marketplace →

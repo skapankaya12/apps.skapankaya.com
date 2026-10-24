@@ -152,7 +152,7 @@ export function ListingDetail({
         <p className="mt-2 text-[var(--muted)]">
           This tool may have been removed or is still in review.
         </p>
-        <ButtonLink href="/browse" className="mt-6" variant="secondary">
+        <ButtonLink href="/marketplace" className="mt-6" variant="secondary">
           Back to browse
         </ButtonLink>
       </Section>
@@ -169,7 +169,7 @@ export function ListingDetail({
 
   return (
     <Section className="py-12">
-      <Link href="/browse" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
+      <Link href="/marketplace" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
         ← Browse
       </Link>
 

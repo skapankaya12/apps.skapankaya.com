@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
     // every few minutes, with compiles of ten minutes or more.
     root: path.resolve(__dirname),
   },
+  // /browse became the Marketplace tab. Permanent, so search engines move
+  // the page's standing across; the query string (?q=, ?category=) carries.
+  async redirects() {
+    return [{ source: "/browse", destination: "/marketplace", permanent: true }];
+  },
 };
 
 export default nextConfig;

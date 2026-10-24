@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { CATALOGUE_PAUSED, copy } from "@/lib/brand";
-import { getApprovedListings } from "@/lib/listings.server";
-import { BrowseExperience } from "@/components/BrowseExperience";
-import { CataloguePause } from "@/components/CataloguePause";
-import { PreLaunchNotice } from "@/components/PreLaunchNotice";
-import { ButtonLink, Section } from "@/components/ui";
-import { GradientWave } from "@/components/ui/gradient-wave";
+import { getDesktopFeed } from "@/lib/desktop.server";
+import { Desktop } from "@/components/desktop/Desktop";
 
 export const revalidate = 300;
 
@@ -14,118 +10,23 @@ export const metadata: Metadata = {
 };
 
 /**
- * The logo's blue to violet, the same run of colours the emails letter one
- * span at a time. On the web background-clip does it in one go.
- */
-const logoGradientText =
-  "bg-gradient-to-r from-[#2f8bff] to-[#6a4bf0] bg-clip-text text-transparent";
-
-/**
- * Landing page = pitch + product, nothing else. Everything explanatory
- * (why this exists, how it works, selling, FAQ, contact) lives on /about
- * so the listings get the space here.
+ * The homepage is a computer screen: "runs on your own computer", shown as a
+ * computer. Aisles are folders, the marketplace is a window, what you own sits
+ * in the Dock and the Trash is where subscriptions go.
  *
- * A server component: the catalogue is read here so the listing rows are in
- * the HTML for crawlers, then <BrowseExperience> goes live on hydration.
+ * Read on the server so every shelf is in the HTML as real links, then the
+ * desktop takes over on hydration. The homepage it replaced is kept, unrouted,
+ * in archive/old-homepage/.
  */
 export default async function HomePage() {
-  const listings = CATALOGUE_PAUSED ? [] : await getApprovedListings();
-
+  const { items, updates } = await getDesktopFeed();
   return (
-    <>
-      {/* Compact hero */}
-      <div className="hero-bleed relative overflow-hidden border-b border-[var(--border)]">
-        {/* Backdrop, back to front: the animated gradient, then the hairline
-            grid on top of it. The grid is the page's signature and the gradient
-            alone reads as generic, so they layer rather than replace. Both are
-            masked out before the bottom border so nothing hard-cuts against it. */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            maskImage: "linear-gradient(to bottom, #000 30%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, #000 30%, transparent 100%)",
-          }}
-        >
-          <GradientWave className="opacity-90" />
-        </div>
-        <div className="bg-grid pointer-events-none absolute inset-0 opacity-50" />
-        <Section className="relative py-8 sm:py-11">
-          {/* Pitch, with the pre-launch card alongside it on wide screens and
-              stacked underneath on narrow ones. */}
-          {/* Splits at xl, not lg. At lg the text column came out ~590px and the
-              headline needs 592px at text-4xl — it wrapped by a single pixel.
-              Below xl the card stacks (it centres itself at max-w-md) and the
-              pitch gets the full section width. */}
-          <div className="grid items-center gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="mx-auto max-w-4xl text-center animate-fade-up">
-              {/* Two deliberate rows: `block` pins the break before the byline
-                  instead of leaving it to the balancer. The {" "}s are the SWC
-                  whitespace gotcha. */}
-              <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl 2xl:text-5xl">
-                {copy.heroHeadline}{" "}
-                <span className="block">
-                  {copy.heroByline.before}{" "}
-                  <span className={logoGradientText}>{copy.heroByline.accent}</span>{" "}
-                  {copy.heroByline.after}
-                </span>
-              </h1>
-              <p className="mx-auto mt-3 max-w-2xl text-balance text-[var(--muted)]">
-                {copy.heroSub}{" "}
-                <span className={`${logoGradientText} font-semibold`}>{copy.heroSubAccent}</span>
-              </p>
-              {/* Split the room before anything else. A buyer's page is this
-                  one, so theirs jumps to the catalogue below; a seller's is
-                  /sell. */}
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <ButtonLink href="#apps" size="lg">
-                  I&apos;m a buyer
-                </ButtonLink>
-                <ButtonLink href="/sell" variant="secondary" size="lg">
-                  I&apos;m a seller
-                </ButtonLink>
-              </div>
-            </div>
-            <PreLaunchNotice />
-          </div>
-        </Section>
-      </div>
-
-      {/* Listings, or the statement in their place while storage is down */}
-      {CATALOGUE_PAUSED ? (
-        <Section className="py-7">
-          <CataloguePause onHome />
-        </Section>
-      ) : (
-        <Section className="py-7">
-          <div id="apps" className="mb-5 flex flex-wrap items-end justify-between gap-3 scroll-mt-24">
-            <h2 className="text-xl font-semibold tracking-tight">Find your solution</h2>
-            <div className="flex gap-2">
-              <ButtonLink href="/about" variant="ghost" size="sm">
-                How this works
-              </ButtonLink>
-              <ButtonLink href="/sell" variant="secondary" size="sm">
-                Sell your tool
-              </ButtonLink>
-            </div>
-          </div>
-          <BrowseExperience initial={listings} />
-        </Section>
-      )}
-
-      {/* Single quiet prompt for anyone who didn't find their tool */}
-      <Section className="pb-16">
-        <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-6 text-center sm:flex-row sm:text-left">
-          <div>
-            <h3 className="font-semibold">Didn&apos;t find what you need?</h3>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              Tell us the problem. We can often build it for you within a week.
-            </p>
-          </div>
-          <ButtonLink href="/about#contact" size="sm">
-            Request a tool
-          </ButtonLink>
-        </div>
-      </Section>
-    </>
+    <Desktop
+      items={items}
+      updates={updates}
+      paused={CATALOGUE_PAUSED}
+      heading={`${copy.heroHeadline} ${copy.heroByline.before} ${copy.heroByline.accent} ${copy.heroByline.after}`}
+      sub={`${copy.heroSub} ${copy.heroSubAccent}`}
+    />
   );
 }

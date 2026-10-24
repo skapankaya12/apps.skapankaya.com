@@ -15,7 +15,7 @@
  * used (the host counts the impressions), so it is the trade being made, not an
  * oversight. Copy one into public/ and point at it locally to opt out.
  */
-type Badge = {
+export type Badge = {
   /** Where the badge links, UTM parameters and all, exactly as the host gives it. */
   href: string;
   /** Their image, on their host. */
@@ -25,7 +25,7 @@ type Badge = {
   height: number;
 };
 
-const BADGES: Badge[] = [
+export const BADGES: Badge[] = [
   {
     href: "https://nicklaunches.com/products/the-solo-market/?utm_source=thesolomarket.com&utm_medium=badge&utm_campaign=featured",
     src: "https://nicklaunches.com/badges/featured.png",

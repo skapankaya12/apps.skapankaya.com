@@ -76,7 +76,7 @@ export default function AdminCategoriesPage() {
 
       <h1 className="mt-6 text-3xl font-semibold tracking-tight">Browse filters</h1>
       <p className="mt-1 max-w-2xl text-[var(--muted)]">
-        The chips buyers filter by on the home page and /browse, and the list
+        The chips buyers filter by on the home page and /marketplace, and the list
         sellers pick from when they submit a tool. Changes are live immediately
         — no deploy.
       </p>

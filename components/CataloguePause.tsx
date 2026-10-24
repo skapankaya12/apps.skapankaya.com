@@ -1,5 +1,5 @@
 /**
- * What the homepage and /browse show in place of the listings while
+ * What the homepage and /marketplace show in place of the listings while
  * CATALOGUE_PAUSED is on. See lib/brand.ts.
  */
 export function CataloguePause({ onHome = false }: { onHome?: boolean }) {

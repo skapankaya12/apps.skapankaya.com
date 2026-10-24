@@ -56,7 +56,7 @@ export default function BlogPage() {
             Reading gives you the idea. {brand.name} gives you the tool.
           </p>
           <Link
-            href="/browse"
+            href="/marketplace"
             className="mt-2 inline-block text-sm font-medium text-[var(--accent)] hover:underline"
           >
             Browse the marketplace →

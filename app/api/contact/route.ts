@@ -22,6 +22,7 @@ const CONTACT_WINDOW_MS = 10 * 60 * 1000;
 
 const TOPIC_LABELS: Record<string, string> = {
   request: "Tool request",
+  suggest: "Suggestion",
   support: "Support",
   selling: "Selling",
   other: "Other",

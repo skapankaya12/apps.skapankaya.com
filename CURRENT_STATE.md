@@ -8,7 +8,13 @@ when it is time. If you notice something here that has gone stale, say so in
 chat and leave the file alone until she asks. A doc that rewrites itself every
 session is a doc nobody can trust.
 
-Last updated: 13 September 2026, at Sevval's request (**licence keys**: a
+Last updated: 24 October 2026, at Sevval's request (**the homepage is now a
+macOS-style desktop**, every other page a window on it; `/browse` became
+`/marketplace`; built 23 and 24 October on branch `desktop-landing`, **not yet
+committed or pushed** at the time of writing. See §8, "Built 23 to 24 October"
+and §4b).
+
+Before that: 13 September 2026 (**licence keys**: a
 seller attaches a batch of their own keys and every buyer gets one, the
 AppSumo way; **categories** are now kinds of tool, with Other and a runs-on
 filter. Both on `staging` and `main`, rules deployed to both projects. See
@@ -199,7 +205,12 @@ root A record is what keeps the apex redirecting to Vercel.
 
 ### `app/` routes worth knowing
 
-- `/` `/browse` `/app/[slug]` are the public catalogue, all server-rendered.
+- `/` is the desktop (§4b). `/marketplace` is the catalogue page (it was
+  `/browse`; `next.config.ts` 308-redirects `/browse` there, query and all).
+  `/app/[slug]` is a listing. All server-rendered.
+- `/api/desktop` is the desktop's shelves and news as JSON, for Spotlight and
+  the Notification Centre on pages other than `/`. Static, revalidated every
+  five minutes, public data only (the same the homepage prints).
 - `/seller/[handle]` is a seller's public page: avatar, bio, join year, their
   tools. Server-rendered, in the sitemap, and what schema.org `author.url`
   points at. Deliberately under `/seller/` rather than the root so a future
@@ -279,7 +290,9 @@ Gmail.
 
 ### `components/`
 
-`AppShell`, `Navbar`, `Footer` are the frame. `ListingCard`, `ListingMedia`,
+`AppShell` is the frame: on `/` it renders the desktop bare, everywhere else
+it wraps the page in `desktop/SiteChrome` (§4b). **`Navbar` and `Footer` are
+gone**; their originals, with the old homepage, are in `archive/old-homepage/`. `ListingCard`, `ListingMedia`,
 `ListingDetail`, `ListingGallery` render listings. `SellerAvatar` is a seller's photo or their initial. `ui/img-sphere.tsx` is the rotating sphere and `SellerSphere` fills it (photo, then initial, then a muted logo for the empty spots). `StartSellingButton` is the /sell CTA. `ui/form.tsx` holds `Field`,
 `FormSection` and `inputClass`. `FreeToolCard` is one /free entry, a plain
 server component because the card is a link out with nothing to hydrate.
@@ -296,6 +309,61 @@ footer, a seamless marquee; adding one is a line in its `BADGES` array.
 dashboard's stock panel with Add keys and Remove unused.
 
 ---
+
+## 4b. The desktop (homepage) and the page frame
+
+Built 23 to 24 October 2026. The homepage is a computer screen in the macOS
+idiom: menu bar, desktop folders, windows, Dock, Notification Centre. Every
+other page sits on the same desktop as one window. **Drawn for us, never
+copied**: no Apple logo, icon, wallpaper or font file ships. The font is the
+visitor's own system font (SF Pro on a Mac).
+
+| Where | What |
+|---|---|
+| `lib/desktop.ts` | Aisles and stages (Resources, Idea, Build, Launch, Grow, Hire), aisle subfolders, wallpapers, the Landing page welcome words, Daily notes and their shuffle, Keep going's two versions. |
+| `lib/desktop.server.ts` | `getDesktopFeed()`: every shelf item and the Notification Centre news, for `/` and `/api/desktop`. |
+| `lib/usefulSites.ts` | The Useful websites list: 38 sites in six subfolders, three `pinned`. Our own one-line descriptions, no affiliate links. |
+| `lib/founders.ts` | The six founders on Keep going. Each line is only what their own site says, checked 24 October. |
+| `lib/videoGroups.ts` | The video prompt groups, shared by `/video-prompts` and the desktop's subfolders. |
+| `components/desktop/` | `Desktop` (window manager), `Window`, `MenuBar`, `Dock`, `apps` (Marketplace, Quick Look, Pages, About, Waitlist, Suggest, Subscriptions), `overlays` (Spotlight, All aisles, context menu, notices), `NotificationCentre`, `Wallpaper`, `GlassAisle`, `DeskFooter`, `SiteChrome`, `icons`, `hooks`. |
+| `components/ui/glass-folder-cards.tsx` | Third-party (Kedhareswer Naidu, 21st.dev), used as given. Two React Compiler lint rules are off for that file only. |
+| `app/desktop.css` | All desktop and page-frame styles, loaded site-wide from `app/layout.tsx`. |
+
+How it behaves, in short:
+
+- **Wallpapers**: Landing page (white and green, the welcome with a rolling
+  word), Daily note (**the default**), Keep going (words, or the founders row;
+  it shuffles between the two), and four NASA photos. Remembered per visitor
+  in localStorage (`sm-desktop`), as are appearance and the shuffles.
+- **Folders**: every aisle is a small glass folder that grows on hover and
+  opens its aisle in the Marketplace window. All aisles (F4) shows them full
+  size; clicking one fans out its real items.
+- **Aisles with subfolders** (Useful websites, Video prompts) open on pinned
+  items and a folder per subfolder, listed in the sidebar too. Empty
+  subfolders stay hidden.
+- **Pages** open inside a Pages window (same origin, no frame inside). Sign-in,
+  checkout and account refuse frames, so they leave the desktop.
+- **Every other page**: menu bar, wallpaper, Dock and footer strip, the page
+  as one window. Close or minimise goes back to `/`, zoom fills the screen.
+  Search (⌘K) and the clock open in place. Dark appearance darkens the page
+  through the site's own colour tokens.
+- **Link preview** (`app/opengraph-image.tsx`) draws the desktop with the
+  real icons.
+
+Gotchas that cost time:
+
+- **Write `backdrop-filter` once, unprefixed.** Writing it and the `-webkit-`
+  copy made the CSS build keep only the prefixed one, so Chrome drew no glass.
+- **Re-render the icons after changing `components/desktop/icons.tsx` or the
+  aisles**: `npx tsx scripts/render-desktop-icons.tsx`. The link preview reads
+  `public/desktop-icons/`, and **the production build fails** if a file is
+  missing (Next forbids `react-dom/server` in the app, hence the files).
+- **New Useful website**: add it to `lib/usefulSites.ts`, then
+  `node scripts/fetch-site-icons.mjs`.
+- `overflow: clip`, not `hidden`, on the desktop: hidden can still be
+  scrolled by focus, which slid the screen sideways.
+- Another session's `next dev` in this folder blocks a second one (Next allows
+  one per folder).
 
 ## 5. Data model and roles
 
@@ -772,6 +840,52 @@ actually asks.
 and mutable forever, which is the package-overwrite hole reintroduced through the
 front door. It also breaks delivery, "own forever" when a link dies, and the
 version tracking behind the Library's "update available" flag.
+
+### Built 23 to 24 October 2026: the desktop (branch `desktop-landing`)
+
+What it is and how it works: §4b. What changed around it:
+
+- **`/browse` is now `/marketplace`** (308 redirect, every internal link and
+  the `SearchAction` moved). The Marketplace nav item replaced Browse.
+- **The old homepage, Navbar and Footer** are kept unrouted in
+  `archive/old-homepage/` (excluded from tsconfig and eslint). The
+  `market-square` branch was deleted after being saved as a git bundle in
+  `archive/market-square/` (4.3 MB; see its README to restore).
+- **The "new this week" popup** no longer shows anywhere; its news is in the
+  Notification Centre. `components/WhatsNewPopup.tsx` and `lib/whatsNew.ts`
+  are now unused.
+- **Contact form** gained a "Suggest something to add" topic (`suggest`,
+  labelled "Suggestion" in the Sheet). Help opens it in a window.
+- **`llms.txt`** describes the desktop; the sitemap carries `/marketplace`.
+- **The Landing page promises "new finds every thursday"**. That is now a
+  public commitment.
+
+**Open, not done (noted 24 October):**
+
+- **Not committed, not pushed.** Sevval decides what goes to `staging` and
+  `main`. `archive/market-square/` is 4.3 MB of binary bundle: decide whether
+  it belongs in git or only on her Mac.
+- **Default wallpaper and the first view**: Daily note is the default, and
+  the Marketplace window opens on arrival, so a first visit does not see the
+  Landing page welcome. Asked, not answered: make Landing page the default
+  and start with the window closed?
+- **Daily notes** are ten placeholder lines written for the site. Sevval wants
+  to choose ten, possibly from founders' posts on X (needs treg, now
+  re-authorised, in a fresh session).
+- **Pinned websites**: our three (Product Hunt, Indie Hackers, Startup School)
+  until Sevval confirms. Visitor-customisable pins are in the backlog.
+- **Not tried on a real phone.**
+- **The paused-catalogue statement** (`CataloguePause`) still blames storage,
+  which is no longer the reason.
+- **`/sell` sphere hydration warning** (dev only): server and client round
+  the sphere's numbers differently. Pre-existing; fix is rounding in
+  `components/ui/img-sphere.tsx`.
+- **Link preview headline** renders in regular weight: the image generator
+  has only a plain font built in. Bundle a bold font to fix.
+- **Founders cards** show real people's public X photos and lines from their
+  own sites. Keep them true; re-check now and then.
+- Backlog (Claude memory, section H): the "pin this site" nudge after a
+  minute; customisable pinned websites.
 
 ### Shipped 13 September 2026: licence keys, and categories as kinds of tool
 

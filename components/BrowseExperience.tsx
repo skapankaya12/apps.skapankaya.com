@@ -23,7 +23,7 @@ const onSystem = (l: Listing, f: SystemFilter) => f === "any" || runsOn(l).inclu
 /**
  * The core "find a tool" experience: search, two rows of chips (what kind of
  * tool, and which system it runs on) and a vertical list of listing rows.
- * Shared by the landing page (below the hero) and /browse.
+ * The catalogue on /marketplace. The old homepage used it too, below its hero.
  *
  * `initial` is the catalogue read on the server, so the rows are in the HTML
  * for crawlers and the first paint.
@@ -138,7 +138,7 @@ export function BrowseExperience({ initial = [] }: { initial?: Listing[] }) {
       {/*
         Reading ?q= is confined to a child that renders nothing, inside
         Suspense. That keeps useSearchParams from opting the whole route into
-        dynamic rendering, so /browse stays a prerendered, CDN-served page —
+        dynamic rendering, so /marketplace stays a prerendered, CDN-served page —
         which matters, because time-to-first-byte is a ranking input.
       */}
       <Suspense fallback={null}>

@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# The market-square homepage, saved as a git bundle on Sevval's Mac only
+# (archive/market-square/README.md). 4.3 MB of binary that stays out of git.
+/archive/market-square/

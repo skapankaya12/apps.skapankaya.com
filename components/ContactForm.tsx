@@ -3,13 +3,18 @@
 import { useState } from "react";
 import { Button, Badge } from "./ui";
 
-type Topic = "request" | "support" | "selling" | "other";
+export type Topic = "request" | "suggest" | "support" | "selling" | "other";
 
 const TOPICS: { value: Topic; label: string; hint: string }[] = [
   {
     value: "request",
     label: "Request a tool",
     hint: "Describe the problem. We can often build it for you within a week.",
+  },
+  {
+    value: "suggest",
+    label: "Suggest something to add",
+    hint: "A tool, a template, a resource: what would help you as a founder?",
   },
   {
     value: "support",
@@ -24,8 +29,8 @@ const TOPICS: { value: Topic; label: string; hint: string }[] = [
   { value: "other", label: "Something else", hint: "Anything else on your mind." },
 ];
 
-export function ContactForm() {
-  const [topic, setTopic] = useState<Topic>("request");
+export function ContactForm({ initialTopic = "request" }: { initialTopic?: Topic } = {}) {
+  const [topic, setTopic] = useState<Topic>(initialTopic);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);

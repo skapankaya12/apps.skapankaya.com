@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./desktop.css";
 import { brand } from "@/lib/brand";
 import { AppShell } from "@/components/AppShell";
 import { JsonLd } from "@/components/JsonLd";
@@ -86,12 +87,12 @@ const websiteLd = {
   publisher: { "@id": `${SITE}/#organization` },
   inLanguage: "en",
   // Lets Google offer a search box for the site directly in results, and
-  // makes /browse?q=… a real, linkable search URL.
+  // makes /marketplace?q=… a real, linkable search URL.
   potentialAction: {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: `${SITE}/browse?q={search_term_string}`,
+      urlTemplate: `${SITE}/marketplace?q={search_term_string}`,
     },
     "query-input": "required name=search_term_string",
   },

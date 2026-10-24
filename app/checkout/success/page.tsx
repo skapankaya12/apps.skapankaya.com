@@ -45,7 +45,7 @@ function SuccessInner() {
         <ButtonLink href="/library" size="lg">
           Go to my library
         </ButtonLink>
-        <ButtonLink href="/browse" variant="secondary" size="lg">
+        <ButtonLink href="/marketplace" variant="secondary" size="lg">
           Keep browsing
         </ButtonLink>
       </div>

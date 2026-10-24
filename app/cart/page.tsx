@@ -21,7 +21,7 @@ export default function CartPage() {
       {items.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-[var(--border-strong)] py-16 text-center">
           <p className="text-[var(--muted)]">Your cart is empty.</p>
-          <ButtonLink href="/browse" className="mt-5" variant="secondary">
+          <ButtonLink href="/marketplace" className="mt-5" variant="secondary">
             Find a tool
           </ButtonLink>
         </div>

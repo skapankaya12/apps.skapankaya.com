@@ -49,12 +49,12 @@ export default function SavedPage() {
           <p className="text-[var(--muted)]">
             Nothing saved yet. Tap the ♥ on any tool to keep it here.
           </p>
-          <ButtonLink href="/browse" className="mt-5" variant="secondary">
+          <ButtonLink href="/marketplace" className="mt-5" variant="secondary">
             Browse tools
           </ButtonLink>
         </div>
       ) : (
-        // A single column, like /browse. ListingCard is a full-width horizontal
+        // A single column, like /marketplace. ListingCard is a full-width horizontal
         // row with a fixed 288px media panel, so in a multi-column grid the
         // media eats the column and the title and price get squeezed into a
         // few characters per line.

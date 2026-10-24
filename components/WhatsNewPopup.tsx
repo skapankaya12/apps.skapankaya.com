@@ -307,7 +307,7 @@ export function WhatsNewPopup() {
             <p className="mt-4 text-[14px] leading-[22px] text-[#4a4a56]">
               and{" "}
               <Link
-                href="/browse"
+                href="/marketplace"
                 onClick={close}
                 className="font-bold text-[#4f46e5] underline"
               >
@@ -319,7 +319,7 @@ export function WhatsNewPopup() {
 
           <div className="mt-7 flex flex-wrap items-center justify-between gap-4">
             <Link
-              href="/browse"
+              href="/marketplace"
               onClick={close}
               className="inline-block rounded-full bg-[#4f46e5] px-5 py-2.5 text-[14px] font-bold leading-[18px] text-white transition-colors hover:bg-[#4338ca]"
             >

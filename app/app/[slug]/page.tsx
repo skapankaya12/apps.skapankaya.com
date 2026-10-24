@@ -178,7 +178,7 @@ export default async function AppPage({
         "@type": "ListItem",
         position: 2,
         name: "Browse tools",
-        item: `${brand.url}/browse`,
+        item: `${brand.url}/marketplace`,
       },
       { "@type": "ListItem", position: 3, name: listing.title, item: url },
     ],

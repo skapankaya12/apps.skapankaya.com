@@ -63,7 +63,7 @@ export default function LibraryPage() {
       {purchases.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-[var(--border-strong)] py-16 text-center">
           <p className="text-[var(--muted)]">You haven&apos;t bought any apps yet.</p>
-          <ButtonLink href="/browse" className="mt-5" variant="secondary">
+          <ButtonLink href="/marketplace" className="mt-5" variant="secondary">
             Browse apps
           </ButtonLink>
         </div>

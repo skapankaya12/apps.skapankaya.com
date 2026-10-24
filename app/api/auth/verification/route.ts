@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   if (account.emailVerified) return Response.json({ ok: true, already: true });
 
   const role = (await getAdminDb().collection("users").doc(uid).get()).data()?.role;
-  const next = role === "seller" ? "/dashboard" : "/browse";
+  const next = role === "seller" ? "/dashboard" : "/marketplace";
   // Firebase throttles link requests per address (TOO_MANY_ATTEMPTS_TRY_LATER
   // after a few in quick succession), which a person pressing "resend" can
   // hit. Say so as a 429, which the banner shows as "try again shortly".

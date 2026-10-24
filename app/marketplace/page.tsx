@@ -10,18 +10,23 @@ import { Section } from "@/components/ui";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "Browse tools",
+  title: "Marketplace",
   description:
     "Every tool on the marketplace: small, finished software you buy once, own forever, and run on your own computer. Filter by the kind of tool and the system it runs on.",
-  alternates: { canonical: "/browse" },
+  alternates: { canonical: "/marketplace" },
 };
 
 /**
+ * The Marketplace tab: every tool, filterable. This was /browse; /browse now
+ * redirects here (next.config.ts) so old links and search results still land.
+ * The homepage that used to sit above this catalogue is kept, unrouted, in
+ * archive/old-homepage/.
+ *
  * The catalogue is read on the server so the listing rows land in the HTML.
  * <BrowseExperience> swaps to the live client store once it hydrates, and
  * reads ?q= itself so this page can stay statically prerendered.
  */
-export default async function BrowsePage() {
+export default async function MarketplacePage() {
   const listings = CATALOGUE_PAUSED ? [] : await getApprovedListings();
 
   /*
@@ -45,9 +50,9 @@ export default async function BrowsePage() {
   const catalogueLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "@id": `${brand.url}/browse#catalogue`,
+    "@id": `${brand.url}/marketplace#catalogue`,
     name: `Every tool on ${brand.name}`,
-    url: `${brand.url}/browse`,
+    url: `${brand.url}/marketplace`,
     numberOfItems: catalogue.length,
     itemListElement: catalogue.map((l, i) => ({
       "@type": "ListItem",

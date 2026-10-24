@@ -9,7 +9,7 @@ import type { Listing } from "./types";
 /** A rolling seven days rather than a calendar week, so Monday is never empty. */
 export const WHATS_NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** At most this many rows in the popup; the rest are one link to /browse. */
+/** At most this many rows in the popup; the rest are one link to /marketplace. */
 export const WHATS_NEW_MAX_ROWS = 6;
 
 /**

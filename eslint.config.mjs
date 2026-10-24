@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The old homepage, kept for reference and never loaded (archive/old-homepage/README.md).
+    "archive/**",
   ]),
 ]);
 

@@ -173,7 +173,7 @@ export const articles: Article[] = [
       { type: "quote", text: "Subscriptions are priced for the customer who uses everything. Most of us are not that customer." },
       { type: "h2", text: "When the SaaS is worth it" },
       { type: "p", text: "This is not an argument against all subscriptions. Collaboration, constantly changing data, and things you depend on every hour are a genuine fit for a platform. The point is to make it a decision instead of a default. Buy the small tool for the small job, and save the monthly spend for the software you truly live in." },
-      { type: "p", text: ["The unbundling of software is quietly one of the best raises a freelancer can give themselves. It just shows up as bills you stop paying. ", { href: "/browse", text: "See what that looks like in practice" }, "."] },
+      { type: "p", text: ["The unbundling of software is quietly one of the best raises a freelancer can give themselves. It just shows up as bills you stop paying. ", { href: "/marketplace", text: "See what that looks like in practice" }, "."] },
     ],
   },
   {
@@ -307,7 +307,7 @@ export const articles: Article[] = [
       { type: "h2", text: "Credibility beats volume now" },
       { type: "p", text: "The old game rewarded whoever accumulated the most links. Language models weigh that far less. What they respond to is whether your content reads as credible, current, and specific enough to quote. A page that says something concrete and checkable is worth more than five pages of competent filler, which is a genuinely good change for anyone building alone." },
       { type: "p", text: "It also means the small maker is not automatically at a disadvantage. You cannot outspend a company on links. You can absolutely be clearer, more specific and more honest than one, and that is now the thing being measured." },
-      { type: "p", text: ["None of this is a trick, and anyone promising you a ranking is guessing. What you can control is whether the machine reading you finds something true, specific and easy to repeat. Start with the layers you never look at: ours are ", { href: "/llms.txt", text: "our llms.txt" }, " and the structured data on every ", { href: "/browse", text: "listing page" }, ", both public and both worth stealing the shape of."] },
+      { type: "p", text: ["None of this is a trick, and anyone promising you a ranking is guessing. What you can control is whether the machine reading you finds something true, specific and easy to repeat. Start with the layers you never look at: ours are ", { href: "/llms.txt", text: "our llms.txt" }, " and the structured data on every ", { href: "/marketplace", text: "listing page" }, ", both public and both worth stealing the shape of."] },
     ],
   },
   {

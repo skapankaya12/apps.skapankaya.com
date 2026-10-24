@@ -41,7 +41,7 @@ export default async function FreeToolsPage() {
   ]);
 
   /*
-   * The directory as a catalogue, same pattern as /browse.
+   * The directory as a catalogue, same pattern as /marketplace.
    *
    * Each entry is a SoftwareApplication with a `downloadUrl` rather than an
    * `offers` node. That is the honest shape: we are describing software and
@@ -104,7 +104,7 @@ export default async function FreeToolsPage() {
         </ButtonLink>
         <p className="mt-6 text-sm text-[var(--muted)]">
           Looking for something more specific?{" "}
-          <Link href="/browse" className="text-[var(--accent)] hover:underline">
+          <Link href="/marketplace" className="text-[var(--accent)] hover:underline">
             Browse the full catalogue
           </Link>
           .

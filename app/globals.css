@@ -277,3 +277,9 @@ main:first-child .hero-bleed {
   margin-top: calc(var(--header-h) * -1);
   padding-top: var(--header-h);
 }
+
+/* A page of our own site shown inside a desktop window: no second menu bar,
+   dock or window frame. See components/AppShell.tsx. */
+[data-embedded] [data-site-chrome] {
+  display: none !important;
+}

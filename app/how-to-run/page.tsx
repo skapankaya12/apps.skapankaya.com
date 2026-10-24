@@ -126,7 +126,7 @@ export default function HowToRunPage() {
           </Link>
           .
         </p>
-        <ButtonLink href="/browse" className="mt-4" variant="secondary" size="sm">
+        <ButtonLink href="/marketplace" className="mt-4" variant="secondary" size="sm">
           Browse apps
         </ButtonLink>
         <p className="mt-4 text-sm text-[var(--muted)]">

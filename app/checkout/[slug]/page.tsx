@@ -41,7 +41,7 @@ export default function CheckoutPage() {
     return (
       <Section className="py-24 text-center">
         <h1 className="text-2xl font-semibold">App not found</h1>
-        <ButtonLink href="/browse" className="mt-6" variant="secondary">
+        <ButtonLink href="/marketplace" className="mt-6" variant="secondary">
           Back to browse
         </ButtonLink>
       </Section>
@@ -153,7 +153,7 @@ export default function CheckoutPage() {
                   <ButtonLink href="/saved" variant="secondary" className="mt-4 w-full">
                     View saved tools
                   </ButtonLink>
-                  <ButtonLink href="/browse" variant="ghost" size="sm" className="mt-2 w-full">
+                  <ButtonLink href="/marketplace" variant="ghost" size="sm" className="mt-2 w-full">
                     Keep browsing →
                   </ButtonLink>
                 </div>

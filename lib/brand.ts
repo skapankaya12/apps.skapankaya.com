@@ -32,7 +32,7 @@ const PITCH = [
  * to live only in the home page hero, as prose. Nothing machine-readable said
  * it, so the structured data described a marketplace that was open for
  * business. Shared by the JSON-LD Organization and WebSite nodes and by the
- * /browse heading, so those three cannot drift apart.
+ * /marketplace heading, so those three cannot drift apart.
  *
  * On launch day this constant and every reference to it come out together. See
  * LAUNCH_CHECKLIST.md for the full list of pre-launch copy to remove.

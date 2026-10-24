@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { buttonClass } from "./ui";
 import { VideoPromptDialog } from "./VideoPromptDialog";
+import { VIDEO_GROUPS } from "@/lib/videoGroups";
 
 export type VideoPromptItem = {
   id: string;
@@ -21,17 +22,7 @@ export type VideoPromptItem = {
  * need something in Three.js", they think "I need a launch film". How it was
  * made stays on each card as its tags.
  */
-export const VIDEO_GROUPS = [
-  { id: "launch", label: "Launch films", blurb: "The short film for launch day." },
-  { id: "demo", label: "Product demos", blurb: "Your real product UI, in motion." },
-  { id: "app", label: "App previews", blurb: "Phone and desktop app previews for the stores and your site." },
-  { id: "feature", label: "Feature announcements", blurb: "One new thing, shown well." },
-  { id: "explainer", label: "Explainers", blurb: "What your product does and how it works." },
-  { id: "brand", label: "Logo & brand reveals", blurb: "Logo intros, outros and brand films." },
-  { id: "data", label: "Data & milestones", blurb: "Numbers that move: users, revenue, charts." },
-  { id: "template", label: "Fill-in templates", blurb: "Prompts that ask about your product first, then build the video." },
-  { id: "style", label: "Brand film styles", blurb: "Ten second films, one style each. Swap in your brand, copy and colours." },
-] as const;
+export { VIDEO_GROUPS };
 
 const TAG_LABELS: Record<string, string> = {
   canvas: "Canvas",

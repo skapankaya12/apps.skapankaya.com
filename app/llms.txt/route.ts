@@ -39,7 +39,7 @@ export async function GET() {
             ).toFixed(0)}, by ${l.sellerName})`
         )
         .join("\n")
-    : "- The catalogue is still filling up. See /browse for what's listed today.";
+    : "- The catalogue is still filling up. See /marketplace for what's listed today.";
 
   const body = `# ${brand.name}
 
@@ -74,9 +74,9 @@ Not sold: SaaS or anything that runs on the seller's servers, non-software goods
 
 ## Key pages
 
-- [${brand.name}](${site}/) — the front page: what the marketplace is, who it is for, today's catalogue and the notify list.
+- [${brand.name}](${site}/) — the front page, laid out as a computer desktop: each aisle of the market is a folder, the Marketplace window shows what is on the shelves, the Notification Centre (opened from the clock) carries the market's latest news, and the notify list is there too.
 - [Documentation](${site}/docs) — the full marketplace manual for buyers and sellers (see Documentation below).
-- [Browse every tool](${site}/browse) — the full catalogue, filterable by the kind of tool and the system it runs on.
+- [Marketplace](${site}/marketplace) — every tool on sale, the full catalogue, filterable by the kind of tool and the system it runs on.
 - [About](${site}/about) — why the marketplace exists, how buying works, pricing for sellers, FAQ.
 - [Free tools](${site}/free) — a checked directory of free and open source tools that live on their makers' own sites.
 - [Product video prompts](${site}/video-prompts) — launch films, ads and demos made by asking an AI to write the video as code, each credited to its maker and linked to the prompt behind it.
