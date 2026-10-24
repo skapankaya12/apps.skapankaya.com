@@ -10,9 +10,9 @@ session is a doc nobody can trust.
 
 Last updated: 24 October 2026, at Sevval's request (**the homepage is now a
 macOS-style desktop**, every other page a window on it; `/browse` became
-`/marketplace`; built 23 and 24 October on branch `desktop-landing`, **not yet
-committed or pushed** at the time of writing. See §8, "Built 23 to 24 October"
-and §4b).
+`/marketplace`; built 23 and 24 October, committed as `c799387` and pushed to
+`staging` on 24 October, **not on `main` yet**. See §8, "Built 23 to 24
+October" and §4b).
 
 Before that: 13 September 2026 (**licence keys**: a
 seller attaches a batch of their own keys and every buyer gets one, the
@@ -862,9 +862,9 @@ What it is and how it works: §4b. What changed around it:
 
 **Open, not done (noted 24 October):**
 
-- **Not committed, not pushed.** Sevval decides what goes to `staging` and
-  `main`. `archive/market-square/` is 4.3 MB of binary bundle: decide whether
-  it belongs in git or only on her Mac.
+- **On `staging` (`c799387`), not on `main`.** Sevval decides when it goes
+  to production. `archive/market-square/` stays on her Mac only: it is in
+  `.gitignore`.
 - **Default wallpaper and the first view**: Daily note is the default, and
   the Marketplace window opens on arrival, so a first visit does not see the
   Landing page welcome. Asked, not answered: make Landing page the default
