@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { refreshEmailVerified, resendVerification } from "@/lib/store";
 import { motion } from "motion/react";
 import { nextShift, noteFor, type MarketUpdate, type ShelfItem } from "@/lib/desktop";
 import { AppIcon, type Glyph } from "./icons";
@@ -43,12 +44,15 @@ export function NotificationCentre({
   items,
   actions,
   onWaitlist,
+  verifyEmail,
   onClose,
 }: {
   updates: MarketUpdate[];
   items: ShelfItem[];
   actions: DeskActions;
   onWaitlist: () => void;
+  /** Set while the signed-in account's email is unverified. */
+  verifyEmail?: string;
   onClose: () => void;
 }) {
   const now = useClock();
@@ -95,6 +99,8 @@ export function NotificationCentre({
       <div className="sm-nc-head">
         <span>Notifications</span>
       </div>
+
+      {verifyEmail && <VerifyCard email={verifyEmail} />}
 
       <div className="sm-nc-card">
         <AppIcon g="notes" size={36} />
@@ -203,6 +209,49 @@ function CalendarWidget({ now }: { now: Date }) {
             {d ?? ""}
           </span>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The verify-your-email reminder. It used to arrive as a banner; the desktop
+ * no longer pops anything up, so it waits here, first in the list, with the
+ * same two actions as the banner on the rest of the site.
+ */
+function VerifyCard({ email }: { email: string }) {
+  const [status, setStatus] = useState<"idle" | "busy" | "sent" | "error">("idle");
+  async function run(task: () => Promise<unknown>, done: "sent" | "idle") {
+    setStatus("busy");
+    try {
+      await task();
+      setStatus(done);
+    } catch {
+      setStatus("error");
+    }
+  }
+  return (
+    <div className="sm-nc-card">
+      <AppIcon g="notes" size={36} />
+      <div>
+        <div className="sm-nc-row">
+          <b>Please verify your email</b>
+        </div>
+        <p>
+          {status === "sent"
+            ? "Sent. Check your inbox and spam."
+            : status === "error"
+              ? "That did not work. Try again shortly."
+              : `We sent a link to ${email}.`}
+        </p>
+        <div className="sm-note-btns">
+          <button type="button" className="sm-nc-act" disabled={status === "busy"} onClick={() => run(refreshEmailVerified, "idle")}>
+            I&apos;ve verified
+          </button>
+          <button type="button" className="sm-nc-act" disabled={status === "busy"} onClick={() => run(resendVerification, "sent")}>
+            Resend email
+          </button>
+        </div>
       </div>
     </div>
   );

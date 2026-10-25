@@ -169,28 +169,49 @@
   position: absolute;
   inset: 0;
   display: grid;
-  place-content: center;
-  justify-items: center;
+  align-content: center;
+  justify-items: start;
   gap: 14px;
-  padding: 0 max(8vw, 240px) 9vh;
-  text-align: center;
+  /* Left-aligned, clear of the folder columns on the right. */
+  padding: 0 340px 9vh max(7vw, 48px);
+  text-align: left;
   color: #123d2b;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
 }
 .sm-wall-welcome p { margin: 0; }
-.sm-welcome-hello {
-  font-size: clamp(34px, 4.6vw, 72px);
+.sm-welcome-guide { font-size: clamp(14px, 1.25vw, 18px); color: rgba(18, 61, 43, 0.72); }
+/* The only parts of a wallpaper that take clicks. */
+.sm-welcome-link,
+.sm-welcome-waitlist { pointer-events: auto; }
+.sm-desk .sm-welcome-link { color: #127a4a; font-weight: 600; text-decoration: underline; text-decoration-color: rgba(214, 170, 72, 0.9); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.sm-desk .sm-welcome-link:hover { color: #0c5c37; }
+.sm-desk .sm-welcome-waitlist {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 99px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #127a4a;
+  box-shadow: 0 6px 18px rgba(18, 122, 74, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+.sm-desk .sm-welcome-waitlist:hover { background: #0f6a40; transform: translateY(-1px); }
+
+/* The headline now: what you'll find here, and who for. */
+.sm-welcome-lead {
+  max-width: none;
+  font-size: clamp(34px, 4.4vw, 68px);
   font-weight: 700;
   letter-spacing: -0.035em;
-  line-height: 1.05;
-}
-.sm-welcome-lead {
-  max-width: 24ch;
-  font-size: clamp(22px, 2.6vw, 40px);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  color: rgba(18, 61, 43, 0.78);
+  line-height: 1.06;
+  color: #123d2b;
   text-wrap: balance;
 }
 .sm-welcome-aside { font-size: clamp(13px, 1.1vw, 16px); color: rgba(18, 61, 43, 0.55); letter-spacing: 0.01em; }
@@ -208,9 +229,9 @@
   white-space: nowrap;
   font-weight: 650;
   color: #127a4a;
-  /* gold, kept to one thin line under the word */
-  background: linear-gradient(#d6aa48, #d6aa48) no-repeat 0 92% / 100% 0.08em;
 }
+.sm-welcome-line { display: block; }
+.sm-welcome-solo { color: #127a4a; }
 .sm-site .sm-wall-welcome { display: none; }
 
 /* Keep going, founders version: the words, then a row of small portrait
@@ -230,58 +251,97 @@
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
 }
-.sm-founders-h { margin: 0; font-size: clamp(40px, 5.5vw, 84px); font-weight: 200; letter-spacing: -0.035em; line-height: 1; color: rgba(255, 255, 255, 0.9); }
-.sm-founders-sub { margin: 0 0 22px; font-size: 14px; color: rgba(255, 255, 255, 0.55); }
-.sm-founders { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-.sm-founder { position: relative; pointer-events: auto; }
-.sm-founder-card {
+.sm-founders-h { margin: 0; font-size: clamp(36px, 4.6vw, 64px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; color: #fff; }
+.sm-founders-sub { margin: 6px 0 22px; font-size: 14px; color: rgba(255, 255, 255, 0.55); }
+
+/* The moving row: two copies end to end, sliding one copy's width, faded out
+   at both edges; it stops while the pointer is on it. */
+.sm-fc-viewport {
+  width: 100%;
+  overflow: hidden;
+  pointer-events: auto;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.sm-fc-track { list-style: none; margin: 0; padding: 6px 0 10px; display: flex; gap: 16px; width: max-content; animation: sm-fc-slide 42s linear infinite; }
+.sm-fc-viewport:hover .sm-fc-track,
+.sm-fc-viewport:focus-within .sm-fc-track { animation-play-state: paused; }
+@keyframes sm-fc-slide { to { transform: translateX(calc(-50% - 8px)); } }
+.sm-fc-card {
   position: relative;
   display: block;
-  width: 118px;
-  height: 156px;
-  border-radius: 14px;
+  width: 168px;
+  height: 222px;
+  border-radius: 18px;
   overflow: hidden;
   background: #222;
-  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 10px 24px rgba(0, 0, 0, 0.35);
-  transition: transform 0.35s cubic-bezier(0.34, 1.36, 0.5, 1), box-shadow 0.3s;
+  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.12), 0 14px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.4s cubic-bezier(0.34, 1.36, 0.5, 1);
 }
-.sm-founder-card img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.05); transition: filter 0.4s; }
-.sm-founder-card:hover,
-.sm-founder-card:focus-visible { transform: translateY(-4px); box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.24), 0 16px 32px rgba(0, 0, 0, 0.45); }
-.sm-founder-card:hover img,
-.sm-founder-card:focus-visible img { filter: none; }
-.sm-founder-meta {
+.sm-fc-card img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.06); transition: filter 0.45s; }
+.sm-fc-card:hover, .sm-fc-card:focus-visible { transform: translateY(-5px); }
+.sm-fc-card:hover img, .sm-fc-card:focus-visible img { filter: none; }
+.sm-fc-x {
   position: absolute;
-  inset: auto 0 0;
-  display: grid;
-  gap: 1px;
-  padding: 26px 8px 7px;
-  text-align: left;
-  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.82) 45%);
-}
-.sm-founder-meta b { font-size: 11.5px; font-weight: 600; color: #fff; }
-.sm-founder-meta small { font-size: 9.5px; line-height: 1.25; color: rgba(255, 255, 255, 0.72); }
-.sm-founder-meta em { font-style: normal; font-size: 9.5px; color: rgba(255, 255, 255, 0.5); }
-.sm-founder-in {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 18px;
-  height: 18px;
+  top: 9px;
+  right: 9px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 700;
+  border-radius: 7px;
   color: #fff;
-  background: rgba(10, 102, 194, 0.85);
-  box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
 }
-.sm-founder-in:hover { background: #0a66c2; }
-.sm-site .sm-wall-founders { display: none; }
+/* Name and line on a frosted strip, like a caption pill. */
+.sm-fc-meta {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  gap: 1px;
+  padding: 7px 9px;
+  border-radius: 11px;
+  text-align: left;
+  background: rgba(20, 20, 24, 0.55);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+}
+.sm-fc-meta b { font-size: 12.5px; font-weight: 600; color: #fff; }
+.sm-fc-meta small { font-size: 10.5px; line-height: 1.3; color: rgba(255, 255, 255, 0.7); }
+
+/* The pinned founder, under the row, like a quote block. */
+.sm-pinned { margin-top: 26px; display: grid; justify-items: center; gap: 8px; pointer-events: auto; }
+.sm-pinned-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.45); }
+.sm-pinned-who { display: inline-flex; align-items: center; gap: 10px; color: #fff; }
+.sm-pinned-who img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 6px 16px rgba(0, 0, 0, 0.4); }
+.sm-pinned-who span { display: grid; text-align: left; }
+.sm-pinned-who b { font-size: 15px; font-weight: 600; }
+.sm-pinned-who small { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+.sm-pinned-who:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.sm-pinned-note { margin: 2px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.8); }
+.sm-desk .sm-pinned-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
+}
+.sm-desk .sm-pinned-me:hover { transform: translateY(-1px); }
 @media (prefers-reduced-motion: reduce) {
-  .sm-founder-card, .sm-founder-card img { transition: none; }
+  .sm-fc-track { animation: none; }
+  .sm-fc-viewport { overflow-x: auto; }
+  .sm-fc-card, .sm-fc-card img { transition: none; }
 }
+.sm-site .sm-wall-founders { display: none; }
 
 .sm-wall-note {
   position: absolute;
@@ -507,6 +567,19 @@
 }
 .sm-gf-icon .gf-label { display: none; }
 .sm-gf-icon .gf-shadow { opacity: 0.7; }
+/*
+ * Smoked glass, on a dark wallpaper: the component leaves the top of the
+ * glass nearly clear and screens a highlight over it, so the blurred artwork
+ * glowed brighter right at the edge and read as a white gap between the
+ * glass and the folder. Tint the top, and dim the rims and the highlight.
+ * The doubled class outranks the component's own rules, which load later.
+ */
+.gf-root.gf-root[data-tone="dark"] .gf-tint {
+  background: linear-gradient(180deg, rgba(14, 14, 16, 0.55) 0%, rgba(12, 12, 14, 0.7) 40%, rgba(8, 8, 10, 0.94) 100%);
+}
+.gf-root.gf-root[data-tone="dark"] .gf-spec { opacity: 0.06; }
+.gf-root.gf-root[data-tone="dark"] .gf-front-rim { opacity: 0.18; }
+.gf-root.gf-root[data-tone="dark"] .gf-back-rim path { stroke: rgba(255, 255, 255, 0.08); }
 .sm-dicon-glass .sm-dicon-label { cursor: pointer; }
 .sm-dicon-glass .sm-dicon-label:hover { background: rgba(0, 0, 0, 0.18); }
 .sm-dicon.is-picked .sm-dicon-art { background: rgba(0, 0, 0, 0.26); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18); }
@@ -581,6 +654,9 @@
 }
 .sm-titlebar-t { font-weight: 600; color: var(--label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 68px; }
 .sm-titlebar-r { position: absolute; right: 10px; top: 50%; translate: 0 -50%; }
+/* With a button on the right, the title stops well short of it. */
+.sm-titlebar:has(.sm-titlebar-r) { justify-content: flex-start; padding-right: 170px; }
+.sm-titlebar:has(.sm-titlebar-r) .sm-titlebar-t { margin-right: 0; }
 .sm-win:not(.is-active) .sm-titlebar-t { color: var(--label-2); }
 
 /* Toolbars: one 52px band holding the title and controls. */
@@ -756,6 +832,28 @@ button.sm-item { border: 0; background: none; font: inherit; color: inherit; wid
 .sm-about p { margin: 0; max-width: 30ch; line-height: 1.45; color: var(--label-2); }
 .sm-about p b { color: var(--label); }
 .sm-about-btns { display: flex; gap: 8px; margin-top: 14px; }
+/* The waitlist window: one icon, one line of promise, one field. */
+.sm-wl { flex: 1; display: grid; justify-items: center; align-content: center; gap: 8px; padding: 10px 28px 26px; text-align: center; background: var(--chrome); }
+.sm-wl h2 { margin: 8px 0 0; font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+.sm-wl p { margin: 0; max-width: 34ch; line-height: 1.45; color: var(--label-2); }
+.sm-wl small { font-size: 11px; color: var(--label-3); }
+.sm-wl-form { display: flex; gap: 6px; width: 100%; max-width: 320px; margin-top: 10px; }
+.sm-wl-form input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  font: inherit;
+  color: var(--label);
+  background: var(--content);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  outline: none;
+}
+.sm-wl-form input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 0 0 0.5px var(--accent); }
+.sm-wl-btn { height: 30px; padding: 0 16px; cursor: pointer; }
+.sm-wl-err { color: #d92d20 !important; font-size: 12px; }
 .sm-waitlist { flex: 1; overflow: auto; padding: 14px; background: var(--content); user-select: text; }
 
 /* --------------------------------------------------------------------- dock */
@@ -934,6 +1032,9 @@ a.sm-nc-card:hover { filter: brightness(1.04); }
 }
 .wall-light .sm-foot { color: rgba(0, 0, 0, 0.6); background: rgba(255, 255, 255, 0.34); box-shadow: inset 0 0.5px 0 rgba(0, 0, 0, 0.08); }
 .sm-foot-copy { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sm-foot-stats { display: inline-flex; align-items: center; gap: 4px; margin-right: auto; margin-left: 14px; white-space: nowrap; }
+.sm-foot-stats b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.sm-foot-stats i { width: 7px; height: 7px; border-radius: 50%; background: #34c759; box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.22); margin-right: 3px; }
 .sm-foot-links { display: flex; align-items: center; gap: 2px; }
 .sm-foot-links a { padding: 2px 7px; border-radius: 5px; }
 .sm-foot-links a:hover { background: rgba(127, 127, 127, 0.2); }
@@ -1032,7 +1133,7 @@ a.sm-nc-card:hover { filter: brightness(1.04); }
 @media (max-width: 767px) {
   .sm-wall-note { padding: 0 24px 12vh; }
   .sm-wall-founders { padding: 0 12px 16vh; }
-  .sm-founder-card { width: 96px; height: 128px; }
+  .sm-fc-card { width: 132px; height: 176px; }
   .sm-wall-welcome { padding: 0 20px 16vh; }
   .sm-icons,
   .sm-mb-wide,
@@ -1211,3 +1312,81 @@ a.sm-nc-card:hover { filter: brightness(1.04); }
   .sm-page { width: calc(100% - 16px); margin-top: 8px; border-radius: 10px; }
   .sm-page-bar { padding: 0 72px; }
 }
+
+/* ---------------------------------------------------------------------------
+   Daily tools: Today, Goals, Focus, Weekly review. Small apps, one column,
+   the desktop's own type and colours.
+--------------------------------------------------------------------------- */
+.sm-app { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 16px; background: var(--content); }
+.sm-app-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.sm-app-head h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.015em; }
+.sm-app-head span { font-size: 12px; color: var(--label-2); }
+.sm-app-add input,
+.sm-review-q textarea {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font: inherit;
+  color: var(--label);
+  background: var(--fill);
+  box-shadow: inset 0 0 0 0.5px var(--sep);
+  outline: none;
+  resize: vertical;
+}
+.sm-app-add input:focus,
+.sm-review-q textarea:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent), inset 0 0 0 0.5px var(--accent); background: var(--content); }
+.sm-app-empty { margin: 4px 0 0; font-size: 12px; color: var(--label-2); text-align: center; }
+.sm-app-foot { align-self: flex-start; cursor: pointer; }
+
+.sm-tasks, .sm-goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.sm-tasks li { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 7px; }
+.sm-tasks li:hover { background: var(--fill); }
+.sm-tasks label { flex: 1; display: flex; align-items: center; gap: 9px; min-width: 0; cursor: pointer; }
+.sm-tasks input[type="checkbox"] { width: 16px; height: 16px; accent-color: #2fb36a; flex: none; }
+.sm-tasks label span { overflow-wrap: anywhere; }
+.sm-tasks li.is-done label span { color: var(--label-3); text-decoration: line-through; }
+.sm-star, .sm-del { border: 0; background: none; padding: 0 4px; color: var(--label-3); font-size: 13px; cursor: pointer; }
+.sm-star.is-on { color: #f5b70a; }
+.sm-del { opacity: 0; font-size: 11px; }
+.sm-tasks li:hover .sm-del, .sm-goals li:hover .sm-del, .sm-del:focus-visible { opacity: 1; }
+
+.sm-goals li { display: grid; gap: 6px; padding: 8px 6px; border-bottom: 0.5px solid var(--sep); }
+.sm-goal-row { display: flex; align-items: baseline; gap: 8px; }
+.sm-goal-row span { flex: 1; font-weight: 500; }
+.sm-goal-row b { font-size: 12px; font-variant-numeric: tabular-nums; color: #127a4a; }
+.sm-goals input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #2fb36a var(--p), var(--fill-2) var(--p));
+  outline: none;
+}
+.sm-goals input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.3); cursor: grab; }
+.sm-goals input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.3); }
+
+.sm-focus { align-items: center; justify-content: center; gap: 14px; }
+.sm-focus-mode { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #e5733d; }
+.sm-focus-mode.is-break { color: #2fb36a; }
+.sm-focus-ring { position: relative; width: 168px; height: 168px; display: grid; place-items: center; }
+/* The ring is its own layer, so the mask that cuts it never hides the time. */
+.sm-focus-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(#ff9f43 var(--p), var(--fill-2) var(--p));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 10px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 10px));
+}
+.sm-focus-ring span { position: relative; font-size: 38px; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--label); }
+.sm-focus-btns { display: flex; gap: 8px; }
+.sm-focus-btns .sm-btn { cursor: pointer; }
+
+.sm-review { gap: 14px; }
+.sm-review-q { display: grid; gap: 6px; }
+.sm-review-q b { font-weight: 600; }
+.sm-review-confirm { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--label-2); }
+.sm-review-confirm .sm-btn { cursor: pointer; }

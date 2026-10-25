@@ -1,7 +1,7 @@
 import type { AisleId, ShelfItem } from "@/lib/desktop";
 
 /** Each kind of window. One of each at most, which is all this desktop needs. */
-export type WinKind = "market" | "look" | "web" | "waitlist" | "about" | "bin" | "suggest";
+export type WinKind = "market" | "look" | "web" | "waitlist" | "about" | "bin" | "suggest" | "today" | "goals" | "focus" | "review";
 
 export type Win = {
   kind: WinKind;
@@ -38,6 +38,10 @@ export const WIN_TITLES: Record<WinKind, string> = {
   about: "About The Solo Market",
   bin: "Subscriptions",
   suggest: "Suggest something",
+  today: "Today",
+  goals: "Goals",
+  focus: "Focus",
+  review: "Weekly review",
 };
 
 /** Opens a window instead of navigating, unless the visitor asked for a new tab. */

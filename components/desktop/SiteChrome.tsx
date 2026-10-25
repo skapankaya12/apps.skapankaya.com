@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { AnimatePresence } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LIGHT_WALLPAPERS, aisleById, type MarketUpdate, type ShelfItem } from "@/lib/desktop";
+import { LIGHT_WALLPAPERS, type MarketUpdate, type ShelfItem } from "@/lib/desktop";
 import { MenuBar } from "./MenuBar";
 import { Dock, type DockEntry } from "./Dock";
 import { DeskFooter } from "./DeskFooter";
@@ -96,8 +96,11 @@ export function SiteChrome({ children }: { children: ReactNode }) {
   const actions = useMemo<DeskActions>(() => {
     const go = (path: string) => router.push(path);
     return {
-      openAisle: (id) => go(aisleById(id).href),
-      openItem: (item) => (item.href.startsWith("http") ? window.open(item.href, "_blank", "noopener") : go(item.href)),
+      // The Marketplace has its own page; every other aisle is a folder on the
+      // desktop, opened there by its address.
+      openAisle: (id) => go(id === "tools" ? "/marketplace" : `/#aisle-${id}`),
+      openItem: (item) =>
+        item.app ? go("/#aisle-daily") : item.href.startsWith("http") ? window.open(item.href, "_blank", "noopener") : go(item.href),
       openPage: go,
       open: (kind) => go(kind === "about" ? "/about" : kind === "market" ? "/marketplace" : kind === "suggest" ? "/about#contact" : "/"),
       close: () => go("/"),
@@ -122,7 +125,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
   const dock: DockEntry[] = [
     link("market", "Marketplace", "/marketplace", <AppIcon g="market" />),
     link("desk", "Desktop", "/", <AppIcon g="launchpad" />),
-    link("about", "About", "/about", <AppIcon g="pages" />),
+    link("sites", "Useful websites", "/#aisle-sites", <AppIcon g="pages" />),
     link("free", "Free & open source", "/free", <AppIcon g="free" />),
     link("video", "Video prompts", "/video-prompts", <AppIcon g="video" />),
     link("blog", "Blog", "/blog", <AppIcon g="blog" />),

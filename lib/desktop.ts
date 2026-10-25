@@ -10,11 +10,13 @@ import { SITE_FOLDERS } from "./usefulSites";
 import { VIDEO_GROUPS } from "./videoGroups";
 
 /** The symbol each aisle carries. Drawn in components/desktop/icons.tsx. */
-export type AisleGlyph = "globe" | "wrench" | "layout" | "puzzle" | "box" | "bulb" | "film" | "photo" | "gift" | "chart" | "case";
+export type AisleGlyph = "globe" | "pencil" | "check" | "wrench" | "layout" | "puzzle" | "box" | "bulb" | "film" | "photo" | "gift" | "chart" | "case";
 
 export type AisleId =
   | "sites"
+  | "daily"
   | "tools"
+  | "ideas"
   | "templates"
   | "plugins"
   | "free"
@@ -46,7 +48,10 @@ export type Stage = { label: string; aisles: Aisle[] };
 export const STAGES: Stage[] = [
   {
     label: "Resources",
-    aisles: [{ id: "sites", label: "Useful websites", href: "/marketplace", glyph: "globe", open: true, subs: SITE_FOLDERS }],
+    aisles: [
+      { id: "sites", label: "Useful websites", href: "/marketplace", glyph: "globe", open: true, subs: SITE_FOLDERS },
+      { id: "daily", label: "Daily tools", href: "/", glyph: "check", open: true },
+    ],
   },
   {
     label: "Idea",
@@ -55,7 +60,8 @@ export const STAGES: Stage[] = [
   {
     label: "Build",
     aisles: [
-      { id: "tools", label: "Tools", href: "/marketplace", glyph: "wrench", open: true },
+      { id: "tools", label: "Marketplace", href: "/marketplace", glyph: "wrench", open: true },
+      { id: "ideas", label: "What to build", href: "/marketplace", glyph: "pencil", open: true },
       { id: "templates", label: "Templates & kits", href: "/marketplace", glyph: "layout", open: false },
       { id: "plugins", label: "Plugins", href: "/marketplace", glyph: "puzzle", open: false },
       { id: "free", label: "Free & open source", href: "/free", glyph: "box", open: true },
@@ -115,6 +121,8 @@ export type ShelfItem = {
   pinned?: boolean;
   /** `image` is a small site icon, not a picture: draw it whole, not cropped. */
   iconOnly?: boolean;
+  /** A desktop app (Daily tools): opening it opens this window, not Quick Look. */
+  app?: "today" | "goals" | "focus" | "review";
 };
 
 /** One line in the Notification Centre: something that happened in the market. */
@@ -149,8 +157,8 @@ export const WALLPAPERS: { id: Wallpaper; label: string; thumb?: string; credit?
 /** Wallpapers light enough that the menu bar, folders and footer go dark. */
 export const LIGHT_WALLPAPERS: Wallpaper[] = ["landing", "quotes"];
 
-/** What a first visit sees: the day's note. */
-export const DEFAULT_WALLPAPER: Wallpaper = "quotes";
+/** What a first visit sees: the Landing page and its welcome. */
+export const DEFAULT_WALLPAPER: Wallpaper = "landing";
 
 /** Stored names from before the wallpapers were renamed. */
 export const OLD_WALLPAPERS: Record<string, Wallpaper> = { paper: "quotes", graphite: "keepgoing", dusk: "landing" };
@@ -179,10 +187,14 @@ export const DAILY_NOTES: string[] = [
  * turns through these, so every kind of solo builder sees themselves named.
  */
 export const WELCOME = {
-  hello: "hi! welcome to thesolomarket!",
-  lead: "here you can find everything you need as a solo",
+  /** The headline, on two lines: this, then "as a solo" and the rolling word. */
+  lead: "find everything you need",
   roles: ["founder", "builder", "vibecoder", "maker", "indie hacker", "developer", "designer", "creator"],
+  /** How to use the desktop, with the last words opening the marketplace. */
+  guide: "find all you need in the folders, or",
+  guideLink: "visit the marketplace",
   aside: "we add new finds every thursday. no ai slop, all picked by founders.",
+  waitlist: "join the waitlist",
 };
 
 /**

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { brand } from "@/lib/brand";
 import { WALLPAPERS, type Wallpaper } from "@/lib/desktop";
 import { BADGES } from "@/components/FooterBadges";
@@ -33,6 +34,7 @@ export function DeskFooter({ wallpaper, actions }: { wallpaper: Wallpaper; actio
         © {new Date().getFullYear()} {brand.name}
         {credit && <span className="sm-foot-credit"> · Photo: {credit}</span>}
       </span>
+      <VisitCount />
       <nav className="sm-foot-links" aria-label="Footer">
         {LINKS.map((l) => (
           <a
@@ -54,5 +56,74 @@ export function DeskFooter({ wallpaper, actions }: { wallpaper: Wallpaper; actio
         ))}
       </nav>
     </footer>
+  );
+}
+
+const ID_KEY = "sm-visitor";
+const COUNTED_KEY = "sm-counted";
+
+/**
+ * "● N online · N visitors", as AI Standings shows it. See app/api/visits for
+ * what is counted and what is not. Checks in once a minute while the page is
+ * visible. Shows nothing until the first answer, so it never flashes "0".
+ * Skipped inside the desktop's Pages window, which is the same visitor.
+ */
+function VisitCount() {
+  const [n, setN] = useState<{ visitors: number; online: number } | null>(null);
+
+  useEffect(() => {
+    if (window.self !== window.top) return;
+    let id = "";
+    let first = false;
+    try {
+      id = localStorage.getItem(ID_KEY) || "";
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(ID_KEY, id);
+      }
+      first = !localStorage.getItem(COUNTED_KEY);
+    } catch {
+      // Storage refused: still counted as online for this page, never as a visitor.
+      id = crypto.randomUUID();
+    }
+    let live = true;
+    const ping = () => {
+      if (document.visibilityState !== "visible") return;
+      fetch("/api/visits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, first }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!d || !live) return;
+          if (first) {
+            try {
+              localStorage.setItem(COUNTED_KEY, "1");
+            } catch {}
+            first = false;
+          }
+          setN({ visitors: d.visitors, online: Math.max(1, d.online) });
+        })
+        .catch(() => {});
+    };
+    ping();
+    const t = setInterval(ping, 60_000);
+    document.addEventListener("visibilitychange", ping);
+    return () => {
+      live = false;
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", ping);
+    };
+  }, []);
+
+  if (!n) return null;
+  return (
+    <span className="sm-foot-stats" aria-label={`${n.online} online, ${n.visitors} ${n.visitors === 1 ? "visitor" : "visitors"}`}>
+      <i aria-hidden="true" />
+      <b>{n.online.toLocaleString()}</b> online
+      <span aria-hidden="true"> · </span>
+      <b>{n.visitors.toLocaleString()}</b> {n.visitors === 1 ? "visitor" : "visitors"}
+    </span>
   );
 }

@@ -5,7 +5,7 @@ import { LegalPage, Clause } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
-  description: `What ${brand.name} collects, why, who processes it, and how to get it deleted. Short version: an email address, what you listed or bought, and nothing else — no analytics, no tracking, no ad networks.`,
+  description: `What ${brand.name} collects, why, who processes it, and how to get it deleted. Short version: an email address, what you listed or bought, and an anonymous visitor count. No analytics, no tracking, no ad networks.`,
   alternates: { canonical: "/privacy" },
 };
 
@@ -14,7 +14,7 @@ export default function PrivacyPage() {
     <LegalPage
       title="Privacy policy"
       updated="2026-09-12"
-      intro="The short version: we collect an email address, whatever you chose to publish on a listing, and a record of what you bought or sold. There is no analytics, no tracking pixel and no advertising network on this site."
+      intro="The short version: we collect an email address, whatever you chose to publish on a listing, and a record of what you bought or sold. The only count we keep is how many people have visited and how many are here now. There is no analytics, no tracking pixel and no advertising network on this site."
     >
       <Clause heading="1. Who is responsible">
         <p>
@@ -89,6 +89,16 @@ export default function PrivacyPage() {
           No analytics or product-tracking scripts. No advertising or marketing
           cookies. No third-party trackers. We do not build a profile of you, and
           we do not sell or rent your data to anyone, ever.
+        </p>
+        <p>
+          The one number we keep is the visitor count at the bottom of the
+          page. Your browser holds a random code, so you are counted once
+          rather than every time you return, and an open page checks in once a
+          minute so we can show how many people are here now. We store that
+          code and the time of the check-in, and nothing else: no IP address,
+          no cookie, nothing about which pages you read or who you are. A
+          check-in is deleted after an hour. Clearing your browser data clears
+          the code.
         </p>
         <p>
           The tools sold here run on your own computer. We have no visibility

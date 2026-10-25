@@ -21,13 +21,14 @@ import {
 } from "@/lib/desktop";
 import { Wallpaper } from "./Wallpaper";
 import { GlassAisle } from "./GlassAisle";
+import { Focus, Goals, Today, WeeklyReview } from "./daily";
 import { DeskFooter } from "./DeskFooter";
 import { NotificationCentre } from "./NotificationCentre";
 import { MenuBar } from "./MenuBar";
 import { Dock, type DockEntry } from "./Dock";
 import { Window } from "./Window";
 import { About, Bin, Marketplace, QuickLook, Suggest, Waitlist, WebView } from "./apps";
-import { ContextMenu, Launchpad, Notice, Spotlight, VerifyNotice } from "./overlays";
+import { ContextMenu, Launchpad, Spotlight } from "./overlays";
 import { useStoreValue, useUser } from "@/lib/hooks";
 import { isEmailVerified } from "@/lib/store";
 import {
@@ -51,10 +52,14 @@ const FRAMES: Record<WinKind, Pick<Win, "x" | "y" | "w" | "h">> = {
   market: { x: 64, y: 52, w: 880, h: 560 },
   look: { x: 420, y: 96, w: 460, h: 480 },
   web: { x: 120, y: 64, w: 1000, h: 640 },
-  waitlist: { x: 560, y: 110, w: 420, h: 500 },
+  waitlist: { x: 560, y: 110, w: 400, h: 420 },
   about: { x: 0, y: 120, w: 360, h: 380 },
   bin: { x: 300, y: 180, w: 420, h: 300 },
   suggest: { x: 520, y: 80, w: 460, h: 560 },
+  today: { x: 140, y: 70, w: 380, h: 480 },
+  goals: { x: 200, y: 90, w: 400, h: 440 },
+  focus: { x: 260, y: 110, w: 320, h: 380 },
+  review: { x: 180, y: 60, w: 460, h: 600 },
 };
 
 /** Which app icon stands for a minimised window. */
@@ -65,6 +70,10 @@ const MIN_ICON: Record<Exclude<WinKind, "bin">, Glyph> = {
   waitlist: "notes",
   about: "about",
   suggest: "notes",
+  today: "notes",
+  goals: "notes",
+  focus: "notes",
+  review: "notes",
 };
 
 /** Keeps a frame on screen: no wider or taller than the room, no corner off the edge. */
@@ -100,10 +109,10 @@ type Props = {
  * is a working shop and not an empty wallpaper.
  */
 export function Desktop({ items, updates, paused, heading, sub }: Props) {
+  // Nothing opens by itself: a visitor arrives on the wallpaper and its welcome.
   const [wins, setWins] = useState<Partial<Record<WinKind, Win>>>({
-    market: { kind: "market", ...FRAMES.market, z: 10, min: false, max: false },
   });
-  const [active, setActive] = useState<WinKind | null>("market");
+  const [active, setActive] = useState<WinKind | null>(null);
   // While the catalogue is paused, open on the aisle with the most in it.
   const [aisle, setAisle] = useState<AisleId>(paused ? "sites" : "tools");
   const [subfolder, setSubfolder] = useState<string | null>(null);
@@ -114,12 +123,10 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
   const [spot, setSpot] = useState(false);
   const [pad, setPad] = useState(false);
   const [ctx, setCtx] = useState<{ x: number; y: number } | null>(null);
-  const [notice, setNotice] = useState(true);
   const [centre, setCentre] = useState(false);
   const user = useUser();
   const verified = useStoreValue(isEmailVerified);
-  const [verifyHidden, setVerifyHidden] = useState(false);
-  const needsVerify = !!user && !verified && !verifyHidden;
+  const needsVerify = !!user && !verified;
   const [picked, setPicked] = useState<string | null>(null);
   const lastPointer = useRef<string>("mouse");
 
@@ -185,6 +192,8 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
         open("market");
       },
       openItem: (item) => {
+        // A Daily tool is an app: it opens its own window, not a preview.
+        if (item.app) return open(item.app);
         setLookState(item);
         open("look");
       },
@@ -197,6 +206,16 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
     }),
     [open, close, minimise, zoom, focus],
   );
+
+  // Other pages link to a folder here as /#aisle-<id> (the Dock's Useful
+  // websites, say). Read once on arrival; the open waits a tick so it is not
+  // a state change inside the effect itself.
+  useEffect(() => {
+    const id = window.location.hash.replace(/^#aisle-/, "");
+    if (!id || id === window.location.hash || !AISLES.some((a) => a.id === id)) return;
+    const t = setTimeout(() => actions.openAisle(id as AisleId), 0);
+    return () => clearTimeout(t);
+  }, [actions]);
 
   // Keyboard: ⌘K or Ctrl+K searches (⌘Space belongs to the visitor's own
   // computer), F4 shows every aisle, Escape closes whatever is on top.
@@ -239,12 +258,12 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
     },
     {
       kind: "app",
-      key: "web",
-      label: "Pages",
-      href: "/about",
+      key: "sites",
+      label: "Useful websites",
+      href: "/#aisle-sites",
       icon: <AppIcon g="pages" />,
-      running: !!wins.web,
-      onOpen: () => (wins.web ? focus("web") : actions.openPage("/about")),
+      running: !!wins.market && aisle === "sites",
+      onOpen: () => actions.openAisle("sites"),
     },
     {
       kind: "app",
@@ -363,6 +382,14 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
         return <Bin />;
       case "suggest":
         return <Suggest />;
+      case "today":
+        return <Today />;
+      case "goals":
+        return <Goals />;
+      case "focus":
+        return <Focus />;
+      case "review":
+        return <WeeklyReview />;
     }
   }
 
@@ -386,7 +413,7 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
         setCtx({ x: e.clientX, y: e.clientY });
       }}
     >
-      <Wallpaper id={wallpaper} />
+      <Wallpaper id={wallpaper} onMarketplace={() => actions.openAisle("tools")} onWaitlist={() => open("waitlist")} />
       <h1 className="sr-only">{heading}</h1>
       <p className="sr-only">{sub}</p>
 
@@ -399,7 +426,6 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
         wallpaper={wallpaper}
         setWallpaper={setWallpaper}
         onClock={() => {
-          setNotice(false);
           setCentre((c) => !c);
         }}
       />
@@ -488,27 +514,13 @@ export function Desktop({ items, updates, paused, heading, sub }: Props) {
       </AnimatePresence>
 
       <AnimatePresence>
-        {needsVerify && !centre && (
-          <VerifyNotice key="verify" email={user!.email} onClose={() => setVerifyHidden(true)} />
-        )}
-        {notice && !needsVerify && (
-          <Notice
-            onWaitlist={() => {
-              setNotice(false);
-              open("waitlist");
-            }}
-            onClose={() => setNotice(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {centre && (
           <NotificationCentre
             updates={updates}
             items={items}
             actions={actions}
             onWaitlist={() => open("waitlist")}
+            verifyEmail={needsVerify ? user!.email : undefined}
             onClose={() => setCentre(false)}
           />
         )}

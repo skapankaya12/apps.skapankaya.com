@@ -7,6 +7,7 @@ import { articles } from "@/lib/articles";
 import type { MarketUpdate, ShelfItem } from "@/lib/desktop";
 import snapshot from "@/lib/data/videoPrompts.json";
 import { SITE_FOLDERS, USEFUL_SITES } from "@/lib/usefulSites";
+import { BUILD_IDEAS } from "@/lib/buildIdeas";
 
 export type DesktopFeed = { items: ShelfItem[]; updates: MarketUpdate[] };
 
@@ -72,6 +73,31 @@ export const getDesktopFeed = cache(async (): Promise<DesktopFeed> => {
       facts: SITE_FOLDERS.find((f) => f.id === w.folder)?.label ?? "Useful website",
       sub: w.folder,
       pinned: w.pinned,
+    })),
+    // Daily tools: small apps that run right on the desktop.
+    ...[
+      { app: "today" as const, title: "Today", blurb: "Your tasks for the day. Star the ones that matter." },
+      { app: "goals" as const, title: "Goals", blurb: "What you are working towards, and how far along." },
+      { app: "focus" as const, title: "Focus", blurb: "A 25 minute focus timer with short breaks." },
+      { app: "review" as const, title: "Weekly review", blurb: "A short template to look back and plan the week." },
+    ].map((d) => ({
+      id: `daily-${d.app}`,
+      aisle: "daily" as const,
+      title: d.title,
+      blurb: d.blurb,
+      price: "App",
+      href: "/",
+      facts: "Saved in this browser only",
+      app: d.app,
+    })),
+    ...BUILD_IDEAS.map((idea) => ({
+      id: `idea-${idea.slug}`,
+      aisle: "ideas" as const,
+      title: idea.title,
+      blurb: idea.problem,
+      price: idea.for,
+      href: "/sell",
+      facts: `Wanted by: ${idea.for}. Build it, then list it here.`,
     })),
   ];
 

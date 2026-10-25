@@ -9,11 +9,15 @@ import type { Aisle, AisleId, ShelfItem } from "@/lib/desktop";
  * browser by the folder component, so none of it is an image file.
  */
 const ART: Record<AisleId, FolderArt> = {
+  // Daily tools: fresh mint, the Landing page's green
+  daily: { style: "streak", colors: ["#f6fdf8", "#bfe8cc", "#4fb37a", "#14583a", "#8fd4a8", "#effbf2"], scale: 0.7, warp: 1.5, angle: -0.3, gloss: 0.3, veins: 0 },
   // Resources: a pale sky, the open web
   sites: { style: "streak", colors: ["#f7fbff", "#cfe6ff", "#7fb8f5", "#2b6cb8", "#9fd0ff", "#eef7ff"], scale: 0.7, warp: 1.4, angle: 0.3, gloss: 0.3, veins: 0 },
   // Idea: amber and brass, a light coming on
   idea: { style: "marble", colors: ["#140f06", "#4d3611", "#a77a2c", "#e7c56f", "#fff3d1"], scale: 0.72, warp: 3.2, angle: 0.6, gloss: 0.5, veins: 0.4 },
   // Build
+  // What to build: warm paper and graphite, a sketchbook
+  ideas: { style: "marble", colors: ["#1a1712", "#4a4236", "#a8977a", "#e9dcc2", "#fffaf0"], scale: 0.74, warp: 3.1, angle: 1.6, gloss: 0.4, veins: 0.5 },
   tools: { style: "streak", colors: ["#f2f5ff", "#a9c6ff", "#2f8bff", "#1b2350", "#5a5df2", "#c4b6ff", "#f6f3ff"], scale: 0.7, warp: 1.5, angle: -0.6, gloss: 0.22, veins: 0 },
   templates: { style: "marble", colors: ["#0e0a1c", "#2e2160", "#6a4bf0", "#b4a0ff", "#f1ecff"], scale: 0.75, warp: 3.4, angle: 1.2, gloss: 0.45, veins: 0.4 },
   plugins: { style: "streak", colors: ["#eafaf7", "#8fe0d2", "#1fa595", "#0b2e2a", "#3fc6b3", "#d6f5ef"], scale: 0.7, warp: 1.6, angle: 0.5, gloss: 0.25, veins: 0 },

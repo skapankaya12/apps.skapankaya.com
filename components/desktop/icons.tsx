@@ -10,7 +10,8 @@
  * What makes a Mac icon read as one, and a flat web icon not: three layers of
  * light. A gradient on the tile, a soft highlight across its top and a darker
  * bottom edge; a bright hairline rim; and an object inside with its own
- * shading and a shadow underneath. Every tile below has all three.
+ * shading and a shadow underneath. Every tile below has all three, and every
+ * object is drawn front on, at one size, under the same light.
  */
 
 import { useId, type ReactNode } from "react";
@@ -41,23 +42,61 @@ function superellipse(cx: number, cy: number, r: number, n = 5, steps = 120) {
 const SQUIRCLE = superellipse(50, 50, 41);
 
 /**
+ * The colours of a Mac: the system blue, green, yellow, orange, red, pink,
+ * indigo, purple and teal, plus paper, silver, graphite, kraft and wood for
+ * the objects. Each is a gradient, light at the top and deeper below, so
+ * every object is lit the same way whatever its colour.
+ */
+const PALETTE = {
+  B: ["#5aaeff", "#0a6cf5"], // blue
+  G: ["#62d881", "#28a745"], // green
+  Y: ["#ffdf5c", "#f7b500"], // yellow
+  O: ["#ffb347", "#ff8a00"], // orange
+  R: ["#ff6f66", "#e5302a"], // red
+  H: ["#ff7d97", "#ff2d55"], // pink, the heart
+  N: ["#6f8cff", "#4b5df0"], // indigo
+  V: ["#b98aff", "#7e4be0"], // purple
+  T: ["#6fe3f2", "#16b2cf"], // teal
+  P: ["#ffffff", "#f0f2f5"], // paper
+  S: ["#eceef3", "#c3c8d2"], // silver
+  I: ["#4b505b", "#1e2127"], // graphite
+  K: ["#e6bd82", "#b9874a"], // kraft
+  W: ["#c99a68", "#8f6438"], // wood
+} as const;
+type Tone = keyof typeof PALETTE;
+
+/** A fill from the palette, for use inside a tile. */
+const tone = (id: string, t: Tone) => `url(#${id}${t})`;
+
+/** The faint edge every paper object gets, so it lifts off a pale tile. */
+const EDGE = { stroke: "#1e2127", strokeOpacity: 0.14, strokeWidth: 0.9 };
+
+/** Each app's tile, top colour then bottom, the way its Mac counterpart is coloured. */
+const TILES: Record<Glyph, [string, string]> = {
+  market: ["#ffffff", "#e4e8f1"],
+  about: ["#ffffff", "#e4e8f1"],
+  launchpad: ["#4b505e", "#1d2028"],
+  pages: ["#ffffff", "#e6ebf3"],
+  free: ["#7fe08f", "#26a148"],
+  video: ["#ffa36b", "#ee4d29"],
+  notes: ["#ffffff", "#f1f1ef"],
+  blog: ["#5b6ea8", "#25335f"],
+  library: ["#f6f1ea", "#e0d6c6"],
+  saved: ["#ffffff", "#eceff4"],
+  sell: ["#5ee3cb", "#0e8f84"],
+  today: ["#ffffff", "#eef0f4"],
+  goals: ["#ffffff", "#eef0f4"],
+  focus: ["#3a3f4b", "#16181e"],
+  review: ["#ffffff", "#f0f1f4"],
+  idea: ["#fff8e8", "#f2e4c2"],
+};
+
+/**
  * The tile every app icon sits on. `id` comes from useId so two copies of the
  * same icon (the Dock and a menu, say) never share gradient ids: a gradient
  * referenced from a hidden copy draws nothing in some browsers.
  */
-function Tile({
-  from,
-  to,
-  children,
-  size,
-  label,
-}: {
-  from: string;
-  to: string;
-  children: (id: string) => ReactNode;
-  size: number;
-  label?: string;
-}) {
+function Tile({ bg, children, size, label }: { bg: [string, string]; children: (id: string) => ReactNode; size: number; label?: string }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, "");
   return (
     <svg
@@ -70,22 +109,32 @@ function Tile({
     >
       <defs>
         <linearGradient id={`${id}g`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={from} />
-          <stop offset="1" stopColor={to} />
+          <stop offset="0" stopColor={bg[0]} />
+          <stop offset="1" stopColor={bg[1]} />
         </linearGradient>
+        {(Object.keys(PALETTE) as Tone[]).map((t) => (
+          <linearGradient key={t} id={`${id}${t}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={PALETTE[t][0]} />
+            <stop offset="1" stopColor={PALETTE[t][1]} />
+          </linearGradient>
+        ))}
         <radialGradient id={`${id}top`} cx="50%" cy="0%" r="75%" fx="50%" fy="0%">
-          <stop offset="0" stopColor="#fff" stopOpacity=".42" />
-          <stop offset=".55" stopColor="#fff" stopOpacity=".06" />
+          <stop offset="0" stopColor="#fff" stopOpacity=".6" />
           <stop offset="1" stopColor="#fff" stopOpacity="0" />
         </radialGradient>
         <linearGradient id={`${id}low`} x1="0" y1="0" x2="0" y2="1">
           <stop offset=".72" stopColor="#000" stopOpacity="0" />
-          <stop offset="1" stopColor="#000" stopOpacity=".16" />
+          <stop offset="1" stopColor="#000" stopOpacity=".14" />
         </linearGradient>
         <linearGradient id={`${id}rim`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fff" stopOpacity=".75" />
-          <stop offset=".35" stopColor="#fff" stopOpacity=".12" />
-          <stop offset="1" stopColor="#fff" stopOpacity=".05" />
+          <stop offset="0" stopColor="#fff" stopOpacity=".9" />
+          <stop offset=".4" stopColor="#fff" stopOpacity=".2" />
+          <stop offset="1" stopColor="#fff" stopOpacity=".1" />
+        </linearGradient>
+        {/* The sheen across the top of a coloured object. */}
+        <linearGradient id={`${id}shine`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity=".42" />
+          <stop offset=".5" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
         <clipPath id={`${id}clip`}>
           <path d={SQUIRCLE} />
@@ -94,9 +143,9 @@ function Tile({
           <feDropShadow dx="0" dy="1.2" stdDeviation="1" floodColor="#000" floodOpacity=".22" />
           <feDropShadow dx="0" dy="4" stdDeviation="3.6" floodColor="#000" floodOpacity=".2" />
         </filter>
-        {/* The shadow an object casts on its own tile. */}
+        {/* The shadow an object casts on its tile: the same light for every icon. */}
         <filter id={`${id}obj`} x="-30%" y="-30%" width="160%" height="170%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity=".28" />
+          <feDropShadow dx="0" dy="2.2" stdDeviation="2.2" floodColor="#000" floodOpacity=".26" />
         </filter>
       </defs>
       <path d={SQUIRCLE} fill={`url(#${id}g)`} filter={`url(#${id}drop)`} />
@@ -124,278 +173,252 @@ export type Glyph =
   | "library"
   | "saved"
   | "sell"
-  | "about";
+  | "about"
+  | "today"
+  | "goals"
+  | "focus"
+  | "review"
+  | "idea";
 
-/** A rounded square with its own top light, for small tiles inside icons. */
-function Chip({ x, y, s, color, id, k }: { x: number; y: number; s: number; color: string; id: string; k: string }) {
+/** A small rounded square in one tone, with the shared sheen. */
+function Chip({ x, y, s, t, id }: { x: number; y: number; s: number; t: Tone; id: string }) {
   return (
     <g>
-      <defs>
-        <linearGradient id={`${id}${k}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fff" stopOpacity=".38" />
-          <stop offset=".6" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <rect x={x} y={y} width={s} height={s} rx={s * 0.28} fill={color} />
-      <rect x={x} y={y} width={s} height={s} rx={s * 0.28} fill={`url(#${id}${k})`} />
-      <rect x={x + 0.4} y={y + 0.4} width={s - 0.8} height={s - 0.8} rx={s * 0.26} fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth=".6" />
+      <rect x={x} y={y} width={s} height={s} rx={s * 0.28} fill={tone(id, t)} />
+      <rect x={x} y={y} width={s} height={s} rx={s * 0.28} fill={`url(#${id}shine)`} />
     </g>
   );
 }
 
+/** A sheet of paper with a coloured band across its top, for notes and the week. */
+function BandedSheet({ id, band, x = 25, y = 22, w = 50, h = 56 }: { id: string; band: Tone; x?: number; y?: number; w?: number; h?: number }) {
+  const r = 7;
+  return (
+    <>
+      <rect x={x} y={y} width={w} height={h} rx={r} fill={tone(id, "P")} {...EDGE} />
+      <path d={`M${x} ${y + r}a${r} ${r} 0 0 1 ${r}-${r}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v8h-${w}z`} fill={tone(id, band)} />
+      <path d={`M${x} ${y + r}a${r} ${r} 0 0 1 ${r}-${r}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v8h-${w}z`} fill={`url(#${id}shine)`} />
+    </>
+  );
+}
+
 export function AppIcon({ g, size = 48, label }: { g: Glyph; size?: number; label?: string }) {
+  return (
+    <Tile bg={TILES[g]} size={size} label={label}>
+      {(id) => <g filter={`url(#${id}obj)`}>{draw(g, id)}</g>}
+    </Tile>
+  );
+}
+
+/** Each object, front on, inside the same 26 to 74 box. */
+function draw(g: Glyph, id: string): ReactNode {
   switch (g) {
     case "market":
     case "about":
-      // Our own four tiles, lifted off a white tile, the logo as an app.
+      // Our own four tiles, the logo as an app.
       return (
-        <Tile from="#ffffff" to="#e4e8f1" size={size} label={label}>
-          {(id) => (
-            <g filter={`url(#${id}obj)`}>
-              <Chip id={id} k="a" x={26} y={26} s={22} color="#2f8bff" />
-              <Chip id={id} k="b" x={52} y={26} s={22} color="#4b6bf6" />
-              <Chip id={id} k="c" x={26} y={52} s={22} color="#5a5df2" />
-              <Chip id={id} k="d" x={52} y={52} s={22} color="#6a4bf0" />
-            </g>
-          )}
-        </Tile>
+        <>
+          <Chip id={id} x={26} y={26} s={22} t="B" />
+          <Chip id={id} x={52} y={26} s={22} t="N" />
+          <Chip id={id} x={26} y={52} s={22} t="N" />
+          <Chip id={id} x={52} y={52} s={22} t="V" />
+        </>
       );
 
     case "launchpad": {
-      const c = ["#ff5f57", "#ffbd2e", "#34c759", "#32ade6", "#5e5ce6", "#ff6fae", "#ff9f0a", "#30d158", "#64d2ff"];
-      return (
-        <Tile from="#4b505e" to="#1d2028" size={size} label={label}>
-          {(id) => (
-            <g filter={`url(#${id}obj)`}>
-              {c.map((col, i) => (
-                <Chip key={col} id={id} k={`l${i}`} x={25.5 + (i % 3) * 17.5} y={25.5 + Math.floor(i / 3) * 17.5} s={13} color={col} />
-              ))}
-            </g>
-          )}
-        </Tile>
-      );
+      const t: Tone[] = ["R", "Y", "G", "T", "N", "H", "O", "G", "B"];
+      return t.map((c, i) => <Chip key={i} id={id} x={25.5 + (i % 3) * 17.5} y={25.5 + Math.floor(i / 3) * 17.5} s={13} t={c} />);
     }
 
     case "pages":
-      // A glass globe on a pale tile.
+      // A blue globe.
       return (
-        <Tile from="#ffffff" to="#e6ebf3" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <radialGradient id={`${id}ball`} cx="38%" cy="32%" r="72%">
-                  <stop offset="0" stopColor="#8fdcff" />
-                  <stop offset=".55" stopColor="#2f8ff0" />
-                  <stop offset="1" stopColor="#1650c4" />
-                </radialGradient>
-                <radialGradient id={`${id}gloss`} cx="40%" cy="22%" r="45%">
-                  <stop offset="0" stopColor="#fff" stopOpacity=".75" />
-                  <stop offset="1" stopColor="#fff" stopOpacity="0" />
-                </radialGradient>
-                <clipPath id={`${id}globe`}>
-                  <circle cx="50" cy="50" r="27" />
-                </clipPath>
-              </defs>
-              <g filter={`url(#${id}obj)`}>
-                <circle cx="50" cy="50" r="27" fill={`url(#${id}ball)`} />
-              </g>
-              <g clipPath={`url(#${id}globe)`} fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="1.6">
-                <ellipse cx="50" cy="50" rx="12" ry="27" />
-                <path d="M50 23v54M23 50h54" />
-                <path d="M26 37c15 5 33 5 48 0M26 63c15-5 33-5 48 0" />
-              </g>
-              <circle cx="50" cy="50" r="27" fill={`url(#${id}gloss)`} />
-              <circle cx="50" cy="50" r="26.5" fill="none" stroke="#fff" strokeOpacity=".4" strokeWidth=".8" />
-            </>
-          )}
-        </Tile>
+        <>
+          <defs>
+            <clipPath id={`${id}globe`}>
+              <circle cx="50" cy="50" r="25" />
+            </clipPath>
+          </defs>
+          <circle cx="50" cy="50" r="25" fill={tone(id, "B")} />
+          <g clipPath={`url(#${id}globe)`} fill="none" stroke="#fff" strokeOpacity=".7" strokeWidth="1.8">
+            <ellipse cx="50" cy="50" rx="11" ry="25" />
+            <path d="M50 25v50M25 50h50" />
+            <path d="M28 37c14 5 30 5 44 0M28 63c14-5 30-5 44 0" />
+          </g>
+          <circle cx="50" cy="50" r="25" fill={`url(#${id}shine)`} />
+        </>
       );
 
     case "free":
-      // An open kraft box on green: free things, given away.
+      // An open kraft box, flaps out: free things, given away.
       return (
-        <Tile from="#7fe08f" to="#26a148" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <linearGradient id={`${id}l`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#e4b97c" />
-                  <stop offset="1" stopColor="#c48f4f" />
-                </linearGradient>
-                <linearGradient id={`${id}r`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#cf9f5f" />
-                  <stop offset="1" stopColor="#a8763a" />
-                </linearGradient>
-              </defs>
-              <g filter={`url(#${id}obj)`}>
-                <path d="M24 44l26 12v24L24 68z" fill={`url(#${id}l)`} />
-                <path d="M76 44L50 56v24l26-12z" fill={`url(#${id}r)`} />
-                <path d="M24 44l26-11 26 11-26 12z" fill="#6b4a22" />
-                {/* Flaps, opened out */}
-                <path d="M24 44l-6-10 25-9 7 8z" fill="#efcf9c" />
-                <path d="M76 44l6-10-25-9-7 8z" fill="#e6c08a" />
-                <path d="M50 56l-8 10-24-11 6-11z" fill="#f2d7a8" />
-              </g>
-              <path d="M50 56v24" stroke="#8a5f2c" strokeOpacity=".5" strokeWidth=".8" />
-            </>
-          )}
-        </Tile>
+        <>
+          <path d="M28 46h44v26a4 4 0 0 1-4 4H32a4 4 0 0 1-4-4z" fill={tone(id, "K")} />
+          <path d="M28 46h44v26a4 4 0 0 1-4 4H32a4 4 0 0 1-4-4z" fill={`url(#${id}shine)`} />
+          <rect x="28" y="44" width="44" height="5" rx="1.5" fill="#6b4a22" />
+          <path d="M28 44l-8-10h22l8 10z" fill="#f2d7a8" />
+          <path d="M72 44l8-10H58l-8 10z" fill="#e6c08a" />
+          <rect x="45" y="49" width="10" height="27" fill="#f2e2c2" fillOpacity=".75" />
+        </>
       );
 
     case "video":
-      // A clapperboard: black slate, striped clapper, a play mark.
+      // A clapperboard: graphite slate, striped clapper, a play mark.
       return (
-        <Tile from="#ffa36b" to="#ee4d29" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <linearGradient id={`${id}slate`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#3a3a42" />
-                  <stop offset="1" stopColor="#141418" />
-                </linearGradient>
-                <pattern id={`${id}stripe`} width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-40)">
-                  <rect width="5" height="10" fill="#fff" />
-                  <rect x="5" width="5" height="10" fill="#1c1c22" />
-                </pattern>
-              </defs>
-              <g filter={`url(#${id}obj)`}>
-                <rect x="24" y="41" width="52" height="35" rx="5" fill={`url(#${id}slate)`} />
-                <g transform="rotate(-9 24 38)">
-                  <rect x="24" y="29" width="52" height="10" rx="2.5" fill={`url(#${id}stripe)`} />
-                </g>
-                <rect x="24" y="40" width="52" height="7" fill={`url(#${id}stripe)`} />
-              </g>
-              <path d="M45 52l14 8.5-14 8.5z" fill="#fff" />
-              <rect x="24.5" y="41.5" width="51" height="34" rx="4.6" fill="none" stroke="#fff" strokeOpacity=".18" />
-            </>
-          )}
-        </Tile>
+        <>
+          <defs>
+            <pattern id={`${id}stripe`} width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-40)">
+              <rect width="5" height="10" fill="#fff" />
+              <rect x="5" width="5" height="10" fill="#1c1c22" />
+            </pattern>
+          </defs>
+          <rect x="24" y="42" width="52" height="34" rx="5" fill={tone(id, "I")} />
+          <g transform="rotate(-9 24 38)">
+            <rect x="24" y="29" width="52" height="10" rx="2.5" fill={`url(#${id}stripe)`} />
+          </g>
+          <rect x="24" y="41" width="52" height="7" fill={`url(#${id}stripe)`} />
+          <path d="M45 54l13 8-13 8z" fill="#fff" />
+        </>
       );
 
     case "notes":
-      // A pad of paper with a yellow top, the way a notes app looks.
+      // A notepad with a yellow top.
       return (
-        <Tile from="#ffffff" to="#f1f1ef" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <linearGradient id={`${id}pad`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#ffdd55" />
-                  <stop offset="1" stopColor="#f7bf22" />
-                </linearGradient>
-              </defs>
-              <rect x="0" y="0" width="100" height="32" fill={`url(#${id}pad)`} />
-              <path d="M0 32h100" stroke="#000" strokeOpacity=".12" strokeWidth="1" />
-              <path d="M9 33.5h82" stroke="#b9b9b9" strokeDasharray="1.2 2.2" strokeWidth="1" />
-              <path d="M22 47h56M22 57h56M22 67h56M22 77h38" stroke="#cfd0d4" strokeWidth="2" strokeLinecap="round" />
-            </>
-          )}
-        </Tile>
+        <>
+          <BandedSheet id={id} band="Y" />
+          <path d="M33 46h34M33 55h34M33 64h22" stroke="#cfd2d8" strokeWidth="2.6" strokeLinecap="round" />
+        </>
       );
 
     case "blog":
-      // A sheet of writing with a pencil across it.
+      // A written sheet with a pencil across it.
       return (
-        <Tile from="#5b6ea8" to="#25335f" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <linearGradient id={`${id}wood`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0" stopColor="#ffd36b" />
-                  <stop offset=".5" stopColor="#f6b73c" />
-                  <stop offset="1" stopColor="#d9921e" />
-                </linearGradient>
-              </defs>
-              <g filter={`url(#${id}obj)`}>
-                <rect x="27" y="22" width="42" height="56" rx="3.5" fill="#fbfbfd" />
-              </g>
-              <path d="M34 35h28M34 43h28M34 51h20" stroke="#c4c8d4" strokeWidth="2.2" strokeLinecap="round" />
-              <g transform="rotate(-38 58 62)" filter={`url(#${id}obj)`}>
-                <rect x="38" y="57.5" width="34" height="9" fill={`url(#${id}wood)`} />
-                <rect x="72" y="57.5" width="6" height="9" rx="1.2" fill="#ef8aa0" />
-                <rect x="70" y="57.5" width="3" height="9" fill="#c9ccd4" />
-                <path d="M38 57.5l-9 4.5 9 4.5z" fill="#f1d9b0" />
-                <path d="M31.5 60.8L29 62l2.5 1.2z" fill="#333" />
-              </g>
-            </>
-          )}
-        </Tile>
+        <>
+          <rect x="27" y="22" width="40" height="54" rx="5" fill={tone(id, "P")} {...EDGE} />
+          <path d="M34 34h26M34 42h26M34 50h16" stroke="#c4c8d4" strokeWidth="2.6" strokeLinecap="round" />
+          <g transform="rotate(-38 58 62)">
+            <rect x="38" y="57.5" width="32" height="9" fill={tone(id, "Y")} />
+            <rect x="38" y="57.5" width="32" height="9" fill={`url(#${id}shine)`} />
+            <rect x="70" y="57.5" width="4" height="9" fill={tone(id, "S")} />
+            <rect x="74" y="57.5" width="5" height="9" rx="1.4" fill="#ef8aa0" />
+            <path d="M38 57.5l-9 4.5 9 4.5z" fill="#f1d9b0" />
+            <path d="M31.5 60.8L29 62l2.5 1.2z" fill="#333" />
+          </g>
+        </>
       );
 
     case "library":
       // Three books on a shelf: what you own stays here.
       return (
-        <Tile from="#f6f1ea" to="#e0d6c6" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <linearGradient id={`${id}spine`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0" stopColor="#000" stopOpacity=".18" />
-                  <stop offset=".35" stopColor="#fff" stopOpacity=".18" />
-                  <stop offset="1" stopColor="#000" stopOpacity=".12" />
-                </linearGradient>
-              </defs>
-              <g filter={`url(#${id}obj)`}>
-                <rect x="25" y="28" width="13" height="46" rx="2" fill="#6a4bf0" />
-                <rect x="40" y="33" width="12" height="41" rx="2" fill="#2f8bff" />
-                <rect x="58" y="29" width="13" height="46" rx="2" fill="#ff6b5b" transform="rotate(16 58 75)" />
-              </g>
-              <rect x="25" y="28" width="13" height="46" rx="2" fill={`url(#${id}spine)`} />
-              <rect x="40" y="33" width="12" height="41" rx="2" fill={`url(#${id}spine)`} />
-              <path d="M25 36h13M25 66h13M40 41h12M40 66h12" stroke="#ffd36b" strokeWidth="1.6" />
-              <rect x="20" y="74" width="60" height="5" rx="1.5" fill="#a77a4c" />
-              <rect x="20" y="74" width="60" height="1.6" fill="#c99a68" />
-            </>
-          )}
-        </Tile>
+        <>
+          {[
+            { x: 26, y: 28, w: 13, h: 46, t: "V" as Tone, r: 0 },
+            { x: 41, y: 33, w: 12, h: 41, t: "B" as Tone, r: 0 },
+            { x: 57, y: 29, w: 13, h: 46, t: "R" as Tone, r: 14 },
+          ].map((b) => (
+            <g key={b.x} transform={b.r ? `rotate(${b.r} ${b.x} ${b.y + b.h})` : undefined}>
+              <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="2" fill={tone(id, b.t)} />
+              <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="2" fill={`url(#${id}shine)`} />
+              <path d={`M${b.x} ${b.y + 8}h${b.w}M${b.x} ${b.y + b.h - 8}h${b.w}`} stroke="#ffd36b" strokeWidth="1.6" />
+            </g>
+          ))}
+          <rect x="21" y="74" width="58" height="5" rx="2" fill={tone(id, "W")} />
+        </>
       );
 
     case "saved":
-      // A glossy heart on white.
+      // A glossy pink heart.
       return (
-        <Tile from="#ffffff" to="#eceff4" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <radialGradient id={`${id}heart`} cx="40%" cy="30%" r="80%">
-                  <stop offset="0" stopColor="#ff8aa3" />
-                  <stop offset=".55" stopColor="#ff3b62" />
-                  <stop offset="1" stopColor="#d10f3d" />
-                </radialGradient>
-              </defs>
-              <g filter={`url(#${id}obj)`}>
-                <path d="M50 76S24 61 24 42.5a13 13 0 0 1 26-5 13 13 0 0 1 26 5C76 61 50 76 50 76z" fill={`url(#${id}heart)`} />
-              </g>
-              <ellipse cx="38" cy="38" rx="7" ry="4.5" fill="#fff" opacity=".55" transform="rotate(-30 38 38)" />
-            </>
-          )}
-        </Tile>
+        <>
+          <path d="M50 76S24 61 24 42.5a13 13 0 0 1 26-5 13 13 0 0 1 26 5C76 61 50 76 50 76z" fill={tone(id, "H")} />
+          <path d="M50 76S24 61 24 42.5a13 13 0 0 1 26-5 13 13 0 0 1 26 5C76 61 50 76 50 76z" fill={`url(#${id}shine)`} />
+        </>
       );
 
     case "sell":
       // A paper price tag on its string.
       return (
-        <Tile from="#5ee3cb" to="#0e8f84" size={size} label={label}>
-          {(id) => (
-            <>
-              <defs>
-                <linearGradient id={`${id}tag`} x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stopColor="#ffffff" />
-                  <stop offset="1" stopColor="#dde4ea" />
-                </linearGradient>
-              </defs>
-              <path d="M30 25c-8 3-10 12-3 17" fill="none" stroke="#f7f1e3" strokeWidth="1.6" strokeLinecap="round" />
-              <g filter={`url(#${id}obj)`}>
-                <path d="M33 30h20l22 22-21 21-22-22V30z" fill={`url(#${id}tag)`} />
-              </g>
-              <circle cx="40" cy="38" r="3.6" fill="#0e8f84" />
-              <circle cx="40" cy="38" r="3.6" fill="none" stroke="#000" strokeOpacity=".15" />
-              <text x="55" y="61" textAnchor="middle" fontSize="17" fontWeight="800" fill="#0e8f84" fontFamily="-apple-system, system-ui, sans-serif" transform="rotate(45 55 56)">
-                $
-              </text>
-            </>
-          )}
-        </Tile>
+        <>
+          <path d="M31 26c-8 3-10 12-3 17" fill="none" stroke="#f7f1e3" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M33 30h20l22 22-21 21-22-22V30z" fill={tone(id, "P")} {...EDGE} strokeLinejoin="round" />
+          <circle cx="40" cy="38" r="3.6" fill="#0e8f84" />
+          <text x="55" y="61" textAnchor="middle" fontSize="17" fontWeight="800" fill="#0e8f84" fontFamily="-apple-system, system-ui, sans-serif" transform="rotate(45 55 56)">
+            $
+          </text>
+        </>
+      );
+
+    case "today":
+      // A checklist card: two done, one to go.
+      return (
+        <>
+          <rect x="25" y="22" width="50" height="56" rx="7" fill={tone(id, "P")} {...EDGE} />
+          {[36, 50, 64].map((y, i) => (
+            <g key={y}>
+              {i < 2 ? (
+                <>
+                  <rect x="32" y={y - 6} width="12" height="12" rx="3.5" fill={tone(id, "B")} />
+                  <path d={`M35 ${y}l2.5 2.5 4-5`} fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              ) : (
+                <rect x="32.8" y={y - 5.2} width="10.4" height="10.4" rx="3" fill="#fff" stroke="#c9ced8" strokeWidth="1.6" />
+              )}
+              <rect x="49" y={y - 2.6} width={i === 2 ? 14 : 19} height="5.2" rx="2.6" fill={i < 2 ? "#d3d8e0" : "#9aa2ae"} />
+            </g>
+          ))}
+        </>
+      );
+
+    case "goals":
+      // A red target with an arrow in it.
+      return (
+        <>
+          <circle cx="48" cy="54" r="24" fill={tone(id, "R")} />
+          <circle cx="48" cy="54" r="17" fill={tone(id, "P")} />
+          <circle cx="48" cy="54" r="10" fill={tone(id, "R")} />
+          <circle cx="48" cy="54" r="4" fill="#fff" />
+          <circle cx="48" cy="54" r="24" fill={`url(#${id}shine)`} />
+          <path d="M49 53l20-20" stroke="#2b2f3a" strokeWidth="3" strokeLinecap="round" />
+          <path d="M66 28l8-2-2 8-4 2-4-4z" fill={tone(id, "B")} />
+        </>
+      );
+
+    case "focus":
+      // A timer with an orange ring three quarters gone.
+      return (
+        <>
+          <rect x="45" y="20" width="10" height="6" rx="2" fill={tone(id, "O")} />
+          <circle cx="50" cy="53" r="25" fill={tone(id, "P")} {...EDGE} />
+          <circle cx="50" cy="53" r="17" fill="none" stroke="#ffe6c7" strokeWidth="6" />
+          <path d="M50 36a17 17 0 1 1-17 17" fill="none" stroke="#ff8a00" strokeWidth="6" strokeLinecap="round" />
+          <path d="M50 53V43" stroke="#1e2127" strokeWidth="2.6" strokeLinecap="round" />
+          <circle cx="50" cy="53" r="2.8" fill="#1e2127" />
+        </>
+      );
+
+    case "review":
+      // A week page: a red band, seven days, today marked.
+      return (
+        <>
+          <BandedSheet id={id} band="R" y={24} h={52} />
+          {Array.from({ length: 7 }, (_, i) => (
+            <rect key={i} x={31 + (i % 4) * 10} y={45 + Math.floor(i / 4) * 11} width="7.5" height="7.5" rx="2" fill={i === 4 ? "#e5302a" : "#d4d8e0"} />
+          ))}
+          <rect x="35" y="19" width="3.4" height="10" rx="1.7" fill={tone(id, "I")} />
+          <rect x="61.6" y="19" width="3.4" height="10" rx="1.7" fill={tone(id, "I")} />
+        </>
+      );
+
+    case "idea":
+      // A lit yellow bulb on a metal base.
+      return (
+        <>
+          <path d="M50 22a18 18 0 0 0-10.5 32.6c2 1.6 3 3.6 3 6.4h15c0-2.8 1-4.8 3-6.4A18 18 0 0 0 50 22z" fill={tone(id, "Y")} />
+          <path d="M50 22a18 18 0 0 0-10.5 32.6c2 1.6 3 3.6 3 6.4h15c0-2.8 1-4.8 3-6.4A18 18 0 0 0 50 22z" fill={`url(#${id}shine)`} />
+          <path d="M45.5 44l4.5 6 4.5-6" fill="none" stroke="#c98a00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <rect x="42.5" y="63" width="15" height="5" rx="2" fill={tone(id, "S")} />
+          <rect x="44.5" y="70" width="11" height="4.5" rx="2" fill={tone(id, "I")} />
+        </>
       );
   }
 }
@@ -424,6 +447,10 @@ export function AisleSymbol({ name, size = 16, className }: { name: AisleGlyph; 
 
 function SymbolPath({ name }: { name: AisleGlyph }) {
   switch (name) {
+    case "pencil":
+      return <path d="M4 20l1.2-4.6L15.8 4.8a2.1 2.1 0 0 1 3 3L8.2 18.4zM14 6.6l3 3" />;
+    case "check":
+      return <path d="M4 5h16v14H4zM8 12l2.5 2.5L16 9" />;
     case "globe":
       return <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9s1.2-6.4 3.7-9z" />;
     case "wrench":

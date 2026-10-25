@@ -4,7 +4,6 @@ import { useRef, useState, type ReactNode } from "react";
 import { brand, copy } from "@/lib/brand";
 import { STAGES, aisleById, type AisleId, type ShelfItem } from "@/lib/desktop";
 import { CataloguePause } from "@/components/CataloguePause";
-import { PreLaunchNotice } from "@/components/PreLaunchNotice";
 import { ContactForm } from "@/components/ContactForm";
 import { AisleSymbol, AppIcon, Chevron, FolderIcon, Magnifier } from "./icons";
 import { intercept, type DeskActions } from "./types";
@@ -56,7 +55,11 @@ function ShelfTile({
       }
     >
       <span className="sm-thumb">
-        {it.image ? (
+        {it.app ? (
+          <AppIcon g={it.app} size={72} />
+        ) : it.aisle === "ideas" ? (
+          <AppIcon g="idea" size={72} />
+        ) : it.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={it.image} alt="" loading="lazy" />
         ) : (
@@ -313,7 +316,15 @@ export function Marketplace({
           <span>
             {current.open && !pausedHere ? `${count} ${count === 1 ? "item" : "items"}` : "Opening soon"}
           </span>
-          <span>{aisle === "sites" ? "Hand-picked, no affiliate links" : "Paid once, yours forever"}</span>
+          <span>
+            {aisle === "sites"
+              ? "Hand-picked, no affiliate links"
+              : aisle === "daily"
+                ? "Saved in this browser only"
+                : aisle === "ideas"
+                  ? "Build one, then list it here"
+                  : "Paid once, yours forever"}
+          </span>
         </div>
       </div>
     </div>
@@ -347,7 +358,7 @@ export function QuickLook({
       href={item.href}
       onClick={(e) => intercept(e, () => actions.openPage(item.href))}
     >
-      {item.price === "Free" ? "Open" : `Get · ${item.price}`}
+      {item.aisle === "ideas" ? "Build it and list it" : item.price === "Free" ? "Open" : `Get · ${item.price}`}
     </a>
   );
   return (
@@ -355,7 +366,9 @@ export function QuickLook({
       <TitleBar title={item.title} right={button} />
       <div className="sm-look">
         <div className={`sm-look-shot${item.iconOnly ? " is-icon" : ""}`}>
-          {item.image ? (
+          {item.aisle === "ideas" ? (
+            <AppIcon g="idea" size={96} />
+          ) : item.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={item.image} alt={`${item.title} preview`} />
           ) : (
@@ -542,11 +555,74 @@ export function Bin() {
 }
 
 export function Waitlist() {
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const valid = email.includes("@") && email.trim().length > 4;
+
+  // The same request and the same answers as components/WaitlistForm.tsx.
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!valid || state === "busy") return;
+    setState("busy");
+    setMessage("");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      if (res.ok) return setState("done");
+      const data = await res.json().catch(() => ({}));
+      setState("error");
+      setMessage(
+        data?.error === "rate-limited"
+          ? "A few tries in a row. Give it a minute."
+          : data?.error === "not-configured"
+            ? "The list isn't quite ready. Try again a little later."
+            : "Couldn't save that. Please try again.",
+      );
+    } catch {
+      setState("error");
+      setMessage("Network error. Check your connection and try again.");
+    }
+  }
+
   return (
     <>
-      <TitleBar title="Waitlist" />
-      <div className="sm-waitlist">
-        <PreLaunchNotice />
+      <TitleBar />
+      <div className="sm-wl">
+        <AppIcon g="market" size={88} />
+        {state === "done" ? (
+          <>
+            <h2>You&apos;re on the list.</h2>
+            <p>We&apos;ll write once, the day buying opens. That&apos;s the only email the list ever sends.</p>
+          </>
+        ) : (
+          <>
+            <h2>Be first in line</h2>
+            <p>
+              Makers are listing their tools now. Buying opens at the public launch: leave your email and
+              we&apos;ll write once, the day it opens.
+            </p>
+            <form className="sm-wl-form" onSubmit={submit}>
+              <input
+                id="sm-waitlist-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                aria-label="Your email"
+              />
+              <button type="submit" className="sm-btn sm-wl-btn" disabled={!valid || state === "busy"}>
+                {state === "busy" ? "Joining…" : "Join"}
+              </button>
+            </form>
+            {state === "error" && <p className="sm-wl-err">{message}</p>}
+            <small>One email, nothing else.</small>
+          </>
+        )}
       </div>
     </>
   );
