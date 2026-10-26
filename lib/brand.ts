@@ -45,7 +45,7 @@ const PITCH = [
  * showing cards whose images cannot load. Set back to false once billing is
  * restored and the storage URLs answer 200 again.
  */
-export const CATALOGUE_PAUSED = true;
+export const CATALOGUE_PAUSED = false;
 
 const STATUS_NOTE =
   "Pre-launch: the marketplace is collecting listings from solo builders, and tools cannot be bought until the public launch.";
