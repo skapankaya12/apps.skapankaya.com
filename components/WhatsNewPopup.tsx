@@ -233,14 +233,14 @@ export function WhatsNewPopup() {
               sat in the email, the faces of the people who built these. */}
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="pr-8 sm:pr-0">
-              <p className="text-[11px] font-bold uppercase leading-4 tracking-[0.12em] text-[#4f46e5]">
+              <p className="text-[11px] font-bold uppercase leading-4 tracking-[0.12em] text-[#8b1a1a]">
                 new this week
               </p>
               <h2
                 id="whats-new-title"
                 className="mt-3 text-[26px] font-extrabold leading-[32px] tracking-[-0.025em] sm:text-[30px] sm:leading-[36px]"
               >
-                <span className="bg-gradient-to-r from-[#6a4bf0] to-[#2f8bff] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#8b1a1a] to-[#b54444] bg-clip-text text-transparent">
                   {count} new {count === 1 ? "listing" : "listings"}
                 </span>{" "}
                 in the marketplace
@@ -274,7 +274,7 @@ export function WhatsNewPopup() {
                     <Link
                       href={`/app/${item.slug}`}
                       onClick={close}
-                      className="group -mx-3 flex flex-col gap-4 rounded-2xl px-3 py-5 transition-colors hover:bg-[#f5f7ff] sm:flex-row sm:items-start"
+                      className="group -mx-3 flex flex-col gap-4 rounded-2xl px-3 py-5 transition-colors hover:bg-[#fdf5f5] sm:flex-row sm:items-start"
                     >
                       <Thumb item={item} className="h-[80px] w-[120px] rounded-[10px]" />
                       <div className="min-w-0">
@@ -292,7 +292,7 @@ export function WhatsNewPopup() {
                         <p className="mt-1 text-[15px] leading-[23px] text-[#4a4a56]">
                           {item.tagline}
                         </p>
-                        <span className="mt-2 inline-block text-[13px] font-bold text-[#4f46e5] group-hover:underline">
+                        <span className="mt-2 inline-block text-[13px] font-bold text-[#8b1a1a] group-hover:underline">
                           View listing
                         </span>
                       </div>
@@ -309,7 +309,7 @@ export function WhatsNewPopup() {
               <Link
                 href="/browse"
                 onClick={close}
-                className="font-bold text-[#4f46e5] underline"
+                className="font-bold text-[#8b1a1a] underline"
               >
                 {extra} more
               </Link>{" "}
@@ -321,7 +321,7 @@ export function WhatsNewPopup() {
             <Link
               href="/browse"
               onClick={close}
-              className="inline-block rounded-full bg-[#4f46e5] px-5 py-2.5 text-[14px] font-bold leading-[18px] text-white transition-colors hover:bg-[#4338ca]"
+              className="inline-block rounded-full bg-[#8b1a1a] px-5 py-2.5 text-[14px] font-bold leading-[18px] text-white transition-colors hover:bg-[#741414]"
             >
               Browse the marketplace
             </Link>
@@ -369,7 +369,7 @@ function WhatsNewTable({
             <Link
               href={`/app/${item.slug}`}
               onClick={onPick}
-              className="-mx-3 grid grid-cols-[64px_1fr] items-center gap-x-4 rounded-xl px-3 py-3 transition-colors hover:bg-[#f5f7ff] sm:grid-cols-[64px_1fr_150px]"
+              className="-mx-3 grid grid-cols-[64px_1fr] items-center gap-x-4 rounded-xl px-3 py-3 transition-colors hover:bg-[#fdf5f5] sm:grid-cols-[64px_1fr_150px]"
             >
               <Thumb item={item} className="h-[43px] w-[64px] rounded-[8px]" />
               <div className="min-w-0">

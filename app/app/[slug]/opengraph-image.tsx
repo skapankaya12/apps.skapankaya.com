@@ -52,8 +52,8 @@ export default async function Image({
               style={{
                 display: "flex",
                 alignSelf: "flex-start",
-                background: "#eef0ff",
-                color: "#4f46e5",
+                background: "#fbeeee",
+                color: "#8b1a1a",
                 borderRadius: 999,
                 padding: "10px 24px",
                 fontSize: 26,
@@ -130,7 +130,7 @@ export default async function Image({
               display: "flex",
               fontSize: 28,
               fontWeight: 700,
-              color: "#4f46e5",
+              color: "#8b1a1a",
             }}
           >
             {brand.domain}

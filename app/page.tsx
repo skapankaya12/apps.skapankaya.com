@@ -14,11 +14,11 @@ export const metadata: Metadata = {
 };
 
 /**
- * The logo's blue to violet, the same run of colours the emails letter one
- * span at a time. On the web background-clip does it in one go.
+ * The brand dark red as a gradient. On the web background-clip does it in
+ * one go.
  */
 const logoGradientText =
-  "bg-gradient-to-r from-[#2f8bff] to-[#6a4bf0] bg-clip-text text-transparent";
+  "bg-gradient-to-r from-[#8b1a1a] to-[#b54444] bg-clip-text text-transparent";
 
 /**
  * Landing page = pitch + product, nothing else. Everything explanatory

@@ -28,8 +28,8 @@ function page(title: string, body: string, status = 200): Response {
   main{max-width:440px;margin:12vh auto;padding:36px 32px;background:#fff;border:1px solid #ececef;border-radius:22px}
   h1{margin:0 0 10px;font-size:22px;line-height:1.3}
   p{margin:0 0 14px;color:#4a4a56}
-  button{font:inherit;font-weight:700;font-size:14px;color:#fff;background:#4f46e5;border:0;border-radius:999px;padding:10px 20px;cursor:pointer}
-  a{color:#4f46e5}
+  button{font:inherit;font-weight:700;font-size:14px;color:#fff;background:#8b1a1a;border:0;border-radius:999px;padding:10px 20px;cursor:pointer}
+  a{color:#8b1a1a}
 </style></head><body><main>${body}</main></body></html>`;
   return new Response(html, {
     status,

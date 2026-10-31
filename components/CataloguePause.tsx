@@ -21,14 +21,14 @@ export function CataloguePause({ onHome = false }: { onHome?: boolean }) {
   );
 }
 
-/** A cone in the logo's blue to violet, dripping into a puddle. Decorative. */
+/** A cone in the brand dark red, dripping into a puddle. Decorative. */
 function MeltingIceCream({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 215" className={className} aria-hidden="true">
       <defs>
         <linearGradient id="scoop" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#6aa8ff" />
-          <stop offset="1" stopColor="#7b5cf2" />
+          <stop offset="0" stopColor="#c45a5a" />
+          <stop offset="1" stopColor="#8b1a1a" />
         </linearGradient>
         <clipPath id="cone">
           <path d="M66 100 L134 100 L100 190 Z" />

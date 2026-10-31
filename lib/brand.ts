@@ -9,10 +9,10 @@
  * every one of those moves together.
  */
 const HERO_HEADLINE = "A marketplace for self-hosted software,";
-/** The headline's second row. `accent` is drawn in the logo's gradient. */
+/** The headline's second row. `accent` is drawn in the brand dark red gradient. */
 const HERO_BYLINE = { before: "made", accent: "by", after: "solo developers." } as const;
 const HERO_SUB = "Discover software built by solo developers. Buy it once. Keep it yours.";
-/** Drawn in the logo's blue to violet gradient on the hero. */
+/** Drawn in the brand dark red gradient on the hero. */
 const HERO_SUB_ACCENT = "No subscriptions.";
 
 /** The hero's headline and sub-line read as one sentence, so they cannot drift. */

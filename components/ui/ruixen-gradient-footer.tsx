@@ -31,24 +31,24 @@ const VBW = 1271;
 const VBH = 599;
 
 /**
- * Ours, floor (0) → top (1): a deep indigo floor that grounds the page, up
- * through --accent, into the periwinkle tints, and out through --accent-soft
+ * Ours, floor (0) → top (1): a deep red floor that grounds the page, up
+ * through --accent, into the rose tints, and out through --accent-soft
  * to nothing. Monochrome on purpose — the site is light-only with one
  * confident accent, and a multi-hue rainbow would be the loudest thing on it.
  *
- * The two anchors are exact tokens from globals.css: #4f46e5 is --accent and
- * #eef0ff is --accent-soft. Everything between them is a tint of the same hue,
+ * The two anchors are exact tokens from globals.css: #8b1a1a is --accent and
+ * #fbeeee is --accent-soft. Everything between them is a tint of the same hue,
  * so the glow can never drift out of brand.
  */
 export const SOLO_STOPS: Stop[] = [
-  { offset: 0, color: "#2B2673" },
-  { offset: 0.16, color: "#4F46E5" },
-  { offset: 0.32, color: "#6D5DF0" },
-  { offset: 0.48, color: "#8B7BF5" },
-  { offset: 0.64, color: "#A5B4FC" },
-  { offset: 0.8, color: "#D9DFFE" },
-  { offset: 0.92, color: "#EEF0FF" },
-  { offset: 1, color: "#EEF0FF00" },
+  { offset: 0, color: "#4A0D0D" },
+  { offset: 0.16, color: "#8b1a1a" },
+  { offset: 0.32, color: "#A93434" },
+  { offset: 0.48, color: "#C45A5A" },
+  { offset: 0.64, color: "#e39a9a" },
+  { offset: 0.8, color: "#F6D9D9" },
+  { offset: 0.92, color: "#fbeeee" },
+  { offset: 1, color: "#fbeeee00" },
 ];
 
 /**
@@ -58,12 +58,12 @@ export const SOLO_STOPS: Stop[] = [
  * page. Pass it as `stops={SOLO_SOFT_STOPS}`.
  */
 export const SOLO_SOFT_STOPS: Stop[] = [
-  { offset: 0, color: "#4F46E5" },
-  { offset: 0.2, color: "#7C6BF2" },
-  { offset: 0.42, color: "#A5B4FC" },
-  { offset: 0.66, color: "#C7D2FE" },
-  { offset: 0.86, color: "#EEF0FF" },
-  { offset: 1, color: "#EEF0FF00" },
+  { offset: 0, color: "#8b1a1a" },
+  { offset: 0.2, color: "#B54444" },
+  { offset: 0.42, color: "#e39a9a" },
+  { offset: 0.66, color: "#f0c4c4" },
+  { offset: 0.86, color: "#fbeeee" },
+  { offset: 1, color: "#fbeeee00" },
 ];
 
 // Height curve: a gentle power falloff, giving a flatter, pyramid-like rise
@@ -94,7 +94,7 @@ export interface RuixenGradientFooterProps {
    * along the bottom edge before the scroll reveal starts.
    *
    * Defaults to 0 here, unlike upstream. The band is fixed to the viewport, so
-   * any resting height puts a saturated indigo bar along the bottom of every
+   * any resting height puts a saturated red bar along the bottom of every
    * page in the site — browse, checkout, dashboard, admin — where it reads as
    * chrome rather than decoration. At 0 the glow belongs to the footer alone.
    * Try 0.04 if you want the strip back.

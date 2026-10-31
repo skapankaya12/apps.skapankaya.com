@@ -734,7 +734,7 @@ interface GradientWaveProps {
  * globals.css (--accent-soft and neighbours). Pale on purpose — this sits
  * behind the h1, and the page is light-only.
  */
-const BRAND_COLORS = ["#ffffff", "#eef0ff", "#d8e0ff", "#efeaff"];
+const BRAND_COLORS = ["#ffffff", "#fbeeee", "#f6d9d9", "#f9e7e4"];
 
 export function GradientWave({
   colors = BRAND_COLORS,

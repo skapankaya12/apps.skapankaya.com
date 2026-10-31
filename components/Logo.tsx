@@ -25,12 +25,12 @@ export function Logo({
     >
       <defs>
         <linearGradient id={`bagFront-${id}`} x1="8" y1="8" x2="40" y2="44" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#2f8bff" />
-          <stop offset="1" stopColor="#6a4bf0" />
+          <stop stopColor="#2a2a30" />
+          <stop offset="1" stopColor="#101014" />
         </linearGradient>
         <linearGradient id={`bagBack-${id}`} x1="30" y1="12" x2="42" y2="44" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f9a825" />
-          <stop offset="1" stopColor="#f43f8e" />
+          <stop stopColor="#a32424" />
+          <stop offset="1" stopColor="#741414" />
         </linearGradient>
       </defs>
 
@@ -56,10 +56,10 @@ export function Logo({
       />
 
       {/* Four app tiles */}
-      <rect x="13.5" y="22" width="7.5" height="7.5" rx="2.1" fill="#ef5138" />
-      <rect x="23" y="22" width="7.5" height="7.5" rx="2.1" fill="#22c39a" />
-      <rect x="13.5" y="31" width="7.5" height="7.5" rx="2.1" fill="#f7b70a" />
-      <rect x="23" y="31" width="7.5" height="7.5" rx="2.1" fill="#b06cf0" />
+      <rect x="13.5" y="22" width="7.5" height="7.5" rx="2.1" fill="#ffffff" />
+      <rect x="23" y="22" width="7.5" height="7.5" rx="2.1" fill="#e39a9a" />
+      <rect x="13.5" y="31" width="7.5" height="7.5" rx="2.1" fill="#e39a9a" />
+      <rect x="23" y="31" width="7.5" height="7.5" rx="2.1" fill="#c8383a" />
     </svg>
   );
 }

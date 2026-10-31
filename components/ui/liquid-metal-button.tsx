@@ -115,9 +115,9 @@ export function LiquidMetalButton({
         el,
         liquidMetalFragmentShader,
         {
-          // Ours. The rim reads as brushed indigo rather than chrome.
-          u_colorBack: rgba("#4f46e5"),
-          u_colorTint: rgba("#c7d2fe"),
+          // Ours. The rim reads as brushed dark red rather than chrome.
+          u_colorBack: rgba("#8b1a1a"),
+          u_colorTint: rgba("#f0c4c4"),
           u_repetition: 4,
           u_softness: 0.5,
           u_shiftRed: 0.3,
@@ -208,7 +208,7 @@ export function LiquidMetalButton({
         aria-hidden
         className="absolute inset-[2px] -z-10 rounded-full"
         style={{
-          background: "linear-gradient(180deg, #5b52ea 0%, #4338ca 100%)",
+          background: "linear-gradient(180deg, #a32424 0%, #741414 100%)",
         }}
       />
       {children}

@@ -38,8 +38,8 @@ export default async function Image({
             style={{
               display: "flex",
               alignSelf: "flex-start",
-              background: "#eef0ff",
-              color: "#4f46e5",
+              background: "#fbeeee",
+              color: "#8b1a1a",
               borderRadius: 999,
               padding: "10px 24px",
               fontSize: 26,
@@ -77,7 +77,7 @@ export default async function Image({
           <div style={{ display: "flex" }}>
             {article ? formatDate(article.date) : brand.tagline}
           </div>
-          <div style={{ display: "flex", fontWeight: 700, color: "#4f46e5" }}>
+          <div style={{ display: "flex", fontWeight: 700, color: "#8b1a1a" }}>
             {brand.domain}
           </div>
         </div>

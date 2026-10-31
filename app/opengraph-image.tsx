@@ -34,7 +34,7 @@ export default function Image() {
       >
         <div style={{ display: "flex", flexDirection: "column" }}>
           {/* Two rows, matching the hero: the headline, then the byline with
-              its accent word in the logo gradient. 56px is sized so row one
+              its accent word in the brand dark red gradient. 56px is sized so row one
               fits the 1056px of content width at Satori's fallback face,
               which is wider than Manrope; at 62px it wrapped. */}
           <div
@@ -53,7 +53,7 @@ export default function Image() {
               <span>{copy.heroByline.before}&nbsp;</span>
               <span
                 style={{
-                  backgroundImage: "linear-gradient(90deg, #2f8bff, #6a4bf0)",
+                  backgroundImage: "linear-gradient(90deg, #8b1a1a, #b54444)",
                   backgroundClip: "text",
                   color: "transparent",
                 }}
@@ -84,7 +84,7 @@ export default function Image() {
             <span
               style={{
                 fontWeight: 700,
-                backgroundImage: "linear-gradient(90deg, #2f8bff, #6a4bf0)",
+                backgroundImage: "linear-gradient(90deg, #8b1a1a, #b54444)",
                 backgroundClip: "text",
                 color: "transparent",
               }}
