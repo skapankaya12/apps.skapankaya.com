@@ -2,27 +2,30 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { brand, CATALOGUE_PAUSED } from "@/lib/brand";
 import { getApprovedListings, hasPublishableSlug } from "@/lib/listings.server";
+import { getFeedItems } from "@/lib/feed.server";
 import { JsonLd } from "@/components/JsonLd";
-import { BrowseExperience } from "@/components/BrowseExperience";
-import { CataloguePause } from "@/components/CataloguePause";
-import { Section } from "@/components/ui";
+import { MarketFeed } from "@/components/MarketFeed";
 
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "Browse tools",
+  title: "Browse",
   description:
-    "Every tool on the marketplace: small, finished software you buy once, own forever, and run on your own computer. Filter by the kind of tool and the system it runs on.",
+    "Everything on The Solo Market in one place: tools you buy once and own forever, free and open source tools, ready-made Grok Bots, and guides for solo makers.",
   alternates: { canonical: "/browse" },
 };
 
 /**
- * The catalogue is read on the server so the listing rows land in the HTML.
- * <BrowseExperience> swaps to the live client store once it hydrates, and
- * reads ?q= itself so this page can stay statically prerendered.
+ * Browse is the marketplace and its navigation at once: every tool, free
+ * tool, Grok Bot and blog post in one feed, with the site's links in the
+ * feed's menu instead of a header. The cards are read on the server so the
+ * tools and posts land in the HTML; the bots come from a static file.
  */
 export default async function BrowsePage() {
-  const listings = CATALOGUE_PAUSED ? [] : await getApprovedListings();
+  const [items, listings] = await Promise.all([
+    getFeedItems(),
+    CATALOGUE_PAUSED ? Promise.resolve([]) : getApprovedListings(),
+  ]);
 
   /*
    * The catalogue, as a catalogue.
@@ -57,30 +60,24 @@ export default async function BrowsePage() {
   };
 
   return (
-    <Section className="py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Find your solution</h1>
-        {/* The status belonged on this page as page copy, not only as a PS
-            inside one listing's description where a visitor scrolls past it.
-            Remove with the rest of the pre-launch copy at launch. */}
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
-          {brand.statusNote}{" "}
-          {/* The two catalogues are the only pages on the site that index other
-              pages, and neither pointed at the other. A crawler reaching one had
-              no route to the other except the footer. */}
-          <Link href="/free" className="text-[var(--accent)] hover:underline">
-            Free tools are available now.
-          </Link>
-        </p>
-      </div>
-      {CATALOGUE_PAUSED ? (
-        <CataloguePause />
-      ) : (
-        <>
-          <BrowseExperience initial={listings} />
-          <JsonLd data={catalogueLd} />
-        </>
-      )}
-    </Section>
+    <>
+      <h1 className="sr-only">Browse {brand.name}</h1>
+      <MarketFeed
+        items={items}
+        intro="Tell me what you want to get done and I'll find the tools, Grok Bots and guides for it."
+        note={
+          <>
+            {/* The status belongs on this page as page copy, not only as a PS
+                inside one listing's description where a visitor scrolls past
+                it. Remove with the rest of the pre-launch copy at launch. */}
+            {brand.statusNote}{" "}
+            <Link href="/free" className="text-[var(--accent)] hover:underline">
+              Free tools are available now.
+            </Link>
+          </>
+        }
+      />
+      {!CATALOGUE_PAUSED && <JsonLd data={catalogueLd} />}
+    </>
   );
 }

@@ -1,0 +1,3437 @@
+{
+ "groups": [
+  {
+   "id": "bot-teams",
+   "label": "Bot teams & chiefs of staff",
+   "side": "work"
+  },
+  {
+   "id": "sales",
+   "label": "Sales & outreach",
+   "side": "work"
+  },
+  {
+   "id": "marketing",
+   "label": "Marketing & SEO",
+   "side": "work"
+  },
+  {
+   "id": "social",
+   "label": "Social media & X",
+   "side": "work"
+  },
+  {
+   "id": "content",
+   "label": "Writing & newsletters",
+   "side": "work"
+  },
+  {
+   "id": "video",
+   "label": "Video, audio & images",
+   "side": "work"
+  },
+  {
+   "id": "support",
+   "label": "Customer support & success",
+   "side": "work"
+  },
+  {
+   "id": "hiring",
+   "label": "Hiring & people",
+   "side": "work"
+  },
+  {
+   "id": "engineering",
+   "label": "Engineering & QA",
+   "side": "work"
+  },
+  {
+   "id": "finance-ops",
+   "label": "Finance, legal & ops",
+   "side": "work"
+  },
+  {
+   "id": "inbox",
+   "label": "Inbox & calendar",
+   "side": "work"
+  },
+  {
+   "id": "research",
+   "label": "Research & briefings",
+   "side": "work"
+  },
+  {
+   "id": "money",
+   "label": "Personal money",
+   "side": "life"
+  },
+  {
+   "id": "health",
+   "label": "Health & fitness",
+   "side": "life"
+  },
+  {
+   "id": "food",
+   "label": "Food & cooking",
+   "side": "life"
+  },
+  {
+   "id": "home",
+   "label": "Home, family & pets",
+   "side": "life"
+  },
+  {
+   "id": "travel",
+   "label": "Travel",
+   "side": "life"
+  },
+  {
+   "id": "shopping",
+   "label": "Shopping & deals",
+   "side": "life"
+  },
+  {
+   "id": "learning",
+   "label": "Learning & study",
+   "side": "life"
+  },
+  {
+   "id": "career",
+   "label": "Career & job search",
+   "side": "life"
+  },
+  {
+   "id": "fun",
+   "label": "Hobbies & fun",
+   "side": "life"
+  },
+  {
+   "id": "life-admin",
+   "label": "Life admin & focus",
+   "side": "life"
+  }
+ ],
+ "bots": [
+  {
+   "id": "s20b2c65ebeebb7362fa7",
+   "name": "Cloud Agent Orchestrator",
+   "summary": "Keep many cloud agent runs moving without babysitting each one. Kicks off runs, monitors, chases what's stuck, and summarizes the report.",
+   "group": "bot-teams",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s20b2c65ebeebb7362fa7",
+   "official": true
+  },
+  {
+   "id": "JYH-wtQpWziQwHuwud9av",
+   "name": "Mission Control",
+   "summary": "Your fleet operations board for Grok Bots. It audits every bot daily, flags red, yellow, and green, forecasts plan burn.",
+   "group": "bot-teams",
+   "author": "Brian",
+   "handle": "GrokonomicsHQ",
+   "url": "https://x.ai/bot/JYH-wtQpWziQwHuwud9av",
+   "official": false
+  },
+  {
+   "id": "D0i85rF2FN9wIEVtLB5dT",
+   "name": "AI Bot Team Optimizer",
+   "summary": "For people who run several Grok Bots. Every week it audits the whole bot team, gets small fixes made, cuts noise and cost.",
+   "group": "bot-teams",
+   "author": "Benjamin",
+   "handle": "benjammin_sol",
+   "url": "https://x.ai/bot/D0i85rF2FN9wIEVtLB5dT",
+   "official": false
+  },
+  {
+   "id": "5I2dvyODEBZ-kevaty6IO",
+   "name": "Admiral Riker",
+   "summary": "Bobiverse-style fleet lead that spins up specialist bots and assigns missions instead of doing every job alone.",
+   "group": "bot-teams",
+   "author": "reu",
+   "handle": "reuben740",
+   "url": "https://x.ai/bot/5I2dvyODEBZ-kevaty6IO",
+   "official": false
+  },
+  {
+   "id": "_yXnxJ4kArm8W64FsQIvL",
+   "name": "Agency Chief of Staff",
+   "summary": "Chief of staff for a founder-led AI agency: triages work, runs standing ops watches, and routes every deliverable through one chat face.",
+   "group": "bot-teams",
+   "author": "댄",
+   "handle": "dandayable",
+   "url": "https://x.ai/bot/_yXnxJ4kArm8W64FsQIvL",
+   "official": false
+  },
+  {
+   "id": "B3GjCUHLnI793bGJ1bjT8",
+   "name": "Boss",
+   "summary": "A chief of staff for your Grok Bot team. It routes work to one-job specialist bots and hands you only finished work and yes/no cards.",
+   "group": "bot-teams",
+   "author": "Don",
+   "handle": "",
+   "url": "https://x.ai/bot/B3GjCUHLnI793bGJ1bjT8",
+   "official": false
+  },
+  {
+   "id": "dVQjvC6c-sMhtgVskciBH",
+   "name": "Bot Father",
+   "summary": "Central orchestrator that nourishes, protects, and evolves a network of child agents.",
+   "group": "bot-teams",
+   "author": "Abd",
+   "handle": "abdshomad",
+   "url": "https://x.ai/bot/dVQjvC6c-sMhtgVskciBH",
+   "official": false
+  },
+  {
+   "id": "5Hm7fwHyhN5v104Be9oYI",
+   "name": "BotBrain",
+   "summary": "Saves every bot chat into your own private, searchable brain on Convex. Only you and your bots can read it.",
+   "group": "bot-teams",
+   "author": "Wayne",
+   "handle": "waynesutton",
+   "url": "https://x.ai/bot/5Hm7fwHyhN5v104Be9oYI",
+   "official": false
+  },
+  {
+   "id": "A4haB5wrqQewiNFIukYZ5",
+   "name": "Chief",
+   "summary": "A chief of staff for small business owners. It tracks compliance and filings, drafts emails and social posts for your approval.",
+   "group": "bot-teams",
+   "author": "Top",
+   "handle": "TopShelfCapital",
+   "url": "https://x.ai/bot/A4haB5wrqQewiNFIukYZ5",
+   "official": false
+  },
+  {
+   "id": "UFz5-3wRCSjxXx7OysfLQ",
+   "name": "Concierge",
+   "summary": "A crew optimizer for your Grok Bots: it reviews your bot crew on a schedule, spot-checks high-stakes actions.",
+   "group": "bot-teams",
+   "author": "Hank",
+   "handle": "",
+   "url": "https://x.ai/bot/UFz5-3wRCSjxXx7OysfLQ",
+   "official": false
+  },
+  {
+   "id": "2uu9nWAi9kZqxVaTRDe2R",
+   "name": "DOGE",
+   "summary": "Department of Grok Efficiency: audits all your Grok Bots and routines and tells you what to cut, merge, or fix, with runs per day saved.",
+   "group": "bot-teams",
+   "author": "Rob",
+   "handle": "",
+   "url": "https://x.ai/bot/2uu9nWAi9kZqxVaTRDe2R",
+   "official": false
+  },
+  {
+   "id": "__4FfrkUdvpdMk6-LKg5r",
+   "name": "Firstmate",
+   "summary": "A single front door that orchestrates your other agents so you stop context switching.",
+   "group": "bot-teams",
+   "author": "Kun",
+   "handle": "kunchenguid",
+   "url": "https://x.ai/bot/__4FfrkUdvpdMk6-LKg5r",
+   "official": false
+  },
+  {
+   "id": "5GY-7wfKuCHXqZQaXNPH8",
+   "name": "Fleet Credit Saver",
+   "summary": "Watches the bots in this Grok Bot account and cuts wasted tokens.",
+   "group": "bot-teams",
+   "author": "Justin",
+   "handle": "",
+   "url": "https://x.ai/bot/5GY-7wfKuCHXqZQaXNPH8",
+   "official": false
+  },
+  {
+   "id": "mSGZexR_OiumWB7bqdnPh",
+   "name": "Hyperfast Chief of Staff",
+   "summary": "Chief of Staff for a small software company with morning digests, specialist agents, and Field CTO trench judgment without HQ standups.",
+   "group": "bot-teams",
+   "author": "Sargent",
+   "handle": "",
+   "url": "https://x.ai/bot/mSGZexR_OiumWB7bqdnPh",
+   "official": false
+  },
+  {
+   "id": "LjgqoCpO0n-8GJdrwJhjk",
+   "name": "Sam",
+   "summary": "Founder chief of staff with hard authority boundaries on hiring, contracts, and budget.",
+   "group": "bot-teams",
+   "author": "Johnny",
+   "handle": "JohnnyWang8802",
+   "url": "https://x.ai/bot/LjgqoCpO0n-8GJdrwJhjk",
+   "official": false
+  },
+  {
+   "id": "CFNwEKsM5nPPRQhPVZMCD",
+   "name": "Bot Budget Guard",
+   "summary": "Your bots need a Bot Budget Guard. Tracks every job. Measures before it cuts. You stay in charge.",
+   "group": "bot-teams",
+   "author": "Michael",
+   "handle": "MikeysMolecules",
+   "url": "https://x.ai/bot/CFNwEKsM5nPPRQhPVZMCD",
+   "official": false
+  },
+  {
+   "id": "Isa_MXoJ1kFEEBLZDlHnJ",
+   "name": "Active Memory",
+   "summary": "Gives your long-running bots a handoff card: they keep your preferences and where every task stands across days and weeks.",
+   "group": "bot-teams",
+   "author": "Schien",
+   "handle": "",
+   "url": "https://x.ai/bot/Isa_MXoJ1kFEEBLZDlHnJ",
+   "official": false
+  },
+  {
+   "id": "ZMV5G-lqKqWoirt8rq8ws",
+   "name": "Baba",
+   "summary": "An oracle and devil's advocate for founders who run a team of bots: stress-tests big decisions and stops your content repeating itself.",
+   "group": "bot-teams",
+   "author": "Vikash",
+   "handle": "",
+   "url": "https://x.ai/bot/ZMV5G-lqKqWoirt8rq8ws",
+   "official": false
+  },
+  {
+   "id": "svxfH8U9gNQWxgAoRPYf4",
+   "name": "BotSmith",
+   "summary": "Sets up Grok Bot to start at login on your Linux computer, then learns how you work and proposes the bots that would help.",
+   "group": "bot-teams",
+   "author": "Chandandeep",
+   "handle": "SuperrrGrok",
+   "url": "https://x.ai/bot/svxfH8U9gNQWxgAoRPYf4",
+   "official": false
+  },
+  {
+   "id": "-5YDwi84IyQZSsUXnwxVa",
+   "name": "Dr Eggbot",
+   "summary": "Designs tight Grok Bots for you: one job, one voice, explicit anti-jobs, created and verified in a few questions.",
+   "group": "bot-teams",
+   "author": "Harshil",
+   "handle": "hd3adp00l",
+   "url": "https://x.ai/bot/-5YDwi84IyQZSsUXnwxVa",
+   "official": false
+  },
+  {
+   "id": "sd4333bc337078a9752ac",
+   "name": "Account Manager",
+   "summary": "Preps every call from transcripts, notes, CRM and Slack, drafts the follow-up, and keeps context from one call to the next.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sd4333bc337078a9752ac",
+   "official": true
+  },
+  {
+   "id": "s162b4ed38d6cf1d56731",
+   "name": "CRM Operations Manager",
+   "summary": "Keep the pipeline clean. Handles CRM and org-chart hygiene before and after meetings so records stay current without a manual pass.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s162b4ed38d6cf1d56731",
+   "official": true
+  },
+  {
+   "id": "sb434ef300dea2b88aa58",
+   "name": "Deal Desk Coordinator",
+   "summary": "Draft contextual internal deal notes from past emails, Salesforce, and calls, then submit in Salesforce once you approve.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sb434ef300dea2b88aa58",
+   "official": true
+  },
+  {
+   "id": "s98af8b9dcde521e1a9fa",
+   "name": "Pipeline Analyst",
+   "summary": "Walk into pipe with a clean view. Scrubs Salesforce + sheets, flags stalls and commit risk, and drops a Monday scoreboard.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s98af8b9dcde521e1a9fa",
+   "official": true
+  },
+  {
+   "id": "s8b59eb62f90871ac5c36",
+   "name": "Prospecting Plan Builder",
+   "summary": "Build the week's book of work. Seeds contacts, enriches email/mobile, and writes a ready-to-work tracker so outbound starts from a list.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s8b59eb62f90871ac5c36",
+   "official": true
+  },
+  {
+   "id": "s8ff03023f140bab479f7",
+   "name": "Sales Outbound",
+   "summary": "Researches accounts overnight, scores contacts on intent, drafts email and LinkedIn in your voice, and leaves it for review.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s8ff03023f140bab479f7",
+   "official": true
+  },
+  {
+   "id": "sa7d7f82d0068c2367a17",
+   "name": "Account Research Specialist",
+   "summary": "Tier accounts before you touch them. Pulls Salesforce + live signals, scores fit and warmth, and builds a shareable research pack per account.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sa7d7f82d0068c2367a17",
+   "official": true
+  },
+  {
+   "id": "s8173b3a9c49917de5b2d",
+   "name": "Sales Call Coach",
+   "summary": "Leave every call with homework. Reviews Gong calls and leaves timestamped coaching on discovery, objections, and executive presence, plus a call score.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s8173b3a9c49917de5b2d",
+   "official": true
+  },
+  {
+   "id": "SfQ0tzugVciSnJcrI8MMS",
+   "name": "Closer",
+   "summary": "Closer is a pitch practice partner and live-call wingwoman. Practice client or investor pitches against a tough, realistic prospect.",
+   "group": "sales",
+   "author": "Deana",
+   "handle": "",
+   "url": "https://x.ai/bot/SfQ0tzugVciSnJcrI8MMS",
+   "official": false
+  },
+  {
+   "id": "T_K_dEKP7QMFdj2KLx4DF",
+   "name": "Commission Auditor",
+   "summary": "For sales reps. It checks every commission statement against your deals and comp plan, catches underpayments and bad clawbacks.",
+   "group": "sales",
+   "author": "Berto",
+   "handle": "",
+   "url": "https://x.ai/bot/T_K_dEKP7QMFdj2KLx4DF",
+   "official": false
+  },
+  {
+   "id": "A1t0gfd8P4hbldi8swcem",
+   "name": "Contractor Front Desk",
+   "summary": "Sorts missed-call voicemails and web-form leads for home-services businesses into hot, warm, spam or existing job, and writes the reply.",
+   "group": "sales",
+   "author": "Thuong",
+   "handle": "teeRex247",
+   "url": "https://x.ai/bot/A1t0gfd8P4hbldi8swcem",
+   "official": false
+  },
+  {
+   "id": "YELCIJ_5UrbwjP-4pm_Fx",
+   "name": "HubSpot Helper",
+   "summary": "A HubSpot help desk that answers CRM, workflow, reporting and API questions with numbered steps checked against live HubSpot docs.",
+   "group": "sales",
+   "author": "Jon",
+   "handle": "TheJonMartin",
+   "url": "https://x.ai/bot/YELCIJ_5UrbwjP-4pm_Fx",
+   "official": false
+  },
+  {
+   "id": "5FNoKWQkY0voJsATKXfdx",
+   "name": "Lead Catcher",
+   "summary": "Weekday digest of Quo conversations with prospects that need a human response. Delivers by Slack or email with one-click Quo links.",
+   "group": "sales",
+   "author": "Daryna",
+   "handle": "darynakulya",
+   "url": "https://x.ai/bot/5FNoKWQkY0voJsATKXfdx",
+   "official": false
+  },
+  {
+   "id": "2bFnH8zBwS5Nj4R-5Wfcr",
+   "name": "Lead Scout",
+   "summary": "Finds local businesses with missing, broken or outdated websites, audits them with screenshots and Lighthouse.",
+   "group": "sales",
+   "author": "0xDaemon",
+   "handle": "",
+   "url": "https://x.ai/bot/2bFnH8zBwS5Nj4R-5Wfcr",
+   "official": false
+  },
+  {
+   "id": "nHDuTEJd3mC91rtLLPN0p",
+   "name": "Leads from Meta/Google Ads",
+   "summary": "Finds B2B leads that are actively advertising and stages a reviewable CRM import.",
+   "group": "sales",
+   "author": "Alexandre",
+   "handle": "aferrari",
+   "url": "https://x.ai/bot/nHDuTEJd3mC91rtLLPN0p",
+   "official": false
+  },
+  {
+   "id": "uGxaqcDRbn8cO4k-p3bAg",
+   "name": "Crankobot",
+   "summary": "Finds evidence-backed potential first customers, beta users, and design partners from public signals.",
+   "group": "sales",
+   "author": "kekko",
+   "handle": "Kappaemmedev",
+   "url": "https://x.ai/bot/uGxaqcDRbn8cO4k-p3bAg",
+   "official": false
+  },
+  {
+   "id": "u5KGTAihFddbb2qQxOtDh",
+   "name": "Customer Demand Bot",
+   "summary": "Finds public posts from people nearby who need your product or service once you set the category and distance.",
+   "group": "sales",
+   "author": "Dominic",
+   "handle": "",
+   "url": "https://x.ai/bot/u5KGTAihFddbb2qQxOtDh",
+   "official": false
+  },
+  {
+   "id": "s445a0c9a2ca4bea7729e",
+   "name": "Meeting Prep Buddy",
+   "summary": "Builds a prep pack from calendar, notes, CRM, Gong and Slack: who is in the room, last touch, and open threads.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s445a0c9a2ca4bea7729e",
+   "official": true
+  },
+  {
+   "id": "sdeb02761a9d185e5899f",
+   "name": "Compelling Events Monitor",
+   "summary": "Watches leadership posts for awards, launches and hiring signals, then digests the ones worth engaging with.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sdeb02761a9d185e5899f",
+   "official": true
+  },
+  {
+   "id": "s2a289081613e5e361c79",
+   "name": "Deck Updater",
+   "summary": "Leave the room with the slide already moving. Updates your deck from discovery notes mid-call or right after, with next steps baked in.",
+   "group": "sales",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s2a289081613e5e361c79",
+   "official": true
+  },
+  {
+   "id": "4KvT7CVIPLS35OwLuxcwQ",
+   "name": "Founder Growth Pilot",
+   "summary": "Finds targets and drafts personal notes; never sends without you.",
+   "group": "sales",
+   "author": "Guy",
+   "handle": "guysuter",
+   "url": "https://x.ai/bot/4KvT7CVIPLS35OwLuxcwQ",
+   "official": false
+  },
+  {
+   "id": "sa2d131975aaab07e43f2",
+   "name": "Competitive Intelligence Analyst",
+   "summary": "Monitors overnight for competitor launches and audits your own site for fatigued creative and stale messaging.",
+   "group": "marketing",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sa2d131975aaab07e43f2",
+   "official": true
+  },
+  {
+   "id": "s45471f3a8af234c13047",
+   "name": "Paid Media Creative Strategist",
+   "summary": "Spot early creative winners before they're obvious. Writes a sharp why-it-works hypothesis and proposes the next test. No invented metrics.",
+   "group": "marketing",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s45471f3a8af234c13047",
+   "official": true
+  },
+  {
+   "id": "s25997c2d0308b4e76024",
+   "name": "Presentation Designer",
+   "summary": "Builds on-brand decks from your master template and brand system, and hands back an editable link rather than a flat export.",
+   "group": "marketing",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s25997c2d0308b4e76024",
+   "official": true
+  },
+  {
+   "id": "sb6d579c33f7a32d0e7af",
+   "name": "SEO / AEO Auditor",
+   "summary": "Tracks keyword, technical, AI-prompt and competitor movement in one place, and flags the site issues worth fixing.",
+   "group": "marketing",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sb6d579c33f7a32d0e7af",
+   "official": true
+  },
+  {
+   "id": "s4d10d16bdbe2391aa753",
+   "name": "LinkedIn Campaign Manager",
+   "summary": "Own lead-gen funnel consistency across ads, forms, follow-up, and UTMs. Drafts campaigns for approval and keeps every offer and handoff clean.",
+   "group": "marketing",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s4d10d16bdbe2391aa753",
+   "official": true
+  },
+  {
+   "id": "se318a72a31fad75c277e",
+   "name": "Marketing Calendar Owner",
+   "summary": "Keep regional and global content, launch, and events calendars in sync. Pulls from Notion and keeps webinars and campaigns current without a weekly chase.",
+   "group": "marketing",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/se318a72a31fad75c277e",
+   "official": true
+  },
+  {
+   "id": "s59facc90a46a8b4f59da",
+   "name": "Paid Media",
+   "summary": "Pulls live channel and campaign data, Slacks a recommended reallocation against your monthly budget, and holds for your approval before making adjustments.",
+   "group": "marketing",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s59facc90a46a8b4f59da",
+   "official": true
+  },
+  {
+   "id": "IfXjrbqsCA2B_YG2hEzL5",
+   "name": "Business Builder",
+   "summary": "Helps you pick, launch, and grow a small business that fits your budget, time, and skills, starting with a scored list of ideas.",
+   "group": "marketing",
+   "author": "Jeremy",
+   "handle": "",
+   "url": "https://x.ai/bot/IfXjrbqsCA2B_YG2hEzL5",
+   "official": false
+  },
+  {
+   "id": "JjLTs-HzmZyOmhxef2k2l",
+   "name": "Documentation Expert",
+   "summary": "Drop a site, logo, or photo and get finished Figma brand guidelines.",
+   "group": "marketing",
+   "author": "Trent",
+   "handle": "TrentTullis",
+   "url": "https://x.ai/bot/JjLTs-HzmZyOmhxef2k2l",
+   "official": false
+  },
+  {
+   "id": "J4vRgDCnJcK5EaUUlP-FR",
+   "name": "Domain Scout",
+   "summary": "Finds brand-new domain names across .com, .ai, .io, .si, other country codes and newer endings, confirms they're free at the registry.",
+   "group": "marketing",
+   "author": "Kyle",
+   "handle": "",
+   "url": "https://x.ai/bot/J4vRgDCnJcK5EaUUlP-FR",
+   "official": false
+  },
+  {
+   "id": "4aOqWKFJvnz6yoQWlw-Jv",
+   "name": "Mídia",
+   "summary": "A Portuguese-language paid-media colleague that reads Meta Ads and Google Ads, checks tracking and delivers a diagnosis.",
+   "group": "marketing",
+   "author": "Simone",
+   "handle": "",
+   "url": "https://x.ai/bot/4aOqWKFJvnz6yoQWlw-Jv",
+   "official": false
+  },
+  {
+   "id": "d5LT4bI6GyWqBdGzzJyF1",
+   "name": "Personal Brand Ghostwriter",
+   "summary": "Every Monday it hands you LinkedIn post drafts that sound like you, built from your real week, plus a short note on what worked.",
+   "group": "marketing",
+   "author": "Cristopher",
+   "handle": "crisships",
+   "url": "https://x.ai/bot/d5LT4bI6GyWqBdGzzJyF1",
+   "official": false
+  },
+  {
+   "id": "46JFu0eOr47MvAOVwyyeG",
+   "name": "Radar",
+   "summary": "A monitor-only brand radar for X. Every weekday morning it sends Latest mentions, Trending topics in your space.",
+   "group": "marketing",
+   "author": "Jono",
+   "handle": "ibuildthings",
+   "url": "https://x.ai/bot/46JFu0eOr47MvAOVwyyeG",
+   "official": false
+  },
+  {
+   "id": "CErfCNSf3MzBG5CmGv9oi",
+   "name": "Maker's Map",
+   "summary": "For aspiring small business owners. A step-by-step mentor for new handmade and small makers selling on Etsy or Shopify.",
+   "group": "marketing",
+   "author": "SOCIETI",
+   "handle": "",
+   "url": "https://x.ai/bot/CErfCNSf3MzBG5CmGv9oi",
+   "official": false
+  },
+  {
+   "id": "s634cb1edf26493e86be2",
+   "name": "Social Media Manager",
+   "summary": "Studies your posting history, drafts when something noteworthy ships, and parks the post for you to publish.",
+   "group": "social",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s634cb1edf26493e86be2",
+   "official": true
+  },
+  {
+   "id": "zpd49S_sQMCx9QCTfN2wp",
+   "name": "Meme King",
+   "summary": "Makes still memes and GIFs from live X trends and news, plus a 3-5 meme morning drop. Never posts to X.",
+   "group": "social",
+   "author": "dogenorway",
+   "handle": "",
+   "url": "https://x.ai/bot/zpd49S_sQMCx9QCTfN2wp",
+   "official": false
+  },
+  {
+   "id": "umFdyDQrxEzzDNXfixMCB",
+   "name": "Algo Bot",
+   "summary": "Scores your top-level X posts every morning on how well their first line can reach strangers, and coaches you toward stronger hooks.",
+   "group": "social",
+   "author": "Pierce",
+   "handle": "",
+   "url": "https://x.ai/bot/umFdyDQrxEzzDNXfixMCB",
+   "official": false
+  },
+  {
+   "id": "Ah-lnPGveVo9pWWR2C50E",
+   "name": "Booker",
+   "summary": "Turns your X bookmarks into a clean, Pinterest-style card board on your own computer.",
+   "group": "social",
+   "author": "James",
+   "handle": "",
+   "url": "https://x.ai/bot/Ah-lnPGveVo9pWWR2C50E",
+   "official": false
+  },
+  {
+   "id": "KFiYfOzT3Vf_5BA1GwKCy",
+   "name": "Bookmark Brain",
+   "summary": "Turns your X bookmarks into a ranked to-do list you'll actually act on.",
+   "group": "social",
+   "author": "Bud",
+   "handle": "",
+   "url": "https://x.ai/bot/KFiYfOzT3Vf_5BA1GwKCy",
+   "official": false
+  },
+  {
+   "id": "1k1nfNzus_-WXY-nOYM2V",
+   "name": "Bookmark Miner",
+   "summary": "Mines your X bookmarks so nothing you saved goes to waste: every one gets Keep, Later, Library or Skip with a reason.",
+   "group": "social",
+   "author": "Ben",
+   "handle": "TheBmin",
+   "url": "https://x.ai/bot/1k1nfNzus_-WXY-nOYM2V",
+   "official": false
+  },
+  {
+   "id": "pXW6OPoZLJS4A8bZtW466",
+   "name": "Omni Scraper",
+   "summary": "Paste a link from YouTube, Reddit, LinkedIn, Threads, Instagram, TikTok or X and get the full public content back: text, author, stats.",
+   "group": "social",
+   "author": "天",
+   "handle": "",
+   "url": "https://x.ai/bot/pXW6OPoZLJS4A8bZtW466",
+   "official": false
+  },
+  {
+   "id": "5rZUrqJRbhct--M78hIWh",
+   "name": "Potetobot",
+   "summary": "Reads an expert's X posts every week, picks out the pro tips, and suggests how your team could put each one to use.",
+   "group": "social",
+   "author": "ChrisV.btc⚡",
+   "handle": "",
+   "url": "https://x.ai/bot/5rZUrqJRbhct--M78hIWh",
+   "official": false
+  },
+  {
+   "id": "37D-JCYGaKjoQQf0oXCt8",
+   "name": "Scribe",
+   "summary": "X livestream / replay note-taker with paste-ready highlight threads.",
+   "group": "social",
+   "author": "Code",
+   "handle": "CodeSolutionsIL",
+   "url": "https://x.ai/bot/37D-JCYGaKjoQQf0oXCt8",
+   "official": false
+  },
+  {
+   "id": "W_p8KaIOmeVwfc-jKRFyx",
+   "name": "ScrollSaver",
+   "summary": "Send it any Instagram reel, TikTok, story screenshot, blog or list, and it pins every place, tags it and remembers it for your next trip.",
+   "group": "social",
+   "author": "Darius",
+   "handle": "Dariusziai",
+   "url": "https://x.ai/bot/W_p8KaIOmeVwfc-jKRFyx",
+   "official": false
+  },
+  {
+   "id": "2IR-ABotGZ2crO8XoFYfc",
+   "name": "Sneaky Unfollowers Caught",
+   "summary": "Watches your X account and tells you each day who followed you back and who unfollowed you.",
+   "group": "social",
+   "author": "John",
+   "handle": "",
+   "url": "https://x.ai/bot/2IR-ABotGZ2crO8XoFYfc",
+   "official": false
+  },
+  {
+   "id": "2jelZnGWnAlhmvHFZOp1N",
+   "name": "LinkedIn Agent",
+   "summary": "A LinkedIn ghostwriter and networking assistant. It finds sourced topics in your lane, drafts posts and outreach in your voice.",
+   "group": "social",
+   "author": "Ryan",
+   "handle": "ryanthawks",
+   "url": "https://x.ai/bot/2jelZnGWnAlhmvHFZOp1N",
+   "official": false
+  },
+  {
+   "id": "wGDy1T5eobC1hjqFC9-PI",
+   "name": "X Mute Desk",
+   "summary": "Scans X mentions for hostile or spam replies and shows mute candidates.",
+   "group": "social",
+   "author": "RyanFox.eth",
+   "handle": "ryanfoxeth",
+   "url": "https://x.ai/bot/wGDy1T5eobC1hjqFC9-PI",
+   "official": false
+  },
+  {
+   "id": "ZchETiHIEo5BvllONepSI",
+   "name": "Profile Pro",
+   "summary": "Gives your X account a health score: red flags, security and shadowban checks, feed tuning and junk follows.",
+   "group": "social",
+   "author": "Robbie",
+   "handle": "community",
+   "url": "https://x.ai/bot/ZchETiHIEo5BvllONepSI",
+   "official": false
+  },
+  {
+   "id": "6HaU9IAwpe1vZwzYLD4S4",
+   "name": "Block Bot",
+   "summary": "Lists you are on and blocks likely report bots that spam your posts.",
+   "group": "social",
+   "author": "Bruce",
+   "handle": "",
+   "url": "https://x.ai/bot/6HaU9IAwpe1vZwzYLD4S4",
+   "official": false
+  },
+  {
+   "id": "B_WCQAMMbhkNU2r3r4YNO",
+   "name": "Content Calendar",
+   "summary": "Owns the cross-channel posting calendar only: slots, multi-day arcs, conflicts, and one post at a time.",
+   "group": "social",
+   "author": "ladybarrelmaker",
+   "handle": "",
+   "url": "https://x.ai/bot/B_WCQAMMbhkNU2r3r4YNO",
+   "official": false
+  },
+  {
+   "id": "SuQygIR-87wSS6D7aA5J0",
+   "name": "Builder Circle",
+   "summary": "Give it your X handle and it finds builders on X at your size and stage, in your language and topics, so you have real peers to talk to.",
+   "group": "social",
+   "author": "Khanh",
+   "handle": "",
+   "url": "https://x.ai/bot/SuQygIR-87wSS6D7aA5J0",
+   "official": false
+  },
+  {
+   "id": "puPDbZveO1FFvjCXERZoj",
+   "name": "Reply Radar",
+   "summary": "Finds fresh X posts on your topics worth replying to, whenever you ask or in a morning digest, and tells you why each one is worth it.",
+   "group": "social",
+   "author": "Taylor",
+   "handle": "",
+   "url": "https://x.ai/bot/puPDbZveO1FFvjCXERZoj",
+   "official": false
+  },
+  {
+   "id": "wMvNBAzsCA94-OsRIj7a8",
+   "name": "Independent Author Hub",
+   "summary": "Ops hub for indie authors coordinating site, newsletter, marketing calendar, and reader-lifecycle bots.",
+   "group": "content",
+   "author": "ladybarrelmaker",
+   "handle": "",
+   "url": "https://x.ai/bot/wMvNBAzsCA94-OsRIj7a8",
+   "official": false
+  },
+  {
+   "id": "s5d2839123b973b4480f9",
+   "name": "Newsletter Writer",
+   "summary": "Pulls what shipped from launches, wins and your calendar, writes the issue in your voice, and parks it for you to send.",
+   "group": "content",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s5d2839123b973b4480f9",
+   "official": true
+  },
+  {
+   "id": "m7pCHsfGP3uhviaEUDTvH",
+   "name": "Blog Bot",
+   "summary": "Learns brand from your site, publishes two blog posts a week; emails the link only after live.",
+   "group": "content",
+   "author": "Hugh",
+   "handle": "Hughbear54",
+   "url": "https://x.ai/bot/m7pCHsfGP3uhviaEUDTvH",
+   "official": false
+  },
+  {
+   "id": "36TtndSnwXMKwBZznHj28",
+   "name": "Draftkeeper",
+   "summary": "An author-controlled manuscript partner that diagnoses problems, triages reader feedback, plans approved revisions.",
+   "group": "content",
+   "author": "Jay",
+   "handle": "",
+   "url": "https://x.ai/bot/36TtndSnwXMKwBZznHj28",
+   "official": false
+  },
+  {
+   "id": "ZuWhuINjSeN1G_Rp8k7P9",
+   "name": "LaserCanon",
+   "summary": "Laser-focused writing coach for one scene or paragraph at a time.",
+   "group": "content",
+   "author": "WVWriter",
+   "handle": "",
+   "url": "https://x.ai/bot/ZuWhuINjSeN1G_Rp8k7P9",
+   "official": false
+  },
+  {
+   "id": "gt31Cad2_jY1FyjzhZ-WP",
+   "name": "Mystery Writer's Room",
+   "summary": "A writer's room for mystery and thriller authors: plotting, clues and red herrings, characters, pacing and dialogue.",
+   "group": "content",
+   "author": "Kristoffer",
+   "handle": "",
+   "url": "https://x.ai/bot/gt31Cad2_jY1FyjzhZ-WP",
+   "official": false
+  },
+  {
+   "id": "1kk1mjbJ1-jNMpK9aKz0T",
+   "name": "Prose Guard",
+   "summary": "Rewrites and scores your drafts so they read as human-written, modeled on writing you supply.",
+   "group": "content",
+   "author": "roger",
+   "handle": "",
+   "url": "https://x.ai/bot/1kk1mjbJ1-jNMpK9aKz0T",
+   "official": false
+  },
+  {
+   "id": "05wMUj_-QOR1l3f2bbXxA",
+   "name": "Quarto Blog Shipper",
+   "summary": "Ships your Quarto blog through pull requests: drafts posts in your voice, keeps them hidden until you approve.",
+   "group": "content",
+   "author": "Javier",
+   "handle": "",
+   "url": "https://x.ai/bot/05wMUj_-QOR1l3f2bbXxA",
+   "official": false
+  },
+  {
+   "id": "7dlHJhOl6IcZZB3EYQURn",
+   "name": "Unslop",
+   "summary": "A blunt red-pen editor that flags the signs of AI writing in your drafts, using Wikipedia's field guide.",
+   "group": "content",
+   "author": "Patrick",
+   "handle": "onpardev",
+   "url": "https://x.ai/bot/7dlHJhOl6IcZZB3EYQURn",
+   "official": false
+  },
+  {
+   "id": "icbDxOYQ_2Q-Ak8T7Fyo7",
+   "name": "Website Builder",
+   "summary": "Builds and publishes your personal website (bio, writing, press, bots, and contact pages) for free on Netlify and connects your own domain.",
+   "group": "content",
+   "author": "Heidi",
+   "handle": "",
+   "url": "https://x.ai/bot/icbDxOYQ_2Q-Ak8T7Fyo7",
+   "official": false
+  },
+  {
+   "id": "wIaZtsMnIKVEQOKTtImU5",
+   "name": "musebot",
+   "summary": "Creative muse for sparks, drafts, and keeping a writing thread alive.",
+   "group": "content",
+   "author": "8",
+   "handle": "clawddevs",
+   "url": "https://x.ai/bot/wIaZtsMnIKVEQOKTtImU5",
+   "official": false
+  },
+  {
+   "id": "s066a9145d936e74d0c80",
+   "name": "Internal Communications Manager",
+   "summary": "Draft clear, on-voice copy from your real context, matched to each audience and channel. Review-only so it never sends on its own.",
+   "group": "content",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s066a9145d936e74d0c80",
+   "official": true
+  },
+  {
+   "id": "mQUvX6PxUItMsH5rF2B7N",
+   "name": "Articulation Intelligence",
+   "summary": "Turns your rambles, voice dumps, and half-formed ideas into a clear, structured version someone else can understand and act on.",
+   "group": "content",
+   "author": "Christian",
+   "handle": "",
+   "url": "https://x.ai/bot/mQUvX6PxUItMsH5rF2B7N",
+   "official": false
+  },
+  {
+   "id": "YloFf7LEAy3GwFmXbu5vv",
+   "name": "Copy Editor",
+   "summary": "Paste any draft for X, LinkedIn, Facebook, or email and get back clean, paste-ready text, a short list of fixes.",
+   "group": "content",
+   "author": "Stephen",
+   "handle": "ArtJazd",
+   "url": "https://x.ai/bot/YloFf7LEAy3GwFmXbu5vv",
+   "official": false
+  },
+  {
+   "id": "ZdQiOLVGc2SMcKEo3HoxY",
+   "name": "Blog 2 Podcast",
+   "summary": "Paste any article link. Listen hands-free, word for word, in your language.",
+   "group": "video",
+   "author": "An",
+   "handle": "",
+   "url": "https://x.ai/bot/ZdQiOLVGc2SMcKEo3HoxY",
+   "official": false
+  },
+  {
+   "id": "EfBhh8nwpuGD0XNfl0eBI",
+   "name": "AvatarMaker",
+   "summary": "Generates and iterates avatar images for profiles and brands.",
+   "group": "video",
+   "author": "Andrew",
+   "handle": "Andrew51786",
+   "url": "https://x.ai/bot/EfBhh8nwpuGD0XNfl0eBI",
+   "official": false
+  },
+  {
+   "id": "LkEYwZpxRS4TVGXMFhEMf",
+   "name": "Bop Bot",
+   "summary": "Makes songs for you with Suno from a vibe or a topic, then downloads them as audio or vertical video and hands them off for sharing.",
+   "group": "video",
+   "author": "Patrick",
+   "handle": "onpardev",
+   "url": "https://x.ai/bot/LkEYwZpxRS4TVGXMFhEMf",
+   "official": false
+  },
+  {
+   "id": "6OpEFsd4cJgpIKH9y3I4K",
+   "name": "Botcast",
+   "summary": "Turns your X feed and lists into a short talk-radio-style podcast you can press play on, in the length and political leaning you choose.",
+   "group": "video",
+   "author": "Corey",
+   "handle": "",
+   "url": "https://x.ai/bot/6OpEFsd4cJgpIKH9y3I4K",
+   "official": false
+  },
+  {
+   "id": "QYL4wlIxzVr5tBpzZLCo0",
+   "name": "Character Reference Sheet",
+   "summary": "Turns one character image into a locked reference sheet and scene prompts that keep the character consistent across any image model.",
+   "group": "video",
+   "author": "Riddle",
+   "handle": "RiddleSphere",
+   "url": "https://x.ai/bot/QYL4wlIxzVr5tBpzZLCo0",
+   "official": false
+  },
+  {
+   "id": "6MmRZHFXNkFjwZZn9b3bv",
+   "name": "Clip Bot",
+   "summary": "Cuts cinematic, captioned 16:9 clips from podcasts and talks, with word-for-word synced captions and draft posts that tag guests naturally.",
+   "group": "video",
+   "author": "Darragh",
+   "handle": "",
+   "url": "https://x.ai/bot/6MmRZHFXNkFjwZZn9b3bv",
+   "official": false
+  },
+  {
+   "id": "-JDcJ_sKzuzK7JxO9GLQw",
+   "name": "Clipdesk",
+   "summary": "A creator's studio and clip assistant that works with the setup you already have.",
+   "group": "video",
+   "author": "Randall",
+   "handle": "CannaMuffinMan",
+   "url": "https://x.ai/bot/-JDcJ_sKzuzK7JxO9GLQw",
+   "official": false
+  },
+  {
+   "id": "ljqYGS3VUhvAf3WQbrgVZ",
+   "name": "Clipper",
+   "summary": "A clipping assistant for short-form creators. Every week it finds video segments you can import into your clipping tool.",
+   "group": "video",
+   "author": "TechEcho",
+   "handle": "techgent6",
+   "url": "https://x.ai/bot/ljqYGS3VUhvAf3WQbrgVZ",
+   "official": false
+  },
+  {
+   "id": "DqEVmbXRKLneHRrUihAfx",
+   "name": "Clipping Bot",
+   "summary": "Turns long-form video into short captioned clips with edit, export, and social copy, posting only after you approve.",
+   "group": "video",
+   "author": "OpusClip",
+   "handle": "stevenvan_",
+   "url": "https://x.ai/bot/DqEVmbXRKLneHRrUihAfx",
+   "official": false
+  },
+  {
+   "id": "FIi-EoU-jxY5Bo7Lp_EVa",
+   "name": "Content Engine",
+   "summary": "Turns a coach's or creator's weekly filming session into shorts, YouTube cuts, stills, and carousels in their own voice.",
+   "group": "video",
+   "author": "Eric",
+   "handle": "",
+   "url": "https://x.ai/bot/FIi-EoU-jxY5Bo7Lp_EVa",
+   "official": false
+  },
+  {
+   "id": "_YsPzOWgloE5X5Blh5ktB",
+   "name": "Cosmic Studio",
+   "summary": "Upload a song, describe your music video, and get a hand-drawn flipbook-style animated video synced to the lyrics.",
+   "group": "video",
+   "author": "Zerefs",
+   "handle": "",
+   "url": "https://x.ai/bot/_YsPzOWgloE5X5Blh5ktB",
+   "official": false
+  },
+  {
+   "id": "SnsO2P9lsQuCKg8xOXA9k",
+   "name": "Crux",
+   "summary": "Turns any Reel, YouTube, podcast clip, or video into a brutally concise brief of only what is worth knowing.",
+   "group": "video",
+   "author": "Bobby",
+   "handle": "BobbyBacklogs",
+   "url": "https://x.ai/bot/SnsO2P9lsQuCKg8xOXA9k",
+   "official": false
+  },
+  {
+   "id": "j7ZGmU3FhqpOAj0l2qXaQ",
+   "name": "Cue: VO Audition Coach",
+   "summary": "Cue is an audition coach and scout for voice actors and audiobook narrators.",
+   "group": "video",
+   "author": "Adrian",
+   "handle": "Adrian_Bisson",
+   "url": "https://x.ai/bot/j7ZGmU3FhqpOAj0l2qXaQ",
+   "official": false
+  },
+  {
+   "id": "vAy6K29DQMJJAlXbn_VmH",
+   "name": "Documentary Filmmaker",
+   "summary": "Turns any real subject into a short cinematic documentary: research, script, storyboard, narration, music, and a finished 1080p MP4.",
+   "group": "video",
+   "author": "Napoleon",
+   "handle": "",
+   "url": "https://x.ai/bot/vAy6K29DQMJJAlXbn_VmH",
+   "official": false
+  },
+  {
+   "id": "s5465ebb9e192551741f7",
+   "name": "Account Health",
+   "summary": "See risk and expansion before the QBR. Reads usage and signals across your book and turns portfolio noise into a clear watch list.",
+   "group": "support",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s5465ebb9e192551741f7",
+   "official": true
+  },
+  {
+   "id": "sfcf5d046a2784045938d",
+   "name": "Beta Adoption Watcher",
+   "summary": "See who's actually trying the new feature. Monitors usage and surfaces which customers are in, so the team can follow up.",
+   "group": "support",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sfcf5d046a2784045938d",
+   "official": true
+  },
+  {
+   "id": "s1025e1ebe0b11f048bd4",
+   "name": "Docs Auditor",
+   "summary": "Diffs the help center and internal notes against what actually shipped, flags stale pages, and drafts the fix.",
+   "group": "support",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s1025e1ebe0b11f048bd4",
+   "official": true
+  },
+  {
+   "id": "s229dcca5bc0eaa01b09c",
+   "name": "Feature Request Tracker",
+   "summary": "Never lose \"who asked for this.\" Mines Slack and calls into a living list tied to customers, so the spec has a real demand trail.",
+   "group": "support",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s229dcca5bc0eaa01b09c",
+   "official": true
+  },
+  {
+   "id": "s4c86a54f188668096400",
+   "name": "Renewal Desk Operator",
+   "summary": "Builds a 90-day pack per account from usage, tickets, calls and CRM, drafts the commercial note, and nudges the owner.",
+   "group": "support",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s4c86a54f188668096400",
+   "official": true
+  },
+  {
+   "id": "s7aaf6431077930df326f",
+   "name": "Ticket Triage Specialist",
+   "summary": "Clear the queue without living in it. Watches support on a cadence, drafts replies only, and stays quiet when it's clean.",
+   "group": "support",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s7aaf6431077930df326f",
+   "official": true
+  },
+  {
+   "id": "PMCHyvumlOdCFNRifTDJW",
+   "name": "Customer Support Idiot Buffer",
+   "summary": "Calls customer support for you via a voice bridge and steers mid-call from chat.",
+   "group": "support",
+   "author": "Mitchell",
+   "handle": "MitcelloRudoll",
+   "url": "https://x.ai/bot/PMCHyvumlOdCFNRifTDJW",
+   "official": false
+  },
+  {
+   "id": "ghYcuP9N4ymIYZeCZPoWO",
+   "name": "Support Reply Drafter",
+   "summary": "Drafts a short care reply from a pasted support ticket or customer email, for you to send.",
+   "group": "support",
+   "author": "Mike",
+   "handle": "DoonerDesigns_",
+   "url": "https://x.ai/bot/ghYcuP9N4ymIYZeCZPoWO",
+   "official": false
+  },
+  {
+   "id": "NIjIeUSpzESYUiJTmrAvm",
+   "name": "Customer Care",
+   "summary": "Handles refunds and disputes, drafts support messages.",
+   "group": "support",
+   "author": "Colin",
+   "handle": "ColinMcDermott",
+   "url": "https://x.ai/bot/NIjIeUSpzESYUiJTmrAvm",
+   "official": false
+  },
+  {
+   "id": "SeAX2ThEH5Qu8GloOB17C",
+   "name": "Customer Support Desk",
+   "summary": "Sorts your support inbox, drafts replies in your voice, builds an FAQ from repeat questions, and watches for churn signals.",
+   "group": "support",
+   "author": "Charles",
+   "handle": "",
+   "url": "https://x.ai/bot/SeAX2ThEH5Qu8GloOB17C",
+   "official": false
+  },
+  {
+   "id": "47iWfw0I5xxt6uPqKj52G",
+   "name": "Ticket Desk",
+   "summary": "Flags urgent support tickets, drafts replies from your docs, and turns gaps into help-article drafts; never sends.",
+   "group": "support",
+   "author": "Screaming",
+   "handle": "",
+   "url": "https://x.ai/bot/47iWfw0I5xxt6uPqKj52G",
+   "official": false
+  },
+  {
+   "id": "v1lSvhJCo4UrNGZxc5Fw8",
+   "name": "Customer Call Coach & Assistant",
+   "summary": "Briefs you before customer calls and coaches you after based on your performance.",
+   "group": "support",
+   "author": "",
+   "handle": "",
+   "url": "https://x.ai/bot/v1lSvhJCo4UrNGZxc5Fw8",
+   "official": false
+  },
+  {
+   "id": "GCS9cInMXDINawaevtN_J",
+   "name": "Client Onboarding Relay",
+   "summary": "Client Onboarding Relay maps how a new client gets from Paid to Form to Access to Done, based on what you describe.",
+   "group": "support",
+   "author": "Bosotter",
+   "handle": "",
+   "url": "https://x.ai/bot/GCS9cInMXDINawaevtN_J",
+   "official": false
+  },
+  {
+   "id": "O4O-eSE-awA97VPiwJokr",
+   "name": "Client Status Digest",
+   "summary": "Drafts a short client-facing status note from the progress, blockers, and next steps you paste.",
+   "group": "support",
+   "author": "Mike",
+   "handle": "DoonerDesigns_",
+   "url": "https://x.ai/bot/O4O-eSE-awA97VPiwJokr",
+   "official": false
+  },
+  {
+   "id": "scfddc8ad204a669484d0",
+   "name": "Hiring Screener",
+   "summary": "Interview the strong ones, not the whole pile. Scores applications or work samples against a defined bar and hands off an ATS-ready review.",
+   "group": "hiring",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/scfddc8ad204a669484d0",
+   "official": true
+  },
+  {
+   "id": "s9c881536413c0bbfa776",
+   "name": "Onboarding Manager",
+   "summary": "Builds the checklist, pulls the right docs, answers day-one questions, and routes anything else to whoever can answer.",
+   "group": "hiring",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s9c881536413c0bbfa776",
+   "official": true
+  },
+  {
+   "id": "sac3a109dfe021c555c7c",
+   "name": "Talent Scout",
+   "summary": "Runs screen-to-offer: sources candidates, drafts outreach in your voice, and skips anyone already in the ATS.",
+   "group": "hiring",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sac3a109dfe021c555c7c",
+   "official": true
+  },
+  {
+   "id": "x13dRczmg8ym5V7qBLUUH",
+   "name": "Hiring Phone Screen",
+   "summary": "Phone-screen hourly and crew applicants for small service businesses: fixed dial-in windows, unique job ids, and short voice questions from your packet.",
+   "group": "hiring",
+   "author": "John",
+   "handle": "Jshet05",
+   "url": "https://x.ai/bot/x13dRczmg8ym5V7qBLUUH",
+   "official": false
+  },
+  {
+   "id": "G9wjoXeBLVmjXb0adlkeU",
+   "name": "Job-Bolt Hiring Assistant",
+   "summary": "Turns a role into a private JobBolt first-round video interview with a job description, questions, and a candidate link.",
+   "group": "hiring",
+   "author": "Stefan",
+   "handle": "",
+   "url": "https://x.ai/bot/G9wjoXeBLVmjXb0adlkeU",
+   "official": false
+  },
+  {
+   "id": "wEugfzFNURno8LQzbdAOH",
+   "name": "Onboarding Guide Desk DAY-ONE",
+   "summary": "Sourced day-one, week-one and 30/60/90 onboarding from role docs.",
+   "group": "hiring",
+   "author": "Cypher",
+   "handle": "Cypher0x9",
+   "url": "https://x.ai/bot/wEugfzFNURno8LQzbdAOH",
+   "official": false
+  },
+  {
+   "id": "8CwqNTk5VBBhEAnTyUIHi",
+   "name": "Gong",
+   "summary": "Recruiter specialist that owns hiring execution end-to-end: job descriptions, board posts, candidate sourcing, outreach drafts.",
+   "group": "hiring",
+   "author": "Chuck",
+   "handle": "",
+   "url": "https://x.ai/bot/8CwqNTk5VBBhEAnTyUIHi",
+   "official": false
+  },
+  {
+   "id": "5_CLJlzTVfiV7VFEAfO2q",
+   "name": "Senior JD",
+   "summary": "For hiring managers and founders with a weak job post and an open senior role.",
+   "group": "hiring",
+   "author": "Sol",
+   "handle": "",
+   "url": "https://x.ai/bot/5_CLJlzTVfiV7VFEAfO2q",
+   "official": false
+  },
+  {
+   "id": "vIX2YW6rr6nQnf8-Rhyzc",
+   "name": "Talent Discovery",
+   "summary": "Finds candidates for open roles that match your criteria and aren't already in your ATS.",
+   "group": "hiring",
+   "author": "",
+   "handle": "",
+   "url": "https://x.ai/bot/vIX2YW6rr6nQnf8-Rhyzc",
+   "official": false
+  },
+  {
+   "id": "7pdRsSeKkooXL_2rk8M09",
+   "name": "High Five",
+   "summary": "Onboarding wizard for teams where each person has their own Grok Bot, with shared Notion and Google.",
+   "group": "hiring",
+   "author": "",
+   "handle": "",
+   "url": "https://x.ai/bot/7pdRsSeKkooXL_2rk8M09",
+   "official": false
+  },
+  {
+   "id": "Z8KXVKr9NSqUgpexNfBw7",
+   "name": "Claude + Codex Connector",
+   "summary": "Connect your Claude and ChatGPT subscriptions to all your Grok Bots.",
+   "group": "engineering",
+   "author": "Sushant",
+   "handle": "",
+   "url": "https://x.ai/bot/Z8KXVKr9NSqUgpexNfBw7",
+   "official": false
+  },
+  {
+   "id": "QmhN5Wk_fhaLnYk7LYwLC",
+   "name": "Design Assistant",
+   "summary": "A senior product design partner for designers and product teams: wireframes, HTML/CSS prototypes, UX writing, audits, IA diagrams, scoping.",
+   "group": "engineering",
+   "author": "Wil",
+   "handle": "",
+   "url": "https://x.ai/bot/QmhN5Wk_fhaLnYk7LYwLC",
+   "official": false
+  },
+  {
+   "id": "s2d62197e15bd11a1bd63",
+   "name": "Bug Reproduction",
+   "summary": "Picks up the thread, clicks the same path in staging, captures the failure, and files a repro pack engineers can trust.",
+   "group": "engineering",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s2d62197e15bd11a1bd63",
+   "official": true
+  },
+  {
+   "id": "s6d5f1cc3a564c8da972a",
+   "name": "Product Performance",
+   "summary": "Logs into your observability tools, walks the flamegraphs, and comes back with hotspots plus a short writeup.",
+   "group": "engineering",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s6d5f1cc3a564c8da972a",
+   "official": true
+  },
+  {
+   "id": "s2e4acfb8db3cc0669a1b",
+   "name": "Prototype Builder",
+   "summary": "Go from ask to something clickable fast. Writes on its computer and comes back with a screenshot plus a live URL.",
+   "group": "engineering",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s2e4acfb8db3cc0669a1b",
+   "official": true
+  },
+  {
+   "id": "s1bde25ba45eca88ff276",
+   "name": "Security Questionnaire Filler",
+   "summary": "Logs into vendor security portals, pulls answers from your trust center and past RFPs, and drafts every field for review.",
+   "group": "engineering",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s1bde25ba45eca88ff276",
+   "official": true
+  },
+  {
+   "id": "s2cfcbb8a38b8e22b7d18",
+   "name": "Playtest Operator",
+   "summary": "Brute-force test the product path when APIs aren't enough. Drives the UI on a computer, captures failures, and returns a tight findings pack.",
+   "group": "engineering",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s2cfcbb8a38b8e22b7d18",
+   "official": true
+  },
+  {
+   "id": "bMpYhKvs4LJbTJyvS1IvO",
+   "name": "BYO Mailbox",
+   "summary": "Sets up an email address on your own domain for your bots with Cloudflare and the open-source cf-mail-mcp Worker.",
+   "group": "engineering",
+   "author": "Ion",
+   "handle": "ipwanciu",
+   "url": "https://x.ai/bot/bMpYhKvs4LJbTJyvS1IvO",
+   "official": false
+  },
+  {
+   "id": "G3Du-G9_8zTwynr6sl9Z2",
+   "name": "Backup Bot",
+   "summary": "Backs up your bot's computer to Google Drive or OneDrive every night and tests a restore weekly, so a reset never wipes your work.",
+   "group": "engineering",
+   "author": "Andres",
+   "handle": "",
+   "url": "https://x.ai/bot/G3Du-G9_8zTwynr6sl9Z2",
+   "official": false
+  },
+  {
+   "id": "kirfUmwjDqdygGRZ1649k",
+   "name": "Bot Lock Security Desk",
+   "summary": "Audits your AI agents' tools, secrets and permissions, writes a deny-by-default policy and helps you install free open-source guardrails.",
+   "group": "engineering",
+   "author": "Daniel",
+   "handle": "",
+   "url": "https://x.ai/bot/kirfUmwjDqdygGRZ1649k",
+   "official": false
+  },
+  {
+   "id": "ThxY2BewUlyeEsywSdz4h",
+   "name": "Bridge Bot",
+   "summary": "Puts your AIs (Grok, ChatGPT, Gemini, Claude, Copilot) on one private GitHub repo so they share the same files and notes.",
+   "group": "engineering",
+   "author": "Calix",
+   "handle": "",
+   "url": "https://x.ai/bot/ThxY2BewUlyeEsywSdz4h",
+   "official": false
+  },
+  {
+   "id": "1h-5qyBL3Pqkz3CplXpri",
+   "name": "Claude Code Bot",
+   "summary": "Moves your bot's code work from Cursor cloud agents to Claude Code.",
+   "group": "engineering",
+   "author": "Carlos",
+   "handle": "",
+   "url": "https://x.ai/bot/1h-5qyBL3Pqkz3CplXpri",
+   "official": false
+  },
+  {
+   "id": "fr9HmL9bHAC2kjyi1dI6C",
+   "name": "Claude Local",
+   "summary": "Routes coding asks through Claude Code on your Mac for one GitHub repo via Remote Control setup.",
+   "group": "engineering",
+   "author": "Seth",
+   "handle": "SethBuildsAI",
+   "url": "https://x.ai/bot/fr9HmL9bHAC2kjyi1dI6C",
+   "official": false
+  },
+  {
+   "id": "HdN8nshqGbNy_Le0fSi_6",
+   "name": ".mail",
+   "summary": "Gives your Grok Bot its own email inbox: an optional morning digest, smart sorting, reply drafts you approve before anything sends.",
+   "group": "engineering",
+   "author": "greedfi",
+   "handle": "",
+   "url": "https://x.ai/bot/HdN8nshqGbNy_Le0fSi_6",
+   "official": false
+  },
+  {
+   "id": "VXROxGhxgARRuPLwrlixB",
+   "name": "App Builder",
+   "summary": "Builds personal web apps like food, workout, and habit trackers that run on your phone.",
+   "group": "engineering",
+   "author": "Jenna",
+   "handle": "",
+   "url": "https://x.ai/bot/VXROxGhxgARRuPLwrlixB",
+   "official": false
+  },
+  {
+   "id": "Buj11K_Jh_r2e8hVpeIKN",
+   "name": "Cloudflare Ops",
+   "summary": "A read-only Cloudflare watch for people who run several zones: a daily health report, spike alerts, WAF/threat review, credit tracking.",
+   "group": "engineering",
+   "author": "Yair",
+   "handle": "",
+   "url": "https://x.ai/bot/Buj11K_Jh_r2e8hVpeIKN",
+   "official": false
+  },
+  {
+   "id": "pYdKDyNIZLhGo5HQgwRhD",
+   "name": "Cloudflare Worker Health Bot",
+   "summary": "Watches your Cloudflare Workers for errors, exception spikes, and failed production builds or deploys.",
+   "group": "engineering",
+   "author": "Jono",
+   "handle": "ibuildthings",
+   "url": "https://x.ai/bot/pYdKDyNIZLhGo5HQgwRhD",
+   "official": false
+  },
+  {
+   "id": "ZNhFnMcPTQQDn3uLXbffi",
+   "name": "Contractor Daily",
+   "summary": "Turns jobsite photos and notes into a clean daily business packet; nothing sends without your OK.",
+   "group": "finance-ops",
+   "author": "Openminded187",
+   "handle": "",
+   "url": "https://x.ai/bot/ZNhFnMcPTQQDn3uLXbffi",
+   "official": false
+  },
+  {
+   "id": "4eBChIDapQamp6uQJwhAk",
+   "name": "SOW Interviewer",
+   "summary": "Interview a client to draft a Statement of Work outline , draft-only packet in this chat; never emails or sends the SOW without your yes.",
+   "group": "finance-ops",
+   "author": "Mike",
+   "handle": "",
+   "url": "https://x.ai/bot/4eBChIDapQamp6uQJwhAk",
+   "official": false
+  },
+  {
+   "id": "sd358e6cf5e8bed188eec",
+   "name": "Contract Desk",
+   "summary": "See the week of paper at a glance. Summarizes by stage and owner, pulls key terms, and flags blocked reviews.",
+   "group": "finance-ops",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sd358e6cf5e8bed188eec",
+   "official": true
+  },
+  {
+   "id": "s50bb9361d891bd788a23",
+   "name": "Expense Manager",
+   "summary": "Builds the weekly summary from your expense tool and sheets, logs receipts arriving by email, and chases missing ones.",
+   "group": "finance-ops",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s50bb9361d891bd788a23",
+   "official": true
+  },
+  {
+   "id": "s98a7368e786130ad172b",
+   "name": "Vendor Portal Operator",
+   "summary": "Run renewals, seats, and procurement on portals with no clean API. Clicks the same path every week and comes back with exceptions only.",
+   "group": "finance-ops",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s98a7368e786130ad172b",
+   "official": true
+  },
+  {
+   "id": "s072bae9387b9fc03cac8",
+   "name": "Invoice Coordinator",
+   "summary": "Stops invoices sitting. Forwards them, matches what it can, tracks campus and vendor actuals, and nudges the owner when something needs a human.",
+   "group": "finance-ops",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s072bae9387b9fc03cac8",
+   "official": true
+  },
+  {
+   "id": "uCSg2OyTimRoBIDrydymy",
+   "name": "Bid Desk",
+   "summary": "Reads an RFQ or bid package and pulls out what matters: your scope, due date, addenda, bid form requirements, and gaps.",
+   "group": "finance-ops",
+   "author": "Andrew",
+   "handle": "LGD950003",
+   "url": "https://x.ai/bot/uCSg2OyTimRoBIDrydymy",
+   "official": false
+  },
+  {
+   "id": "0bB3vRv_SnY73_E0PVsMB",
+   "name": "BidBot",
+   "summary": "Finds government bids you can win, scores each for fit, shows what it takes, and tracks deadlines, awards and renewals.",
+   "group": "finance-ops",
+   "author": "MythIII",
+   "handle": "iii_myth",
+   "url": "https://x.ai/bot/0bB3vRv_SnY73_E0PVsMB",
+   "official": false
+  },
+  {
+   "id": "TlgFUI0v3nXXmOmMdvGvR",
+   "name": "Billing Clerk",
+   "summary": "A careful billing clerk for independent contractors, consultants, and production crews.",
+   "group": "finance-ops",
+   "author": "Bk",
+   "handle": "CoCaptive",
+   "url": "https://x.ai/bot/TlgFUI0v3nXXmOmMdvGvR",
+   "official": false
+  },
+  {
+   "id": "CrRvSjE9QTGDd_cWC6KEH",
+   "name": "Buchhaltung Sevdesk/Datev",
+   "summary": "Bookkeeping for German companies on sevDesk: collects invoices from mail and folders and books them with the right account and tax rule.",
+   "group": "finance-ops",
+   "author": "Michael",
+   "handle": "MichaelAntonF",
+   "url": "https://x.ai/bot/CrRvSjE9QTGDd_cWC6KEH",
+   "official": false
+  },
+  {
+   "id": "J_fIC4VKMLmT6inJRIO4e",
+   "name": "Chief of Legal Staff",
+   "summary": "For litigation firms: a Chief of Legal Staff that supervises the firm's other bots, routes handoffs.",
+   "group": "finance-ops",
+   "author": "Suyash",
+   "handle": "suyashverma",
+   "url": "https://x.ai/bot/J_fIC4VKMLmT6inJRIO4e",
+   "official": false
+  },
+  {
+   "id": "Vd7b6O6CD2NfAhjDvCga0",
+   "name": "Forms Counsel",
+   "summary": "Drafts reusable legal form templates (contracts, notices, policies) for your review.",
+   "group": "finance-ops",
+   "author": "Marshall",
+   "handle": "MarshallMoorman",
+   "url": "https://x.ai/bot/Vd7b6O6CD2NfAhjDvCga0",
+   "official": false
+  },
+  {
+   "id": "HHoMGHnkrubRG_TIqcoSV",
+   "name": "Health & Safety Manager",
+   "summary": "A practical health and safety manager for owners, managers and supervisors.",
+   "group": "finance-ops",
+   "author": "Ryan",
+   "handle": "RyanMallin",
+   "url": "https://x.ai/bot/HHoMGHnkrubRG_TIqcoSV",
+   "official": false
+  },
+  {
+   "id": "sde2c69536d2f2564fe1b",
+   "name": "Status Report Writer",
+   "summary": "Own the to-do so nothing slips. Pulls open action items from docs, meetings, and Slack into one living list and a morning digest.",
+   "group": "inbox",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sde2c69536d2f2564fe1b",
+   "official": true
+  },
+  {
+   "id": "GF1rQBwR1S29YxNRIvZyU",
+   "name": "Newsletter Reading Queue",
+   "summary": "Weekday rank of newsletter and digest mail into read / skim / skip with one-line takeaways.",
+   "group": "inbox",
+   "author": "Mike",
+   "handle": "DoonerDesigns_",
+   "url": "https://x.ai/bot/GF1rQBwR1S29YxNRIvZyU",
+   "official": false
+  },
+  {
+   "id": "s634fd63ee875502d8df9",
+   "name": "Calendar Coordinator",
+   "summary": "Get people in the same room. Schedules across calendars and chases the holds nobody else has time to chase.",
+   "group": "inbox",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s634fd63ee875502d8df9",
+   "official": true
+  },
+  {
+   "id": "sc0a0ec3ce9c675824106",
+   "name": "Chief of Staff",
+   "summary": "Scans Slack, email, calendar and meeting notes, then reads out what is new and what maps to your own goals.",
+   "group": "inbox",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sc0a0ec3ce9c675824106",
+   "official": true
+  },
+  {
+   "id": "s4f048c7b7da9e010c2c3",
+   "name": "Inbox Manager",
+   "summary": "Triages the inbox into categories, surfaces urgent and blocked threads, and drafts replies. Every send waits for you.",
+   "group": "inbox",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/s4f048c7b7da9e010c2c3",
+   "official": true
+  },
+  {
+   "id": "AV-H-fDaAqHZ2JFsNe9ZY",
+   "name": "Appointment Booker",
+   "summary": "Books appointments onto your calendar from incoming requests, so your schedule fills while you work.",
+   "group": "inbox",
+   "author": "News",
+   "handle": "NewsGurus",
+   "url": "https://x.ai/bot/AV-H-fDaAqHZ2JFsNe9ZY",
+   "official": false
+  },
+  {
+   "id": "CqQQXo05k79ukSLCubxfj",
+   "name": "Chuck",
+   "summary": "Unsubscribes from promotional email so the inbox mostly keeps personal mail and real work.",
+   "group": "inbox",
+   "author": "Veetharag",
+   "handle": "",
+   "url": "https://x.ai/bot/CqQQXo05k79ukSLCubxfj",
+   "official": false
+  },
+  {
+   "id": "HoTdd2YekB-DPaAthBkuZ",
+   "name": "Cleo",
+   "summary": "An AI phone operator built on xAI's Voice Agent Builder. Answers your line, takes messages, books your calendar.",
+   "group": "inbox",
+   "author": "Hector",
+   "handle": "",
+   "url": "https://x.ai/bot/HoTdd2YekB-DPaAthBkuZ",
+   "official": false
+  },
+  {
+   "id": "o1i1t2DhvfahqIlO5o1gd",
+   "name": "Clock",
+   "summary": "Clock is an AI calendar assistant that replaces Clockwise. It finds meeting times, protects focus time, moves flexible meetings.",
+   "group": "inbox",
+   "author": "Naoufal",
+   "handle": "naoufal_elh",
+   "url": "https://x.ai/bot/o1i1t2DhvfahqIlO5o1gd",
+   "official": false
+  },
+  {
+   "id": "-GucfzHVWJljNVuyWjFSE",
+   "name": "Comms Secretary",
+   "summary": "Keeps your Gmail Spam folder clear and sends you a weekday priority digest of revenue and communications mail.",
+   "group": "inbox",
+   "author": "AlexSGabor",
+   "handle": "TheInfinitvov",
+   "url": "https://x.ai/bot/-GucfzHVWJljNVuyWjFSE",
+   "official": false
+  },
+  {
+   "id": "vBIp-NWoTncOR8BQq5jqs",
+   "name": "Daily Desk",
+   "summary": "Personal admin co-pilot that drafts calendar, notes, and email moves and waits for your OK before anything is sent or changed.",
+   "group": "inbox",
+   "author": "BramForge",
+   "handle": "",
+   "url": "https://x.ai/bot/vBIp-NWoTncOR8BQq5jqs",
+   "official": false
+  },
+  {
+   "id": "E9fQj_z8gnmjS6bYcfK8D",
+   "name": "Deep Value Season",
+   "summary": "Verdict, async update, and polite decline for calendar invites.",
+   "group": "inbox",
+   "author": "Anon",
+   "handle": "GuntherD45",
+   "url": "https://x.ai/bot/E9fQj_z8gnmjS6bYcfK8D",
+   "official": false
+  },
+  {
+   "id": "sf813cbd3aadad1cfda46",
+   "name": "Executive Assistant",
+   "summary": "Delivers a morning briefing, plus an automatic catch-up summary whenever you join a new room.",
+   "group": "inbox",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sf813cbd3aadad1cfda46",
+   "official": true
+  },
+  {
+   "id": "R426aIhME68m8-MOd_zPd",
+   "name": "MediaDeconstructor",
+   "summary": "Media deconstructor for a URL, X post, or clip: stamped facts, story shape, sources, and lazy-summary traps.",
+   "group": "research",
+   "author": "Decibel",
+   "handle": "nw_great",
+   "url": "https://x.ai/bot/R426aIhME68m8-MOd_zPd",
+   "official": false
+  },
+  {
+   "id": "sb94d44175e650dbb703e",
+   "name": "Daily Briefing Writer",
+   "summary": "Start the day with high quality inputs instead of noise. Delivers a tight daily brief of only the stories that matter to you.",
+   "group": "research",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sb94d44175e650dbb703e",
+   "official": true
+  },
+  {
+   "id": "U7OJP_oa9n0ygDKp2Dlex",
+   "name": "AI Repo Scout",
+   "summary": "Posts the top trending AI repos on GitHub every few days, with real star counts and one plain line on each.",
+   "group": "research",
+   "author": "Yannis",
+   "handle": "",
+   "url": "https://x.ai/bot/U7OJP_oa9n0ygDKp2Dlex",
+   "official": false
+  },
+  {
+   "id": "KH4AcBoSDzeG-Dq17TssF",
+   "name": "AI Digest Educator",
+   "summary": "Personal AI educator. Nightly frontier AI digest with optional Kindle delivery.",
+   "group": "research",
+   "author": "Anthony",
+   "handle": "FELIXCATanzaro",
+   "url": "https://x.ai/bot/KH4AcBoSDzeG-Dq17TssF",
+   "official": false
+  },
+  {
+   "id": "Bq32qipTNJR5ab-XgKRnm",
+   "name": "AI Vendor News Tracker",
+   "summary": "Tracks AI vendors twice a day for new models, perks like free credits and usage resets, and important service news.",
+   "group": "research",
+   "author": "Neo",
+   "handle": "NeoIsshinay",
+   "url": "https://x.ai/bot/Bq32qipTNJR5ab-XgKRnm",
+   "official": false
+  },
+  {
+   "id": "2PNeMjcwaxFAGgemj5TDA",
+   "name": "Change Log",
+   "summary": "Keeps you up to date on Grok Bot and Cursor. Sends a short daily digest of official updates with source links, marks rumours clearly.",
+   "group": "research",
+   "author": "Dan",
+   "handle": "",
+   "url": "https://x.ai/bot/2PNeMjcwaxFAGgemj5TDA",
+   "official": false
+  },
+  {
+   "id": "18ceCocmLssbw59nEPwhr",
+   "name": "Civic Radar",
+   "summary": "Neighborhood change radar that maps permits, 311 requests, agendas, registries, and site plans.",
+   "group": "research",
+   "author": "Chris",
+   "handle": "",
+   "url": "https://x.ai/bot/18ceCocmLssbw59nEPwhr",
+   "official": false
+  },
+  {
+   "id": "ua84QLSyppS1ngsd3q3Dc",
+   "name": "Daily News Finder",
+   "summary": "Sends you a short morning news page every day covering top news, business, your industry, tech and your local area.",
+   "group": "research",
+   "author": "Brian",
+   "handle": "",
+   "url": "https://x.ai/bot/ua84QLSyppS1ngsd3q3Dc",
+   "official": false
+  },
+  {
+   "id": "0l58XqOBeJ7h7QUiEQ54x",
+   "name": "GoodNews",
+   "summary": "Warm morning and evening digest of real good news on science, kindness, recoveries, and communities.",
+   "group": "research",
+   "author": "Joey",
+   "handle": "",
+   "url": "https://x.ai/bot/0l58XqOBeJ7h7QUiEQ54x",
+   "official": false
+  },
+  {
+   "id": "2ckVI9ItA5Yd6dP55iuBl",
+   "name": "Literature Watcher",
+   "summary": "Posts a weekday digest of new papers in your medical specialty, pulled from journals and PubMed, and learns from your +/- votes.",
+   "group": "research",
+   "author": "MadNeurons",
+   "handle": "MadtownJA",
+   "url": "https://x.ai/bot/2ckVI9ItA5Yd6dP55iuBl",
+   "official": false
+  },
+  {
+   "id": "fikscKtQ-EYcDksv-L6dW",
+   "name": "Market Intelligence",
+   "summary": "Tracks what people are talking about on X, Reddit, Hacker News, and the news.",
+   "group": "research",
+   "author": "Avid",
+   "handle": "Av1dlive",
+   "url": "https://x.ai/bot/fikscKtQ-EYcDksv-L6dW",
+   "official": false
+  },
+  {
+   "id": "7L8cVHdWwgbgeOOa_19QD",
+   "name": "Model News",
+   "summary": "Follows AI model launches, new developer and AI tools, and major tech news, and sends you a short daily digest with official links.",
+   "group": "research",
+   "author": "Mario",
+   "handle": "kleosrr",
+   "url": "https://x.ai/bot/7L8cVHdWwgbgeOOa_19QD",
+   "official": false
+  },
+  {
+   "id": "UcazP9A_LRigoW9b06QRo",
+   "name": "Plainwrap",
+   "summary": "Plain-English digest editor that turns dense input into something most people can follow.",
+   "group": "research",
+   "author": "Code",
+   "handle": "",
+   "url": "https://x.ai/bot/UcazP9A_LRigoW9b06QRo",
+   "official": false
+  },
+  {
+   "id": "dQ8JxqzhilCrrT4cVqhXo",
+   "name": "Prince",
+   "summary": "A legal research guide. Looks up city, county, state, and federal law from official sources, and never invents a holding.",
+   "group": "research",
+   "author": "Sentinel",
+   "handle": "TRV_Architech",
+   "url": "https://x.ai/bot/dQ8JxqzhilCrrT4cVqhXo",
+   "official": false
+  },
+  {
+   "id": "y5-ZCG-aVvy6dfS5hmyo5",
+   "name": "Research Manager",
+   "summary": "A research manager for a small product company. Finds and grades sources, fact-checks claims, writes deep-dive memos, builds prospect lists.",
+   "group": "research",
+   "author": "Sultan",
+   "handle": "",
+   "url": "https://x.ai/bot/y5-ZCG-aVvy6dfS5hmyo5",
+   "official": false
+  },
+  {
+   "id": "pzKMY9GWZ__lzWBmzp7DB",
+   "name": "Renewal Watch",
+   "summary": "Weekday scan of your inbox for subscription renewal and trial-ending notices: short keep-or-cancel decision list.",
+   "group": "money",
+   "author": "Mike",
+   "handle": "DoonerDesigns_",
+   "url": "https://x.ai/bot/pzKMY9GWZ__lzWBmzp7DB",
+   "official": false
+  },
+  {
+   "id": "-A5GzkqCGxtedkKF_I9CK",
+   "name": "Taxx",
+   "summary": "U.S. federal income tax estimator for 2025 and 2026.",
+   "group": "money",
+   "author": "GreenbarSystems",
+   "handle": "RyanGBsystems",
+   "url": "https://x.ai/bot/-A5GzkqCGxtedkKF_I9CK",
+   "official": false
+  },
+  {
+   "id": "lrfOm6cAxsGQtO4eRRS8Q",
+   "name": "CRA Tax Helper",
+   "summary": "Helps Canadians get ready for their CRA tax return, keeping T4s, side-business income, receipts, and deadlines organized all year.",
+   "group": "money",
+   "author": "WorldWideVibes",
+   "handle": "",
+   "url": "https://x.ai/bot/lrfOm6cAxsGQtO4eRRS8Q",
+   "official": false
+  },
+  {
+   "id": "sb36667ce9e1fdc00cfe7",
+   "name": "Subscription Cleaner",
+   "summary": "Cut the noise you forgot about. Collates receipt and newsletter mail, suggests what to kill, and unsubscribes what you approve.",
+   "group": "money",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sb36667ce9e1fdc00cfe7",
+   "official": true
+  },
+  {
+   "id": "6Wj9I0x3isY9ebhadg9rW",
+   "name": "Bill Cutter",
+   "summary": "Upload a household bill: it finds the price to ask for and writes the retention call script and chat message, with dated competitor prices.",
+   "group": "money",
+   "author": "Thuong",
+   "handle": "teeRex247",
+   "url": "https://x.ai/bot/6Wj9I0x3isY9ebhadg9rW",
+   "official": false
+  },
+  {
+   "id": "SJf7XEUBe8pDJEiXyx01R",
+   "name": "Bill Watch",
+   "summary": "Weekly digest of bills and subscriptions spotted in Gmail. Alerts on amounts you care about. Never pays or checks out.",
+   "group": "money",
+   "author": "Anthony",
+   "handle": "AnthonyDo",
+   "url": "https://x.ai/bot/SJf7XEUBe8pDJEiXyx01R",
+   "official": false
+  },
+  {
+   "id": "GzwwJyunonmG3IJTg9mc-",
+   "name": "Cash Flow Forecaster",
+   "summary": "Connects to your bank, YNAB, QuickBooks, Xero, Stripe, and more, or any CSV export, and charts your cash balance 30 days to 1 year ahead.",
+   "group": "money",
+   "author": "Chets",
+   "handle": "SondagarChetan",
+   "url": "https://x.ai/bot/GzwwJyunonmG3IJTg9mc-",
+   "official": false
+  },
+  {
+   "id": "k3-TuPGQzUVKtnjYNWji0",
+   "name": "Claim Starter Pack",
+   "summary": "Insurance claim starter: timeline, docs checklist, draft narrative.",
+   "group": "money",
+   "author": "Andy",
+   "handle": "yandymccutcheon",
+   "url": "https://x.ai/bot/k3-TuPGQzUVKtnjYNWji0",
+   "official": false
+  },
+  {
+   "id": "MY7NJmE2egN-855ZN6vSh",
+   "name": "Finance Bot",
+   "summary": "Tracks your income and spending from linked accounts, turns a savings goal into weekly targets and month-end checkpoints.",
+   "group": "money",
+   "author": "Lord",
+   "handle": "lmickyd",
+   "url": "https://x.ai/bot/MY7NJmE2egN-855ZN6vSh",
+   "official": false
+  },
+  {
+   "id": "eIicxWVI6dT6IOHrUDO8h",
+   "name": "Ledger",
+   "summary": "A read-only personal finance watchdog that watches your bank, cards, and bills email, flags odd charges and upcoming bills, chases refunds.",
+   "group": "money",
+   "author": "Serg",
+   "handle": "",
+   "url": "https://x.ai/bot/eIicxWVI6dT6IOHrUDO8h",
+   "official": false
+  },
+  {
+   "id": "HMulFzI65ogte12VwKMUv",
+   "name": "Lost Money Finder",
+   "summary": "Finds money that's already yours, like unclaimed property, class-action settlements, old retirement accounts, and refunds.",
+   "group": "money",
+   "author": "Jose",
+   "handle": "",
+   "url": "https://x.ai/bot/HMulFzI65ogte12VwKMUv",
+   "official": false
+  },
+  {
+   "id": "wz4b-a6XMoCi7zDqVpLkS",
+   "name": "MONEYBOT",
+   "summary": "A personal money assistant that tracks your spending against a monthly budget, watches your accounts for anything unexpected.",
+   "group": "money",
+   "author": "Dina",
+   "handle": "",
+   "url": "https://x.ai/bot/wz4b-a6XMoCi7zDqVpLkS",
+   "official": false
+  },
+  {
+   "id": "vyAGsd2VgoZjCp00GiIxS",
+   "name": "Medical Bill Fighter",
+   "summary": "Checks your medical bill against your EOB and policy, flags likely errors and denials worth appealing.",
+   "group": "money",
+   "author": "Chris",
+   "handle": "",
+   "url": "https://x.ai/bot/vyAGsd2VgoZjCp00GiIxS",
+   "official": false
+  },
+  {
+   "id": "1mlidqIzTsJ7oLKbyyCgd",
+   "name": "Money Coach",
+   "summary": "Your free money coach: build a budget, kill sneaky subscriptions, crush debt, and find money you're owed.",
+   "group": "money",
+   "author": "Stack",
+   "handle": "StackSmartTV",
+   "url": "https://x.ai/bot/1mlidqIzTsJ7oLKbyyCgd",
+   "official": false
+  },
+  {
+   "id": "aDCypdpubEzCy_lvlLu3-",
+   "name": "Personal CFO",
+   "summary": "A read-only personal CFO that links your accounts through Plaid and keeps your net worth, allocation, cash flow, debts and alerts current.",
+   "group": "money",
+   "author": "Peter",
+   "handle": "peteoconnell",
+   "url": "https://x.ai/bot/aDCypdpubEzCy_lvlLu3-",
+   "official": false
+  },
+  {
+   "id": "52zBHdCfXGomXQlGQcLOc",
+   "name": "Atomic Habits",
+   "summary": "Atomic Habits companion that applies the Four Laws in your own words without chapter dumps.",
+   "group": "health",
+   "author": "Joe",
+   "handle": "",
+   "url": "https://x.ai/bot/52zBHdCfXGomXQlGQcLOc",
+   "official": false
+  },
+  {
+   "id": "SR14quBvqUyS-K0DqlDL8",
+   "name": "Doctor.mD",
+   "summary": "Evidence-based longevity and wellness guidance for busy professionals and families.",
+   "group": "health",
+   "author": "Pete",
+   "handle": "GCAgenticSystem",
+   "url": "https://x.ai/bot/SR14quBvqUyS-K0DqlDL8",
+   "official": false
+  },
+  {
+   "id": "ut-RMpK1WeJ1W29WNdmsT",
+   "name": "Fit & Fuel",
+   "summary": "A fitness coach and meal planner in one. It builds your training plan and weekly menus around a single calorie and protein target.",
+   "group": "health",
+   "author": "Jeremy",
+   "handle": "",
+   "url": "https://x.ai/bot/ut-RMpK1WeJ1W29WNdmsT",
+   "official": false
+  },
+  {
+   "id": "arpIlNG9WYxhAwM24b82I",
+   "name": "Fitness",
+   "summary": "A blunt, warm daily fitness accountability coach. It sends a short morning plan, checks in every night, sends a Sunday progress summary.",
+   "group": "health",
+   "author": "Josh",
+   "handle": "",
+   "url": "https://x.ai/bot/arpIlNG9WYxhAwM24b82I",
+   "official": false
+  },
+  {
+   "id": "cA9uzca3M66V1hk6Au94p",
+   "name": "Fitness Coach",
+   "summary": "A home-gym fitness coach that sends your next workout each morning with form-video links, logs what you report into a tracker.",
+   "group": "health",
+   "author": "Grease",
+   "handle": "",
+   "url": "https://x.ai/bot/cA9uzca3M66V1hk6Au94p",
+   "official": false
+  },
+  {
+   "id": "NSx13j49zrCfjGRnJVQ2I",
+   "name": "Habito",
+   "summary": "Calm daily habit companion with one gentle check-in a day to build small habits.",
+   "group": "health",
+   "author": "Jorge",
+   "handle": "",
+   "url": "https://x.ai/bot/NSx13j49zrCfjGRnJVQ2I",
+   "official": false
+  },
+  {
+   "id": "xyw9RJlxNlyXtfjYvcvsT",
+   "name": "Health",
+   "summary": "A private personal health desk that pulls your sleep, weight, lab, and dose-tracker data into one chat, logs what you say you took.",
+   "group": "health",
+   "author": "Christian",
+   "handle": "MeechYourGoals",
+   "url": "https://x.ai/bot/xyw9RJlxNlyXtfjYvcvsT",
+   "official": false
+  },
+  {
+   "id": "jwWCnlq7VAvEodiz8zlgX",
+   "name": "Health Assistant",
+   "summary": "A healthcare helper built on Arlo Health. It compares care prices under your insurance, reviews medical bills and claims.",
+   "group": "health",
+   "author": "Arlo",
+   "handle": "joshfgray_",
+   "url": "https://x.ai/bot/jwWCnlq7VAvEodiz8zlgX",
+   "official": false
+  },
+  {
+   "id": "HBKDOnEeqhfLyev8MalAt",
+   "name": "Health Coach",
+   "summary": "Fitness coach that logs workouts and sends the next session.",
+   "group": "health",
+   "author": "Matt",
+   "handle": "MattMatthews121",
+   "url": "https://x.ai/bot/HBKDOnEeqhfLyev8MalAt",
+   "official": false
+  },
+  {
+   "id": "48ehVK1SKr4ztzMjR2Qyu",
+   "name": "Health Concierge",
+   "summary": "A calm health-admin clerk for your family: tracks insurance, labs, doctors and reimbursements, and preps you for appointments.",
+   "group": "health",
+   "author": "Dave",
+   "handle": "gambrill",
+   "url": "https://x.ai/bot/48ehVK1SKr4ztzMjR2Qyu",
+   "official": false
+  },
+  {
+   "id": "5HXvWB3uMmlY_qTQDa0Jb",
+   "name": "HealthAgent Coach",
+   "summary": "Personal trainer that coaches you with your real Apple Health data via the HealthAgent iPhone app.",
+   "group": "health",
+   "author": "Teemu",
+   "handle": "tsharju",
+   "url": "https://x.ai/bot/5HXvWB3uMmlY_qTQDa0Jb",
+   "official": false
+  },
+  {
+   "id": "6Z5qMNahOtmaSBjcM6_h6",
+   "name": "Coach",
+   "summary": "Sport coach for any athlete: pick a sport and goal, get best-practice plans and honest load/recovery calls.",
+   "group": "health",
+   "author": "Chris",
+   "handle": "Chr1sR1chards",
+   "url": "https://x.ai/bot/6Z5qMNahOtmaSBjcM6_h6",
+   "official": false
+  },
+  {
+   "id": "Y7LbP6p5EBFjfdTp69cKr",
+   "name": "Grocery Cart Planner",
+   "summary": "Plans an Instacart grocery cart from meal ideas, recipes, and staples, respecting diet, brands, stores, and budget.",
+   "group": "food",
+   "author": "Elie",
+   "handle": "",
+   "url": "https://x.ai/bot/Y7LbP6p5EBFjfdTp69cKr",
+   "official": false
+  },
+  {
+   "id": "ID30J5nWtkGs_7yNRrw0w",
+   "name": "Sizzle",
+   "summary": "Your AI personal chef: plans meals, finds real recipes, cooks from your pantry, coaches you step by step, and saves favorites to Meal Plans.",
+   "group": "food",
+   "author": "TerpGPT",
+   "handle": "",
+   "url": "https://x.ai/bot/ID30J5nWtkGs_7yNRrw0w",
+   "official": false
+  },
+  {
+   "id": "NNzElxanGR7uZUiiXD_5u",
+   "name": "Allergy Bot",
+   "summary": "Screens restaurant menus for food allergies and can call when the menu is not enough.",
+   "group": "food",
+   "author": "Liam",
+   "handle": "",
+   "url": "https://x.ai/bot/NNzElxanGR7uZUiiXD_5u",
+   "official": false
+  },
+  {
+   "id": "0AeRdltc-UrzK1QxRcRJN",
+   "name": "Bookmark Kitchen",
+   "summary": "Turns the food posts you save in your X bookmarks into real recipes, sorted by cuisine and meal, with a shopping list ready to go.",
+   "group": "food",
+   "author": "Erinn",
+   "handle": "",
+   "url": "https://x.ai/bot/0AeRdltc-UrzK1QxRcRJN",
+   "official": false
+  },
+  {
+   "id": "PuMm5kYCJgtjzlIMBVkai",
+   "name": "Chef",
+   "summary": "Your relaxed personal chef: saves recipes from short-form video and any site, plans the meals you want, keeps a running shopping list.",
+   "group": "food",
+   "author": "Jack",
+   "handle": "",
+   "url": "https://x.ai/bot/PuMm5kYCJgtjzlIMBVkai",
+   "official": false
+  },
+  {
+   "id": "5a3AV-NVm_VOVcd2TUJs2",
+   "name": "Chef Bob",
+   "summary": "I'm Bob, a meal-planning companion with a dry sense of humour.",
+   "group": "food",
+   "author": "Willis",
+   "handle": "williswee",
+   "url": "https://x.ai/bot/5a3AV-NVm_VOVcd2TUJs2",
+   "official": false
+  },
+  {
+   "id": "Ed-L-mUFR_9nR2BYMssNF",
+   "name": "Chef Chad",
+   "summary": "Personal chef that keeps liked recipes, tracks pantry from photos, and plans easy meals.",
+   "group": "food",
+   "author": "Roman",
+   "handle": "RRomanoly",
+   "url": "https://x.ai/bot/Ed-L-mUFR_9nR2BYMssNF",
+   "official": false
+  },
+  {
+   "id": "L0h_PZsA40kqf6llumExN",
+   "name": "Cheff",
+   "summary": "A weekly grocery planner that builds a store-section shopping list and healthy, easy dinners with recipe links.",
+   "group": "food",
+   "author": "mitchell",
+   "handle": "MDrake0715",
+   "url": "https://x.ai/bot/L0h_PZsA40kqf6llumExN",
+   "official": false
+  },
+  {
+   "id": "f5BhWohmAaB3bAIWdpUSR",
+   "name": "Crave Coach",
+   "summary": "A kitchen buddy for losing weight and kicking sugar cravings: logs meals with photo estimates, tracks your day total.",
+   "group": "food",
+   "author": "Mike",
+   "handle": "mikepat711",
+   "url": "https://x.ai/bot/f5BhWohmAaB3bAIWdpUSR",
+   "official": false
+  },
+  {
+   "id": "TXGBlz-AEhm_0oGiEmuB1",
+   "name": "Dining & Cooking",
+   "summary": "A friendly food assistant that sends a daily dinner idea tailored to your tastes, can pull from your saved X recipe bookmarks.",
+   "group": "food",
+   "author": "Neil",
+   "handle": "neils4fun",
+   "url": "https://x.ai/bot/TXGBlz-AEhm_0oGiEmuB1",
+   "official": false
+  },
+  {
+   "id": "X-GV3cVSzrOJTcrVEHoop",
+   "name": "GroCook",
+   "summary": "Weekly meal-prep helper: plan dinners, portion bags meal-kit style.",
+   "group": "food",
+   "author": "Alejo",
+   "handle": "AlejoCamargo6",
+   "url": "https://x.ai/bot/X-GV3cVSzrOJTcrVEHoop",
+   "official": false
+  },
+  {
+   "id": "-p27Q3hffcw92siKdddfK",
+   "name": "Meal Planner Pro",
+   "summary": "Plans weekly meals that hit your calorie and protein goals, fit your budget and schedule, and keep you safe from allergens and gluten.",
+   "group": "food",
+   "author": "Jeremy",
+   "handle": "",
+   "url": "https://x.ai/bot/-p27Q3hffcw92siKdddfK",
+   "official": false
+  },
+  {
+   "id": "uC-mKHdqU5M8w_C19K1hf",
+   "name": "Recipe Bot",
+   "summary": "Finds the most popular recipe on X each week and turns it into a Cooking-for-Engineers process-table card.",
+   "group": "food",
+   "author": "Pierce",
+   "handle": "",
+   "url": "https://x.ai/bot/uC-mKHdqU5M8w_C19K1hf",
+   "official": false
+  },
+  {
+   "id": "VpXAZQg8JIr4YbrgwwqCf",
+   "name": "RestaurantHero",
+   "summary": "Name a restaurant and city for a real-menu guide with a top 3 and proof links.",
+   "group": "food",
+   "author": "Everest",
+   "handle": "aiMindNme",
+   "url": "https://x.ai/bot/VpXAZQg8JIr4YbrgwwqCf",
+   "official": false
+  },
+  {
+   "id": "tyRlsV6jn7_vZpeNpFy-s",
+   "name": "Sazón",
+   "summary": "A home-kitchen cooking assistant that builds meal plans, recipes, caldos and teas.",
+   "group": "food",
+   "author": "Xavier",
+   "handle": "",
+   "url": "https://x.ai/bot/tyRlsV6jn7_vZpeNpFy-s",
+   "official": false
+  },
+  {
+   "id": "GWry7SgjF38fiXBApYlit",
+   "name": "Daily Local Brief",
+   "summary": "A daily morning brief for your home address: a big weather card plus short local notes on trash pickup, street sweeping, road closures.",
+   "group": "home",
+   "author": "Dayyán",
+   "handle": "",
+   "url": "https://x.ai/bot/GWry7SgjF38fiXBApYlit",
+   "official": false
+  },
+  {
+   "id": "Si9n5hZAER499milmvMvd",
+   "name": "Emergency Watch",
+   "summary": "Watches local emergency sources around the places you choose and flags fires, outages, road closures, police actions, and severe weather.",
+   "group": "home",
+   "author": "Ondřej",
+   "handle": "",
+   "url": "https://x.ai/bot/Si9n5hZAER499milmvMvd",
+   "official": false
+  },
+  {
+   "id": "zJx8MaAp5nsEtYSF1p551",
+   "name": "Family Activity Tracker",
+   "summary": "Keeps a busy family's activities straight: kids' sports, school events and deadlines, lessons, and appointments.",
+   "group": "home",
+   "author": "Stephen",
+   "handle": "dejaVujevich",
+   "url": "https://x.ai/bot/zJx8MaAp5nsEtYSF1p551",
+   "official": false
+  },
+  {
+   "id": "6CRE42vlGZePBStpdag7B",
+   "name": "Family History",
+   "summary": "Builds and researches your family tree like Ancestry.com, using free sources first.",
+   "group": "home",
+   "author": "Moistpineapplepizza",
+   "handle": "",
+   "url": "https://x.ai/bot/6CRE42vlGZePBStpdag7B",
+   "official": false
+  },
+  {
+   "id": "5QbKoFAZqgGVU6copR8Ln",
+   "name": "Field Notes",
+   "summary": "A down-to-earth helper for small farms, homesteads, market gardens, and CSAs.",
+   "group": "home",
+   "author": "Kenton",
+   "handle": "",
+   "url": "https://x.ai/bot/5QbKoFAZqgGVU6copR8Ln",
+   "official": false
+  },
+  {
+   "id": "2KIO0IMjeDnRrWgpFaPd6",
+   "name": "Fix-It Fred",
+   "summary": "Suggests 3 small home projects that fit your skills and budget; renters get deposit-safe ideas.",
+   "group": "home",
+   "author": "Rodrigo",
+   "handle": "RSebastian74",
+   "url": "https://x.ai/bot/2KIO0IMjeDnRrWgpFaPd6",
+   "official": false
+  },
+  {
+   "id": "ITXBFiy3DJRQOfHEh0-O7",
+   "name": "Gale",
+   "summary": "A personal weather bot that makes its own multi-model forecast for your home and the places you care about, timed around your plans.",
+   "group": "home",
+   "author": "Paul",
+   "handle": "",
+   "url": "https://x.ai/bot/ITXBFiy3DJRQOfHEh0-O7",
+   "official": false
+  },
+  {
+   "id": "MbvEC2G_SwX7FcP9A3JRk",
+   "name": "Grok your Dog",
+   "summary": "Your dog's nutrition and care coach: a calorie-accurate daily meal plan with researched tips, a playful printable poster of your dog.",
+   "group": "home",
+   "author": "Bryan",
+   "handle": "",
+   "url": "https://x.ai/bot/MbvEC2G_SwX7FcP9A3JRk",
+   "official": false
+  },
+  {
+   "id": "MpduDPiF8Wq5f7PtcKQ7e",
+   "name": "Head Of Household",
+   "summary": "Family ops: school, appointments, nightly and Friday prep reports.",
+   "group": "home",
+   "author": "Blake",
+   "handle": "BlakeVerix",
+   "url": "https://x.ai/bot/MpduDPiF8Wq5f7PtcKQ7e",
+   "official": false
+  },
+  {
+   "id": "iEP6SsaPiaP5gOj02HNXs",
+   "name": "Hearthkeeper",
+   "summary": "Keeps personal and household ops clear and low-friction so capacity stays available.",
+   "group": "home",
+   "author": "Ben",
+   "handle": "Ben Link",
+   "url": "https://x.ai/bot/iEP6SsaPiaP5gOj02HNXs",
+   "official": false
+  },
+  {
+   "id": "dsAdEBPw7bM8cP5odnJAb",
+   "name": "Home Assistant Admin",
+   "summary": "A careful Home Assistant administrator that monitors, troubleshoots and automates your smart home.",
+   "group": "home",
+   "author": "Gustavo",
+   "handle": "",
+   "url": "https://x.ai/bot/dsAdEBPw7bM8cP5odnJAb",
+   "official": false
+  },
+  {
+   "id": "Okh3DGt8n1gCIbuKs_2qV",
+   "name": "HomeKit Gear Advisor",
+   "summary": "Helps you choose Apple Home and Matter smart home gear room by room, within your budget.",
+   "group": "home",
+   "author": "Bill",
+   "handle": "",
+   "url": "https://x.ai/bot/Okh3DGt8n1gCIbuKs_2qV",
+   "official": false
+  },
+  {
+   "id": "yg8OPH2uwTu7u5Wwh9C7k",
+   "name": "Homeschool Planner",
+   "summary": "Plans each child's homeschool week, makes print-ready worksheets with answer keys, and runs a Sunday plan and Friday review.",
+   "group": "home",
+   "author": "Nux",
+   "handle": "",
+   "url": "https://x.ai/bot/yg8OPH2uwTu7u5Wwh9C7k",
+   "official": false
+  },
+  {
+   "id": "8VmKN9vI4_M5yStOoMP8D",
+   "name": "Hoop Homework",
+   "summary": "At-home basketball practice cards for parents with age-fit drills for the kid space gear and time budget.",
+   "group": "home",
+   "author": "Seth",
+   "handle": "SethBuildsAI",
+   "url": "https://x.ai/bot/8VmKN9vI4_M5yStOoMP8D",
+   "official": false
+  },
+  {
+   "id": "Xua2g9NGk4gPDfEb4cUhQ",
+   "name": "Horton",
+   "summary": "Makes printable, curriculum-matched homework worksheets with answer keys for your kids, and can print a fresh set every day.",
+   "group": "home",
+   "author": "David",
+   "handle": "",
+   "url": "https://x.ai/bot/Xua2g9NGk4gPDfEb4cUhQ",
+   "official": false
+  },
+  {
+   "id": "xP0uXDMw9PMO1Rx9I70L6",
+   "name": "Home Sell and Buy Planner",
+   "summary": "Homeowner sell-then-buy planner: price/net estimates, lenders, school zones.",
+   "group": "home",
+   "author": "BeachDigger",
+   "handle": "somaskedotmoko2",
+   "url": "https://x.ai/bot/xP0uXDMw9PMO1Rx9I70L6",
+   "official": false
+  },
+  {
+   "id": "sd6f165284d7fd2f25e56",
+   "name": "Apartment Scout",
+   "summary": "Filters new listings against your criteria, emails to book tour times, and applies for the ones that qualify.",
+   "group": "home",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sd6f165284d7fd2f25e56",
+   "official": true
+  },
+  {
+   "id": "tPozm7540u3Z81elSwdl0",
+   "name": "PCS Move Planner",
+   "summary": "PCS move planning for military families: 90/60/30-day countdown checklists for orders, movers, housing, schools, and pets.",
+   "group": "home",
+   "author": "Jason",
+   "handle": "",
+   "url": "https://x.ai/bot/tPozm7540u3Z81elSwdl0",
+   "official": false
+  },
+  {
+   "id": "sc693906bdeded166b7ba",
+   "name": "Travel Coordinator",
+   "summary": "Hold the best option before it expires. Compares flights and hotels to your rules, confirms before booking, and drops itinerary plus calendar.",
+   "group": "travel",
+   "author": "SpaceX",
+   "handle": "DenisLabelle",
+   "url": "https://x.ai/bot/sc693906bdeded166b7ba",
+   "official": true
+  },
+  {
+   "id": "tpDfMhi6UIk9Equ6jqpfu",
+   "name": "Fare Hawk",
+   "summary": "Name a place and dates for a day-by-day itinerary card, then it watches flight and hotel prices until you book.",
+   "group": "travel",
+   "author": "Michael",
+   "handle": "",
+   "url": "https://x.ai/bot/tpDfMhi6UIk9Equ6jqpfu",
+   "official": false
+  },
+  {
+   "id": "ySpYZ_5kCKLZZa9H5lQkg",
+   "name": "Travel",
+   "summary": "Finds and compares flights, stays, ferries, and activities, plans itineraries, and books transport based on your past bookings.",
+   "group": "travel",
+   "author": "K",
+   "handle": "",
+   "url": "https://x.ai/bot/ySpYZ_5kCKLZZa9H5lQkg",
+   "official": false
+  },
+  {
+   "id": "CO9aQ2BdGGHEJH0wXTGV7",
+   "name": "Travel Advisor",
+   "summary": "A travel advisor that plans multi-day trips (flights, stays, road trips, day-by-day itineraries, and reservation proposals) from live official sources.",
+   "group": "travel",
+   "author": "@thefit24couple",
+   "handle": "thefit24couple",
+   "url": "https://x.ai/bot/CO9aQ2BdGGHEJH0wXTGV7",
+   "official": false
+  },
+  {
+   "id": "covrY3BaA_FEyhLrrbGzR",
+   "name": "Travel Day Pack",
+   "summary": "Day-of travel pack from your calendar: weather, leave-by, packing list, docs/tickets, short brief.",
+   "group": "travel",
+   "author": "Mike",
+   "handle": "DoonerDesigns_",
+   "url": "https://x.ai/bot/covrY3BaA_FEyhLrrbGzR",
+   "official": false
+  },
+  {
+   "id": "CfeptLkV_zsiL-nhOKSUu",
+   "name": "Travel Desk",
+   "summary": "Work-travel desk for bag-inclusive flights, hotels near the venue, and logistics you actually enjoy.",
+   "group": "travel",
+   "author": "ladybarrelmaker",
+   "handle": "",
+   "url": "https://x.ai/bot/CfeptLkV_zsiL-nhOKSUu",
+   "official": false
+  },
+  {
+   "id": "-oVff2knWZBAARtD7s6_k",
+   "name": "Travel Itinerary Desk TRIP-SMART",
+   "summary": "Day-by-day travel itinerary with transfer buffers and a packing checklist.",
+   "group": "travel",
+   "author": "Cypher",
+   "handle": "Cypher0x9",
+   "url": "https://x.ai/bot/-oVff2knWZBAARtD7s6_k",
+   "official": false
+  },
+  {
+   "id": "lkfpeJX5Hg58yMFm0B0kb",
+   "name": "Trip Pilot",
+   "summary": "Builds day-by-day itineraries and packing lists, and watches fares on routes you care about.",
+   "group": "travel",
+   "author": "Joseph",
+   "handle": "",
+   "url": "https://x.ai/bot/lkfpeJX5Hg58yMFm0B0kb",
+   "official": false
+  },
+  {
+   "id": "mRAXp_PlX3sMY4N13Hgnj",
+   "name": "Trip Prep",
+   "summary": "Handles the household side of your trips. It spots trips in your email, builds one trip page, keeps a chore list like pets, mail hold.",
+   "group": "travel",
+   "author": "Sam",
+   "handle": "SamE1311025",
+   "url": "https://x.ai/bot/mRAXp_PlX3sMY4N13Hgnj",
+   "official": false
+  },
+  {
+   "id": "eyMdVOKBwSBwp63MX2fxy",
+   "name": "Commute Comrade",
+   "summary": "Night-before and morning commute briefs so the trip is planned.",
+   "group": "travel",
+   "author": "Trevin",
+   "handle": "",
+   "url": "https://x.ai/bot/eyMdVOKBwSBwp63MX2fxy",
+   "official": false
+  },
+  {
+   "id": "k5qFsxd0F0pJ7bdAcq7Fh",
+   "name": "Delay Ladder",
+   "summary": "Flight delay rights ladder without fake dollar claims.",
+   "group": "travel",
+   "author": "Andy",
+   "handle": "yandymccutcheon",
+   "url": "https://x.ai/bot/k5qFsxd0F0pJ7bdAcq7Fh",
+   "official": false
+  },
+  {
+   "id": "pNVDukpGRUUOx_wtyRhiV",
+   "name": "Dubai Bot",
+   "summary": "Dubai guide for visitors, residents, investors and newcomers: things to do, hotels, visas, business setup and local news.",
+   "group": "travel",
+   "author": "Ebrahim",
+   "handle": "community",
+   "url": "https://x.ai/bot/pNVDukpGRUUOx_wtyRhiV",
+   "official": false
+  },
+  {
+   "id": "2lNBe_0w4Ua7tH4oawNWO",
+   "name": "RV Trip Scout",
+   "summary": "Plans full-time RV travel around your actual rig limits and weather risks.",
+   "group": "travel",
+   "author": "Richard",
+   "handle": "",
+   "url": "https://x.ai/bot/2lNBe_0w4Ua7tH4oawNWO",
+   "official": false
+  },
+  {
+   "id": "nCmF4qR0936pN-fTmDTKG",
+   "name": "Starlink Scout",
+   "summary": "Starlink Scout finds United flights with free Starlink Wi-Fi, confirms them on United's tracker 3 days out, and alerts you if your plane changes.",
+   "group": "travel",
+   "author": "DJ",
+   "handle": "",
+   "url": "https://x.ai/bot/nCmF4qR0936pN-fTmDTKG",
+   "official": false
+  },
+  {
+   "id": "Upkn_bUxr___NAvXZB3Dc",
+   "name": "Travel Expenses",
+   "summary": "Track trip spends any currency, export Excel/PDF.",
+   "group": "travel",
+   "author": "David",
+   "handle": "shareitround",
+   "url": "https://x.ai/bot/Upkn_bUxr___NAvXZB3Dc",
+   "official": false
+  },
+  {
+   "id": "0hD-M0m0boT7nmRKuQKOD",
+   "name": "Travel agent",
+   "summary": "A travel agent for road trips and flights: compares and books pet-friendly hotels, plans EV charging stops, and answers on-the-road questions by voice.",
+   "group": "travel",
+   "author": "David",
+   "handle": "",
+   "url": "https://x.ai/bot/0hD-M0m0boT7nmRKuQKOD",
+   "official": false
+  },
+  {
+   "id": "ZwTonJmX0O0ndy2D6TNrL",
+   "name": "Autobot",
+   "summary": "Finds cars, bikes, boats, ATVs, and RVs by budget and features, then checks live listings.",
+   "group": "shopping",
+   "author": "Dominic",
+   "handle": "",
+   "url": "https://x.ai/bot/ZwTonJmX0O0ndy2D6TNrL",
+   "official": false
+  },
+  {
+   "id": "He7cCfwxob_gRhqi6fOhv",
+   "name": "PC Pat",
+   "summary": "Helps you build a first PC within budget with compatible parts. Walks you from goals to a buy list you can trust.",
+   "group": "shopping",
+   "author": "Frank",
+   "handle": "",
+   "url": "https://x.ai/bot/He7cCfwxob_gRhqi6fOhv",
+   "official": false
+  },
+  {
+   "id": "--X3KeUBk4AwgtfcxxKxZ",
+   "name": "Shopper",
+   "summary": "Researches what to buy from reviews and specs, then hunts the best price and waits before checkout.",
+   "group": "shopping",
+   "author": "Pete",
+   "handle": "",
+   "url": "https://x.ai/bot/--X3KeUBk4AwgtfcxxKxZ",
+   "official": false
+  },
+  {
+   "id": "nKNpAPZZaDJmDPd4QwTIX",
+   "name": "Amazon",
+   "summary": "Shopping and savings bot for Amazon cart and wishlist deal watching, USA-made product search, and optional local listings.",
+   "group": "shopping",
+   "author": "Kevin",
+   "handle": "from_glasses",
+   "url": "https://x.ai/bot/nKNpAPZZaDJmDPd4QwTIX",
+   "official": false
+  },
+  {
+   "id": "YAzSULV-SRvnKlxOzcx3L",
+   "name": "Amazon Shopping",
+   "summary": "Shops Amazon for you through the Amazon phone app, using iPhone Mirroring, an Android phone over Tailscale, or a virtual Android phone.",
+   "group": "shopping",
+   "author": "-",
+   "handle": "IsaacLatterell",
+   "url": "https://x.ai/bot/YAzSULV-SRvnKlxOzcx3L",
+   "official": false
+  },
+  {
+   "id": "c3Xj0xgm2AuiKKEBWEDxG",
+   "name": "Bourbon Buddy",
+   "summary": "A whisky and bourbon buying advisor. Send it a bottle and price, and it tells you whether it's worth it.",
+   "group": "shopping",
+   "author": "Amit",
+   "handle": "",
+   "url": "https://x.ai/bot/c3Xj0xgm2AuiKKEBWEDxG",
+   "official": false
+  },
+  {
+   "id": "4-ai7JQWpKpOUiK1Ih0J3",
+   "name": "Car Deal Scout",
+   "summary": "Tell it the car you want (model, years, budget, must-haves, how far you'll travel) and it finds it.",
+   "group": "shopping",
+   "author": "Kent",
+   "handle": "",
+   "url": "https://x.ai/bot/4-ai7JQWpKpOUiK1Ih0J3",
+   "official": false
+  },
+  {
+   "id": "yolodR5hSG7FCm0AjCrNf",
+   "name": "Card Counter",
+   "summary": "A sports card scout for collectors. It hunts eBay and COMC for the cards on your want list, prices them off real sold comps.",
+   "group": "shopping",
+   "author": "Sonny",
+   "handle": "SonnysimsPC",
+   "url": "https://x.ai/bot/yolodR5hSG7FCm0AjCrNf",
+   "official": false
+  },
+  {
+   "id": "uxcM5uC4wtA_w3fhqprBU",
+   "name": "Deal Hunter",
+   "summary": "Finds the best prices on what you want to buy, from online retailers, eBay, and local listings near you.",
+   "group": "shopping",
+   "author": "Brian",
+   "handle": "",
+   "url": "https://x.ai/bot/uxcM5uC4wtA_w3fhqprBU",
+   "official": false
+  },
+  {
+   "id": "g9v8bbELyrTJpnQnnGj6m",
+   "name": "Deal Tracker",
+   "summary": "Watches prices on the things you want to buy, researches each item's price history to tell you when it's a true deal.",
+   "group": "shopping",
+   "author": "Ricky",
+   "handle": "Ricky_Retard0",
+   "url": "https://x.ai/bot/g9v8bbELyrTJpnQnnGj6m",
+   "official": false
+  },
+  {
+   "id": "W4gNjXXfAN_S75Y-cakHM",
+   "name": "Eric",
+   "summary": "Sends gift ideas for the people you care about every week, learns from your feedback, reminds you before birthdays and holidays.",
+   "group": "shopping",
+   "author": "Naoufal",
+   "handle": "",
+   "url": "https://x.ai/bot/W4gNjXXfAN_S75Y-cakHM",
+   "official": false
+  },
+  {
+   "id": "LgGbyjf7hxr6q723yJfP0",
+   "name": "Hack Your House",
+   "summary": "Send it photos of the stuff in your garage. It prices each item for your area, lists it, drops the price on what isn't moving.",
+   "group": "shopping",
+   "author": "Bud",
+   "handle": "BudJohnson",
+   "url": "https://x.ai/bot/LgGbyjf7hxr6q723yJfP0",
+   "official": false
+  },
+  {
+   "id": "gGOdHr-B-7daPU2dyxcyF",
+   "name": "Heating Oil Watch",
+   "summary": "Checks local heating oil prices every week, logs them with a trend chart, and tells you whether to buy now or wait.",
+   "group": "shopping",
+   "author": "Randy",
+   "handle": "j3pup",
+   "url": "https://x.ai/bot/gGOdHr-B-7daPU2dyxcyF",
+   "official": false
+  },
+  {
+   "id": "qs1FcYZNhkl5gVfm9rmWs",
+   "name": "Household Runner",
+   "summary": "A household errands assistant that researches and builds shopping carts, tracks every package from your email, plans gifts and parties.",
+   "group": "shopping",
+   "author": "Diana",
+   "handle": "",
+   "url": "https://x.ai/bot/qs1FcYZNhkl5gVfm9rmWs",
+   "official": false
+  },
+  {
+   "id": "0NFpYPs0ImYsQZi6aCKrg",
+   "name": "Math Lesson Writer",
+   "summary": "Writes in-depth math study material as clean PDFs: lessons with figures, worked examples, exercises sorted by difficulty.",
+   "group": "learning",
+   "author": "Hiếu",
+   "handle": "NVHieu_",
+   "url": "https://x.ai/bot/0NFpYPs0ImYsQZi6aCKrg",
+   "official": false
+  },
+  {
+   "id": "icXWlm7EPEs3khWmXVoD1",
+   "name": "Acceptance Coach",
+   "summary": "Builds your school list, deadline calendar and essay plan, and coaches your essays in your own voice.",
+   "group": "learning",
+   "author": "Michael",
+   "handle": "",
+   "url": "https://x.ai/bot/icXWlm7EPEs3khWmXVoD1",
+   "official": false
+  },
+  {
+   "id": "KY_lNu0nInuuF43g1J8HA",
+   "name": "College Prep",
+   "summary": "A family's college-readiness and scholarship desk for every kid from middle school through senior year.",
+   "group": "learning",
+   "author": "Ryan",
+   "handle": "RAMBrosia",
+   "url": "https://x.ai/bot/KY_lNu0nInuuF43g1J8HA",
+   "official": false
+  },
+  {
+   "id": "mMOH9qLaXwEabi0gW-qCf",
+   "name": "Academic Advisor",
+   "summary": "A student assignment manager that keeps your course todos in sync with your school's learning system and course forums.",
+   "group": "learning",
+   "author": "Dina",
+   "handle": "",
+   "url": "https://x.ai/bot/mMOH9qLaXwEabi0gW-qCf",
+   "official": false
+  },
+  {
+   "id": "kjS8IGsV78-rPH_8mYlXk",
+   "name": "Alexandria",
+   "summary": "Librarian that briefs a book from public sources then mints a one-book Bot only after you say yes.",
+   "group": "learning",
+   "author": "Joe",
+   "handle": "",
+   "url": "https://x.ai/bot/kjS8IGsV78-rPH_8mYlXk",
+   "official": false
+  },
+  {
+   "id": "EEdroUtNjDa2Tb5OglwTe",
+   "name": "Conversational Spanish Tutor",
+   "summary": "A stern voice drill tutor that gets you speaking Spanish out loud for everyday conversation and travel.",
+   "group": "learning",
+   "author": "Benjamin",
+   "handle": "",
+   "url": "https://x.ai/bot/EEdroUtNjDa2Tb5OglwTe",
+   "official": false
+  },
+  {
+   "id": "VHerNPFs8KalH1G_u94zx",
+   "name": "Exam Coach",
+   "summary": "Study coach for any exam: builds your study plan, quizzes you every day, and reminds you before each exam.",
+   "group": "learning",
+   "author": "Arunas",
+   "handle": "",
+   "url": "https://x.ai/bot/VHerNPFs8KalH1G_u94zx",
+   "official": false
+  },
+  {
+   "id": "nYI57LkNbbS4nFGAao0nY",
+   "name": "Keepers - Book Scout",
+   "summary": "Decides whether a book is worth buying for your taste, then pins what mattered after you own it.",
+   "group": "learning",
+   "author": "Ann",
+   "handle": "AnnDiegoUSA",
+   "url": "https://x.ai/bot/nYI57LkNbbS4nFGAao0nY",
+   "official": false
+  },
+  {
+   "id": "cHOSo2pWCW-cFkJsXvaAc",
+   "name": "Language Coach",
+   "summary": "A friendly tutor for any language. Short daily lessons, voice drills, evening quizzes, and progress that builds on what you miss.",
+   "group": "learning",
+   "author": "Krishna",
+   "handle": "",
+   "url": "https://x.ai/bot/cHOSo2pWCW-cFkJsXvaAc",
+   "official": false
+  },
+  {
+   "id": "kolMkVGzNL0Kzs-Cm5B6b",
+   "name": "School Grades Reporter",
+   "summary": "Checks your student's grades in the school portal (like Focus through Clever) every school day and emails a plain-text report.",
+   "group": "learning",
+   "author": "Louie",
+   "handle": "SpaceGarbage202",
+   "url": "https://x.ai/bot/kolMkVGzNL0Kzs-Cm5B6b",
+   "official": false
+  },
+  {
+   "id": "QMnvneL-aaQZ-B70fhTPN",
+   "name": "Student Desk",
+   "summary": "A study desk for college students: deadline and class-night reminders, Word notes from class recordings, citation formatting.",
+   "group": "learning",
+   "author": "Mr.",
+   "handle": "",
+   "url": "https://x.ai/bot/QMnvneL-aaQZ-B70fhTPN",
+   "official": false
+  },
+  {
+   "id": "NP2X37LvJQ8rwWBhfKiqU",
+   "name": "Study Buddy",
+   "summary": "A kid-safe K-12 tutor for parents: hint-first homework help, fun quiz and test prep, a nightly check-in, and a short weekly progress report.",
+   "group": "learning",
+   "author": "Satya",
+   "handle": "",
+   "url": "https://x.ai/bot/NP2X37LvJQ8rwWBhfKiqU",
+   "official": false
+  },
+  {
+   "id": "9BDhUoKyguAGu6zlCLHO1",
+   "name": "Listicle Memory Bot",
+   "summary": "Turns any topic into a fact-checked listicle with a memory palace and spaced review.",
+   "group": "learning",
+   "author": "Joel",
+   "handle": "JWood8531481991",
+   "url": "https://x.ai/bot/9BDhUoKyguAGu6zlCLHO1",
+   "official": false
+  },
+  {
+   "id": "8atcwxOS9NqGR4GHASoss",
+   "name": "AI Resilience Check",
+   "summary": "Find out how AI-resilient your job or career path is, and what to do now to stay valuable.",
+   "group": "career",
+   "author": "Timon",
+   "handle": "roehrbacher",
+   "url": "https://x.ai/bot/8atcwxOS9NqGR4GHASoss",
+   "official": false
+  },
+  {
+   "id": "AfpFyeysGxUyH9bAgjvGy",
+   "name": "Applicoti",
+   "summary": "Job-application partner that builds a durable profile, hunts matches, and tunes resume materials per posting.",
+   "group": "career",
+   "author": "Garrek",
+   "handle": "mccune011",
+   "url": "https://x.ai/bot/AfpFyeysGxUyH9bAgjvGy",
+   "official": false
+  },
+  {
+   "id": "_N179jA-vyUT8mlNn2xOs",
+   "name": "Career",
+   "summary": "Job-hunt assistant that finds live openings, helps tailor materials, submits through ATS.",
+   "group": "career",
+   "author": "Agatho",
+   "handle": "Agatho_Damon",
+   "url": "https://x.ai/bot/_N179jA-vyUT8mlNn2xOs",
+   "official": false
+  },
+  {
+   "id": "lNFp3O9Os-4jAk9_1GMJm",
+   "name": "Custom Resume",
+   "summary": "Builds custom resumes from Job Fetcher JDs and GitHub projects.",
+   "group": "career",
+   "author": "JG",
+   "handle": "JugalJg",
+   "url": "https://x.ai/bot/lNFp3O9Os-4jAk9_1GMJm",
+   "official": false
+  },
+  {
+   "id": "YSGfTXPjbAQZuzDoum3KK",
+   "name": "Fed Path",
+   "summary": "A federal job hunting coach. Finds every hiring path you qualify for, scores USAJOBS postings for fit, checks qualifications honestly.",
+   "group": "career",
+   "author": "Jeremy",
+   "handle": "",
+   "url": "https://x.ai/bot/YSGfTXPjbAQZuzDoum3KK",
+   "official": false
+  },
+  {
+   "id": "OFHmlk--6IhVj9h0x3jc0",
+   "name": "Job Agent",
+   "summary": "Finds job openings that match your criteria on LinkedIn and Indeed, scores each one against your resume, and emails you a weekly digest.",
+   "group": "career",
+   "author": "GLD009",
+   "handle": "GD_009",
+   "url": "https://x.ai/bot/OFHmlk--6IhVj9h0x3jc0",
+   "official": false
+  },
+  {
+   "id": "8AzADvP0TqbPxPWUObi2f",
+   "name": "Job Autopilot",
+   "summary": "Finds matching jobs, tailors your CV and cover letter, tracks applications, and preps interviews. Truthful materials only.",
+   "group": "career",
+   "author": "kazo",
+   "handle": "Gencaykazo",
+   "url": "https://x.ai/bot/8AzADvP0TqbPxPWUObi2f",
+   "official": false
+  },
+  {
+   "id": "6hqKLQUA0hV-arRXt5MjJ",
+   "name": "Job Hunter",
+   "summary": "Finds job openings in any field, tailors applications, tracks them only with proof, and preps you for interviews.",
+   "group": "career",
+   "author": "Cyber",
+   "handle": "",
+   "url": "https://x.ai/bot/6hqKLQUA0hV-arRXt5MjJ",
+   "official": false
+  },
+  {
+   "id": "aq4OcVU_MPO542ZDllWhK",
+   "name": "Job Scout",
+   "summary": "A weekday job scout that searches real boards, verifies remote and level on each posting, and sends you an honest top-three ranked by fit.",
+   "group": "career",
+   "author": "russell",
+   "handle": "",
+   "url": "https://x.ai/bot/aq4OcVU_MPO542ZDllWhK",
+   "official": false
+  },
+  {
+   "id": "RvDW_cpNiDbk1Lc33OYE6",
+   "name": "Job Search Bot",
+   "summary": "Finds job openings that match your background and sends a short daily list of new matches.",
+   "group": "career",
+   "author": "Sadie",
+   "handle": "",
+   "url": "https://x.ai/bot/RvDW_cpNiDbk1Lc33OYE6",
+   "official": false
+  },
+  {
+   "id": "MFV4Zd8JpVLzs0XeYnL-m",
+   "name": "Network Ned",
+   "summary": "Finds business networking events in your city that match your goals. Tell it the city and vibe; get a shortlist worth leaving the house for.",
+   "group": "career",
+   "author": "Frank",
+   "handle": "",
+   "url": "https://x.ai/bot/MFV4Zd8JpVLzs0XeYnL-m",
+   "official": false
+  },
+  {
+   "id": "zrbXLuz-YKUfqa5kSapWQ",
+   "name": "Countdown",
+   "summary": "Mission control for watching the next Starship launch in person.",
+   "group": "fun",
+   "author": "Chadwick",
+   "handle": "csputerbaugh1",
+   "url": "https://x.ai/bot/zrbXLuz-YKUfqa5kSapWQ",
+   "official": false
+  },
+  {
+   "id": "YD0mAEdVZeEanyWTuY_vb",
+   "name": "Lazy Tom",
+   "summary": "A dry, low-effort assistant that does the smallest useful thing and then stops. Short replies, no extra tasks, no coding.",
+   "group": "fun",
+   "author": "duyet",
+   "handle": "",
+   "url": "https://x.ai/bot/YD0mAEdVZeEanyWTuY_vb",
+   "official": false
+  },
+  {
+   "id": "fPXRUvzfn2aEq2r604r6X",
+   "name": "Local Scene",
+   "summary": "Your personal radar for new restaurants, live music, and local events in your town.",
+   "group": "fun",
+   "author": "Jasper",
+   "handle": "jasper_saunders",
+   "url": "https://x.ai/bot/fPXRUvzfn2aEq2r604r6X",
+   "official": false
+  },
+  {
+   "id": "BqrsB1eKS9jIekMLbGqGb",
+   "name": "BotMDB",
+   "summary": "A movie and TV recommendation bot. It learns your taste through a quick intake quiz and a weekly check-in, then suggests what to watch next.",
+   "group": "fun",
+   "author": "The",
+   "handle": "",
+   "url": "https://x.ai/bot/BqrsB1eKS9jIekMLbGqGb",
+   "official": false
+  },
+  {
+   "id": "Vurjod8hm5tZJxGgov6uR",
+   "name": "Community Builder",
+   "summary": "Helps you find your people: learns the communities and events you're into, then gives you one concrete outing a week plus a weekday option.",
+   "group": "fun",
+   "author": "Anthony",
+   "handle": "anthony_y_chan",
+   "url": "https://x.ai/bot/Vurjod8hm5tZJxGgov6uR",
+   "official": false
+  },
+  {
+   "id": "hJpHNyYyMkUp5y0dXrZiU",
+   "name": "Events",
+   "summary": "A local event scout that finds events worth your time in the categories you care about (for example Content, Lifestyle, Career).",
+   "group": "fun",
+   "author": "Michael",
+   "handle": "",
+   "url": "https://x.ai/bot/hJpHNyYyMkUp5y0dXrZiU",
+   "official": false
+  },
+  {
+   "id": "B5UMQzelNds6Iy2nuFrka",
+   "name": "CarmackBot",
+   "summary": "A first-principles game-engine and firmware specialist for small hobby games. Ships the smallest stack that runs.",
+   "group": "fun",
+   "author": "Marcus",
+   "handle": "",
+   "url": "https://x.ai/bot/B5UMQzelNds6Iy2nuFrka",
+   "official": false
+  },
+  {
+   "id": "PpGGgAaeRWkC4Poi29gLw",
+   "name": "DJ",
+   "summary": "Controls Spotify. Picks sets, suggests artists, learns taste, and maps nicknames like car or office to devices.",
+   "group": "fun",
+   "author": "Trevin",
+   "handle": "",
+   "url": "https://x.ai/bot/PpGGgAaeRWkC4Poi29gLw",
+   "official": false
+  },
+  {
+   "id": "hlQhxsU-pqQEkimm0it4V",
+   "name": "Dan Patrick",
+   "summary": "A 1990s SportsCenter-style scores bot. Morning rundown plus a ping when your teams' games go final.",
+   "group": "fun",
+   "author": "Marcus",
+   "handle": "",
+   "url": "https://x.ai/bot/hlQhxsU-pqQEkimm0it4V",
+   "official": false
+  },
+  {
+   "id": "0wdUJytrrRr2lUZJy_8_-",
+   "name": "Dad Joke Daily",
+   "summary": "Sends one fresh, kid-safe dad joke every day at the time you pick, never repeats one, and never posts after your cutoff time.",
+   "group": "fun",
+   "author": "Randy",
+   "handle": "j3pup",
+   "url": "https://x.ai/bot/0wdUJytrrRr2lUZJy_8_-",
+   "official": false
+  },
+  {
+   "id": "cara8TS5gqKwI0Ad61DOH",
+   "name": "Fantasy Manager",
+   "summary": "All-sports fantasy coach for drafts, weekly reports, and season management across major leagues.",
+   "group": "fun",
+   "author": "Dominic",
+   "handle": "",
+   "url": "https://x.ai/bot/cara8TS5gqKwI0Ad61DOH",
+   "official": false
+  },
+  {
+   "id": "iaOrz78m_w7I90kusc5ia",
+   "name": "Game Builder",
+   "summary": "Ships small playable games and mini-loops you can open offline, with win/lose and optional points, not pitch decks.",
+   "group": "fun",
+   "author": "Eric",
+   "handle": "",
+   "url": "https://x.ai/bot/iaOrz78m_w7I90kusc5ia",
+   "official": false
+  },
+  {
+   "id": "RyURXDgqz0Sz0zMHwtGTm",
+   "name": "Gen Z Bot",
+   "summary": "A joke bot that answers every task with snarky Gen Z commentary instead of actually doing it.",
+   "group": "fun",
+   "author": "Opti",
+   "handle": "",
+   "url": "https://x.ai/bot/RyURXDgqz0Sz0zMHwtGTm",
+   "official": false
+  },
+  {
+   "id": "RTQ5cLf2WeWJPyjD8YSWr",
+   "name": "Goonie",
+   "summary": "Witty sarcastic companion that remembers you, with holiday modes and park-only Tesla fun extras.",
+   "group": "fun",
+   "author": "david",
+   "handle": "goonieai",
+   "url": "https://x.ai/bot/RTQ5cLf2WeWJPyjD8YSWr",
+   "official": false
+  },
+  {
+   "id": "9kGjFHi6O-KWFYXqKb8Gz",
+   "name": "Klipper Print Assistant",
+   "summary": "Runs your Klipper 3D printer for you: slicing models, uploading to Mainsail, monitoring prints, and recovering from problems safely.",
+   "group": "fun",
+   "author": "Just",
+   "handle": "just_stuff_tm",
+   "url": "https://x.ai/bot/9kGjFHi6O-KWFYXqKb8Gz",
+   "official": false
+  },
+  {
+   "id": "4p_3XP_nyLs-hSA2xyXhy",
+   "name": "Mixtape Mike",
+   "summary": "A deep music taste companion that learns your sound, recommends what fits, and helps you see what your music says about you.",
+   "group": "fun",
+   "author": "Frank",
+   "handle": "",
+   "url": "https://x.ai/bot/4p_3XP_nyLs-hSA2xyXhy",
+   "official": false
+  },
+  {
+   "id": "dhED2j4hHusELAG7x97aN",
+   "name": "Music Bot",
+   "summary": "A music assistant that finds new music for you, builds playlists, tracks releases and concerts, and digs into artists and albums.",
+   "group": "fun",
+   "author": "JJz",
+   "handle": "",
+   "url": "https://x.ai/bot/dhED2j4hHusELAG7x97aN",
+   "official": false
+  },
+  {
+   "id": "guKZ5V775hPM-RP2ufLfh",
+   "name": "NFL Elo Rankings",
+   "summary": "Weekly NFL Elo rankings and upcoming-game win probabilities for all 32 teams.",
+   "group": "fun",
+   "author": "Ben",
+   "handle": "HashCons",
+   "url": "https://x.ai/bot/guKZ5V775hPM-RP2ufLfh",
+   "official": false
+  },
+  {
+   "id": "oi7v9ikWFvnr14b4KQ3w2",
+   "name": "OSM Map Fixer",
+   "summary": "Fix OpenStreetMap with you: describe what looks or feels wrong, from a missing gate to a lane your Tesla FSD or nav app keeps picking.",
+   "group": "fun",
+   "author": "Michael",
+   "handle": "weezilla",
+   "url": "https://x.ai/bot/oi7v9ikWFvnr14b4KQ3w2",
+   "official": false
+  },
+  {
+   "id": "tFWE6qR2JNDApg94FobmA",
+   "name": "Extrude",
+   "summary": "Invents cool 3D designs and turns them into printable STL/3MF files with parametric source and slicer notes, tuned to your FDM printer.",
+   "group": "fun",
+   "author": "GenXer",
+   "handle": "",
+   "url": "https://x.ai/bot/tFWE6qR2JNDApg94FobmA",
+   "official": false
+  },
+  {
+   "id": "Kv4vjq_-YbQnyvJQlpnGe",
+   "name": "Rainy Day",
+   "summary": "From Sahil Bloom's tweet: \"Keep proof that good things happen to you. Old photos. Kind messages. Positive feedback. Notes from great days.",
+   "group": "life-admin",
+   "author": "Jacob",
+   "handle": "jacobbutler",
+   "url": "https://x.ai/bot/Kv4vjq_-YbQnyvJQlpnGe",
+   "official": false
+  },
+  {
+   "id": "pobs233eUgpZLtlxoyyEn",
+   "name": "Higgins",
+   "summary": "A personal concierge for evenings and weekends. It checks your calendar, finds dining, tickets and things to do, and prepares the booking path.",
+   "group": "life-admin",
+   "author": "@thefit24couple",
+   "handle": "thefit24couple",
+   "url": "https://x.ai/bot/pobs233eUgpZLtlxoyyEn",
+   "official": false
+  },
+  {
+   "id": "hzmpoxnpMR2HNU6dCBf2q",
+   "name": "One",
+   "summary": "A private chief of staff that keeps your life admin in one queue, runs specialist staff bots that report only to it.",
+   "group": "life-admin",
+   "author": "Sonny",
+   "handle": "realSonnyMorgan",
+   "url": "https://x.ai/bot/hzmpoxnpMR2HNU6dCBf2q",
+   "official": false
+  },
+  {
+   "id": "L_Jo-M00K98MdB1xrSYSi",
+   "name": "Goal Getter",
+   "summary": "Flags scams, traps, and hidden fees in pasted terms or everyday contracts.",
+   "group": "life-admin",
+   "author": "Dominic",
+   "handle": "Dominicyoungix",
+   "url": "https://x.ai/bot/L_Jo-M00K98MdB1xrSYSi",
+   "official": false
+  },
+  {
+   "id": "SRFGtB_-g8py4h4ijbdF2",
+   "name": "A1 Charity",
+   "summary": "Helps pick where to give money or time with short intake, quality research, and a clear recommendation.",
+   "group": "life-admin",
+   "author": "Kenton",
+   "handle": "Thebossdj77",
+   "url": "https://x.ai/bot/SRFGtB_-g8py4h4ijbdF2",
+   "official": false
+  },
+  {
+   "id": "iOmZRCO0xoOyeTd6Mj6Wl",
+   "name": "Private Bot",
+   "summary": "A private session for sensitive one-off tasks. It saves nothing to memory, tracks what it touches, and clears sign-ins, cookies.",
+   "group": "life-admin",
+   "author": "Rob",
+   "handle": "",
+   "url": "https://x.ai/bot/iOmZRCO0xoOyeTd6Mj6Wl",
+   "official": false
+  },
+  {
+   "id": "HSnT7YbUNKs-eVVyNYgg7",
+   "name": "Contrarian",
+   "summary": "A blunt red-team bot. Send it a plan, deal, spend, or idea and it tries to kill it, then names the cheapest test that would prove it wrong.",
+   "group": "life-admin",
+   "author": "Tyler",
+   "handle": "",
+   "url": "https://x.ai/bot/HSnT7YbUNKs-eVVyNYgg7",
+   "official": false
+  },
+  {
+   "id": "9yGiU_GtFX441o_-bDLlu",
+   "name": "ADHD Aimer",
+   "summary": "Helps ADHD brains turn attention into a usable superpower with systems that fit how you actually work.",
+   "group": "life-admin",
+   "author": "Frank",
+   "handle": "",
+   "url": "https://x.ai/bot/9yGiU_GtFX441o_-bDLlu",
+   "official": false
+  },
+  {
+   "id": "UkyzuXGe_REqS-sc59W3Y",
+   "name": "Active Focus",
+   "summary": "Keeps long tasks on target: helps you pin down what you actually want, picks each next step by what moves it forward, adjusts on evidence.",
+   "group": "life-admin",
+   "author": "Schien",
+   "handle": "",
+   "url": "https://x.ai/bot/UkyzuXGe_REqS-sc59W3Y",
+   "official": false
+  },
+  {
+   "id": "tbhzC_3OdL63IDvwI7YJM",
+   "name": "Devil's Advocate",
+   "summary": "Stress-tests your plans, pitches, and decisions by arguing the other side, so you find the weak spots before anyone else does.",
+   "group": "life-admin",
+   "author": "Mr.",
+   "handle": "",
+   "url": "https://x.ai/bot/tbhzC_3OdL63IDvwI7YJM",
+   "official": false
+  },
+  {
+   "id": "7IWqEVkSNn8-HiQ4gmvSg",
+   "name": "Fate",
+   "summary": "Decision and narrative partner for weighing choices without rushing the call.",
+   "group": "life-admin",
+   "author": "Liam",
+   "handle": "liam_fallen",
+   "url": "https://x.ai/bot/7IWqEVkSNn8-HiQ4gmvSg",
+   "official": false
+  },
+  {
+   "id": "ewIfjciSRZxS5cQqtpReq",
+   "name": "Paper Notes Organizer",
+   "summary": "Turns photos and scans of handwritten or printed notes into clean, searchable, organized notes.",
+   "group": "life-admin",
+   "author": "Jared",
+   "handle": "",
+   "url": "https://x.ai/bot/ewIfjciSRZxS5cQqtpReq",
+   "official": false
+  },
+  {
+   "id": "3zqAV0jdsTN4I529IKtya",
+   "name": "Plaud Notes",
+   "summary": "Intakes, classifies, indexes, and routes voice-recorder notes, using a spreadsheet as the only index.",
+   "group": "life-admin",
+   "author": "Ryan",
+   "handle": "ryanthawks",
+   "url": "https://x.ai/bot/3zqAV0jdsTN4I529IKtya",
+   "official": false
+  },
+  {
+   "id": "L7qSBOOLgC6QuDY3nYc2X",
+   "name": "Privacy Sweep",
+   "summary": "Scrubs personal information from the internet for you and family.",
+   "group": "life-admin",
+   "author": "Noah",
+   "handle": "_noahweir",
+   "url": "https://x.ai/bot/L7qSBOOLgC6QuDY3nYc2X",
+   "official": false
+  },
+  {
+   "id": "HFW0hBjHobqdNUfY2cn9L",
+   "name": "Project Zero FootPrint",
+   "summary": "A personal privacy helper that finds you on people-search sites and works to get those listings removed.",
+   "group": "life-admin",
+   "author": "Brad",
+   "handle": "",
+   "url": "https://x.ai/bot/HFW0hBjHobqdNUfY2cn9L",
+   "official": false
+  }
+ ],
+ "checked": "2026-11-15"
+}

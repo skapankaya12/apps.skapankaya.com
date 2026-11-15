@@ -26,6 +26,7 @@ export function Footer() {
           links={[
             { href: "/browse", label: "Browse tools" },
             { href: "/free", label: "Free tools" },
+            { href: "/grok-bots", label: "Grok Bots" },
             { href: "/sell", label: "Sell your tool" },
             { href: "/library", label: "My library" },
           ]}

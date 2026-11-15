@@ -24,8 +24,13 @@ const TOPICS: { value: Topic; label: string; hint: string }[] = [
   { value: "other", label: "Something else", hint: "Anything else on your mind." },
 ];
 
-export function ContactForm() {
-  const [topic, setTopic] = useState<Topic>("request");
+/**
+ * `lockTopic` fixes the topic and hides the chips, for a form opened from
+ * somewhere that already says what it is for (Marketplace's "Suggest a
+ * tool"). `bare` drops the card frame, for use inside a pop-up.
+ */
+export function ContactForm({ lockTopic, bare = false }: { lockTopic?: Topic; bare?: boolean } = {}) {
+  const [topic, setTopic] = useState<Topic>(lockTopic ?? "request");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
@@ -86,8 +91,10 @@ export function ContactForm() {
   return (
     <form
       onSubmit={submit}
-      className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6"
+      className={bare ? "" : "rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6"}
     >
+      {!lockTopic && (
+      <>
       <label className="text-sm font-medium">What&apos;s this about?</label>
       <div className="mt-2 flex flex-wrap gap-2">
         {TOPICS.map((t) => (
@@ -105,7 +112,9 @@ export function ContactForm() {
           </button>
         ))}
       </div>
-      <p className="mt-2 text-xs text-[var(--muted)]">{active.hint}</p>
+      </>
+      )}
+      <p className={`${lockTopic ? "" : "mt-2 "}text-xs text-[var(--muted)]`}>{active.hint}</p>
 
       <div className="mt-5">
         <label className="text-sm font-medium" htmlFor="contact-email">

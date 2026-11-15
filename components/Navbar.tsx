@@ -11,10 +11,11 @@ import Image from "next/image";
 import { ButtonLink } from "./ui";
 import { LiquidMetalButton } from "./ui/liquid-metal-button";
 
+// About is in the footer only (and in the browse menu), not up here.
 const navItems = [
-  { href: "/about", label: "About" },
   { href: "/browse", label: "Browse" },
   { href: "/free", label: "Free / Open Source tools" },
+  { href: "/grok-bots", label: "Grok Bots" },
   { href: "/blog", label: "Blogs" },
   // The seller CTA sits last because it is a button rather than a link. See
   // the LiquidMetalButton branch below.

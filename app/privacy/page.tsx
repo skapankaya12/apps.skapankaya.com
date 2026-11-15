@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      updated="2026-09-12"
+      updated="2026-11-15"
       intro="The short version: we collect an email address, whatever you chose to publish on a listing, and a record of what you bought or sold. There is no analytics, no tracking pixel and no advertising network on this site."
     >
       <Clause heading="1. Who is responsible">
@@ -59,6 +59,17 @@ export default function PrivacyPage() {
           us to remove it, whichever comes first. We send one message, we
           don&apos;t add you to anything else, and we never pass it on. Reply to
           that email, or use the contact form, to be taken off the list.
+        </p>
+        <p>
+          <strong className="text-[var(--foreground)]">
+            If you sign up for the Thursday email.
+          </strong>{" "}
+          Just your email address, so we can send one email a week with the new
+          finds on The Solo Market. We first send one message asking you to
+          confirm; until you click it, you get nothing else. Every Thursday
+          email has an unsubscribe link, and unsubscribing stops them straight
+          away. This list is separate from the launch list and from account
+          emails, and we never pass it on.
         </p>
         <p>
           <strong className="text-[var(--foreground)]">Emails we send you.</strong>{" "}

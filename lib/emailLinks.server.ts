@@ -26,6 +26,22 @@ function sign(uid: string): string {
   return createHmac("sha256", key()).update(`unsubscribe:${uid}`).digest("base64url").slice(0, 32);
 }
 
+/**
+ * The same signature for any other kind of emailed link, kept apart by its
+ * purpose so a token for one job (confirming a newsletter address) can never
+ * be replayed for another (unsubscribing it).
+ */
+export function signLink(purpose: string, value: string): string {
+  return createHmac("sha256", key()).update(`${purpose}:${value}`).digest("base64url").slice(0, 32);
+}
+
+export function verifyLink(purpose: string, value: string, token: string): boolean {
+  if (!value || !token) return false;
+  const expected = Buffer.from(signLink(purpose, value));
+  const given = Buffer.from(token);
+  return expected.length === given.length && timingSafeEqual(expected, given);
+}
+
 export function unsubscribeUrl(uid: string): string {
   return `${brand.url}/api/email/unsubscribe?u=${encodeURIComponent(uid)}&t=${sign(uid)}`;
 }

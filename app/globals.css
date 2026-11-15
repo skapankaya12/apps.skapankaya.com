@@ -277,3 +277,56 @@ main:first-child .hero-bleed {
   margin-top: calc(var(--header-h) * -1);
   padding-top: var(--header-h);
 }
+
+/* ---------------------------------------------------------------------------
+   Grok Bot avatars (components/GrokBotAvatar.tsx)
+
+   Most bots sit still. A few blink (.bot-blink) or hop (.bot-hop) on their
+   own, each from its own starting point (--bot-delay) so neighbours never
+   move in step. Hovering a card wakes its bot: a quick blink and a hop.
+   Nothing moves for visitors who ask for reduced motion.
+--------------------------------------------------------------------------- */
+.bot .bot-eyes,
+.bot .bot-body {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.bot .bot-body { transform-origin: 50% 100%; }
+
+.bot-blink .bot-eyes {
+  animation: bot-blink 4s var(--bot-delay, 0s) infinite;
+}
+.bot-hop .bot-body {
+  animation: bot-hop 3.2s var(--bot-delay, 0s) infinite cubic-bezier(0.3, 0, 0.4, 1);
+}
+.bot-hop .bot-eyes {
+  animation: bot-blink 4.6s var(--bot-delay, 0s) infinite;
+}
+
+.bot-card:hover .bot .bot-eyes {
+  animation: bot-blink 1.4s 0.15s infinite;
+}
+.bot-card:hover .bot .bot-body {
+  animation: bot-hop 1.1s infinite cubic-bezier(0.3, 0, 0.4, 1);
+}
+
+@keyframes bot-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.1); }
+}
+
+@keyframes bot-hop {
+  0%, 62%, 100% { transform: translateY(0) scale(1, 1); }
+  68% { transform: translateY(0) scale(1.06, 0.92); }
+  80% { transform: translateY(-14%) scale(0.97, 1.04); }
+  92% { transform: translateY(0) scale(1.04, 0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bot .bot-eyes,
+  .bot .bot-body,
+  .bot-card:hover .bot .bot-eyes,
+  .bot-card:hover .bot .bot-body {
+    animation: none;
+  }
+}
