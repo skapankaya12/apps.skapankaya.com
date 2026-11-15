@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { brand } from "@/lib/brand";
-import { useUser } from "@/lib/hooks";
-import { logout } from "@/lib/store";
+import { useStoreValue, useUser } from "@/lib/hooks";
+import { getAuthResolved, logout } from "@/lib/store";
 import { GROK_BOT_GROUPS } from "@/lib/grokBots";
 import { BOT_ITEMS, FEED_KINDS, KIND_PATHS, mixFeed, searchFeed, type FeedItem, type FeedKind } from "@/lib/feed";
 import { BotAvatar, botColors, botMotion, hash } from "./GrokBotAvatar";
@@ -352,11 +352,11 @@ export function MarketFeed({
 
       {/* The bar floats over the grid as it scrolls: the logo on the left, the
           menu and search in one pill in the middle, the guide on the right. */}
-      <div className="sticky top-3 z-30 flex items-center gap-2 sm:gap-3">
+      <div className="sticky top-3 z-30 flex items-center gap-1.5 sm:gap-3">
         <Link
           href="/"
           aria-label={`${brand.name} home`}
-          className="flex h-11 shrink-0 items-center rounded-full bg-[var(--background)] px-3 shadow-[0_2px_12px_rgba(16,16,20,0.10),0_0_0_1px_rgba(16,16,20,0.05)] sm:px-4"
+          className="flex h-11 shrink-0 items-center rounded-full bg-[var(--background)] px-2.5 shadow-[0_2px_12px_rgba(16,16,20,0.10),0_0_0_1px_rgba(16,16,20,0.05)] sm:px-4"
         >
           <Image src="/logo.png" alt={brand.name} width={1160} height={620} priority className="h-7 w-auto sm:h-8" />
         </Link>
@@ -371,7 +371,7 @@ export function MarketFeed({
               onClick={() => setMenuOpen((o) => !o)}
               aria-expanded={menuOpen}
               aria-haspopup="menu"
-              className="flex h-full max-w-[60%] shrink-0 items-center gap-2 rounded-l-full pl-4 pr-3 text-[15px] font-medium sm:max-w-none sm:pl-5 sm:pr-4"
+              className="flex h-full max-w-[60%] shrink-0 items-center gap-1.5 rounded-l-full pl-3.5 pr-2.5 text-[15px] font-medium sm:max-w-none sm:gap-2 sm:pl-5 sm:pr-4"
             >
               {/* "Everything" does not fit beside search on a phone. */}
               {kind === "all" ? (
@@ -385,7 +385,7 @@ export function MarketFeed({
               <Chevron open={menuOpen} />
             </button>
             <span className="h-6 w-px shrink-0 bg-[var(--border)]" aria-hidden />
-            <label className="flex h-full min-w-0 flex-1 items-center gap-2 pl-3 pr-4 sm:pl-4">
+            <label className="flex h-full min-w-0 flex-1 items-center gap-1.5 pl-2.5 pr-3 sm:gap-2 sm:pl-4 sm:pr-4">
               <SearchIcon />
               <span className="sr-only">Search {brand.name}</span>
               <input
@@ -455,6 +455,7 @@ export function MarketFeed({
             <span className="hidden sm:inline">Help me choose</span>
           </button>
         )}
+        <AccountButton path={KIND_PATHS[kind]} />
       </div>
 
       <FeedHero kind={kind} extra={hero} />
@@ -533,6 +534,50 @@ function QueryParamSync({ onQuery }: { onQuery: (q: string) => void }) {
 
 function cardId(itemId: string): string {
   return `card-${itemId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+}
+
+/**
+ * Sign in, beside the guide. Until Firebase has answered whether anyone is
+ * signed in, the spot holds its size and shows nothing, so a signed-in visitor
+ * never sees "Sign in" flash first. Signed in, it is their photo or initial:
+ * sellers go to their dashboard, everyone else to their account. Signing in
+ * comes back to the page it was pressed on.
+ */
+function AccountButton({ path }: { path: string }) {
+  const user = useUser();
+  const resolved = useStoreValue(getAuthResolved);
+  const pill =
+    "flex h-11 shrink-0 items-center rounded-full bg-[var(--background)] text-sm font-medium shadow-[0_2px_12px_rgba(16,16,20,0.10),0_0_0_1px_rgba(16,16,20,0.05)] hover:bg-[var(--surface-muted)]";
+
+  if (!resolved) return <span className="h-11 w-11 shrink-0 sm:w-[84px]" aria-hidden />;
+
+  if (!user) {
+    return (
+      <Link href={`/login?next=${encodeURIComponent(path)}`} className={`${pill} w-11 justify-center sm:w-auto sm:px-4`}>
+        <svg viewBox="0 0 20 20" className="h-[18px] w-[18px] sm:hidden" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>
+          <circle cx="10" cy="7" r="3.2" />
+          <path d="M3.8 17c.9-3.2 3.2-5 6.2-5s5.3 1.8 6.2 5" />
+        </svg>
+        <span className="hidden sm:inline">Sign in</span>
+        <span className="sr-only sm:hidden">Sign in</span>
+      </Link>
+    );
+  }
+
+  const href = user.role === "seller" || user.role === "admin" ? "/dashboard" : "/account";
+  const initial = (user.displayName || user.email || "?").trim().charAt(0).toUpperCase();
+  return (
+    <Link href={href} aria-label="Your account" className={`${pill} w-11 justify-center`}>
+      {user.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+      ) : (
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#8b1a1a] to-[#c25555] text-sm font-semibold text-white">
+          {initial}
+        </span>
+      )}
+    </Link>
+  );
 }
 
 /* ---------------------------------------------------------------------------

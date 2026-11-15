@@ -25,7 +25,13 @@ const BARE_ROUTES = new Set([
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const bare = BARE_ROUTES.has(pathname);
+  // When Vercel refreshes the homepage in the background (ISR), the page is
+  // stored with its address as "/index", its file name, and that reaches
+  // usePathname in the browser too. Read it, and any trailing slash, as the
+  // page it is, or the homepage would get the site header back after the
+  // first refresh (it did, on 15 November).
+  const path = !pathname || pathname === "/index" ? "/" : pathname.replace(/(.)\/$/, "$1");
+  const bare = BARE_ROUTES.has(path);
 
   useEffect(() => {
     // Wire up Firestore listeners + auth after mount, so the first client

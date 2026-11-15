@@ -134,15 +134,15 @@
    "badge": "Worth reading"
   },
   {
-   "id": "read:20-years-766-million-files",
+   "id": "read:choose-boring-technology",
    "kind": "read",
-   "title": "20 years, 766 million files",
-   "summary": "Two brothers on twenty years of running a small bootstrapped file converter from the UK, ups and downs included.",
-   "href": "https://blog.zamzar.com/2026/10/30/20-years-766-million-files-two-chameleons/",
-   "meta": "Reading · Zamzar",
+   "title": "Choose boring technology",
+   "summary": "You only get a few chances to try new technology. Spend them on what makes your product different, and build the rest on what you already know.",
+   "href": "https://boringtechnology.club/",
+   "meta": "Reading · Dan McKinley",
    "group": "Reading",
-   "image": "/feed/read/20-years-766-million-files-two-chameleons-the-za.jpg",
-   "byline": "Zamzar",
+   "image": "/feed/read/choose-boring-technology.jpg",
+   "byline": "Dan McKinley",
    "badge": "Worth reading"
   },
   {
@@ -371,18 +371,6 @@
    "group": "Perks and credits",
    "image": "/feed/perk/aws-activate-credits.jpg",
    "byline": "AWS",
-   "badge": "Perk"
-  },
-  {
-   "id": "perk:google-for-startups-cloud",
-   "kind": "perk",
-   "title": "Google for Startups Cloud",
-   "summary": "Google Cloud credits and support for early startups building on Google Cloud.",
-   "href": "https://cloud.google.com/startup",
-   "meta": "Perks and credits · Google",
-   "group": "Perks and credits",
-   "image": "/feed/perk/google-for-startups-cloud-program.jpg",
-   "byline": "Google",
    "badge": "Perk"
   },
   {
@@ -624,18 +612,6 @@
    "badge": "Free"
   },
   {
-   "id": "kit:create-t3-app",
-   "kind": "kit",
-   "title": "Create T3 App",
-   "summary": "Start a full-stack, typesafe Next.js app with one command.",
-   "href": "https://create.t3.gg",
-   "meta": "Templates and kits · free",
-   "group": "Templates and kits",
-   "image": "/feed/kit/create-t3-app.jpg",
-   "byline": "create.t3.gg",
-   "badge": "Free"
-  },
-  {
    "id": "kit:starlight",
    "kind": "kit",
    "title": "Starlight",
@@ -865,13 +841,13 @@
    "platform": "Raycast"
   },
   {
-   "id": "video:kit-24-one-time-bundle",
+   "id": "video:kit-22-maker-map-globe",
    "kind": "video",
-   "title": "One-time bundle promo",
-   "summary": "A short promo film for a buy-once bundle, made by an AI writing the video as code.",
+   "title": "Community map app reel",
+   "summary": "A square reel of a community map spinning on a globe.",
    "href": "https://github.com/lumian2015/opus-5-5-video-templates",
-   "image": "/video-prompts/kit/24-one-time-bundle.webp",
-   "video": "/video-prompts/kit/24-one-time-bundle.mp4",
+   "image": "/video-prompts/kit/22-maker-map-globe.webp",
+   "video": "/video-prompts/kit/22-maker-map-globe.mp4",
    "byline": "Opus 5.5 Video Templates",
    "badge": "Video prompt",
    "meta": "Video prompt · Opus 5.5 Video Templates",
@@ -943,19 +919,6 @@
    "group": "Video prompts"
   },
   {
-   "id": "video:kit-22-maker-map-globe",
-   "kind": "video",
-   "title": "Community map app reel",
-   "summary": "A square reel of a community map spinning on a globe.",
-   "href": "https://github.com/lumian2015/opus-5-5-video-templates",
-   "image": "/video-prompts/kit/22-maker-map-globe.webp",
-   "video": "/video-prompts/kit/22-maker-map-globe.mp4",
-   "byline": "Opus 5.5 Video Templates",
-   "badge": "Video prompt",
-   "meta": "Video prompt · Opus 5.5 Video Templates",
-   "group": "Video prompts"
-  },
-  {
    "id": "video:style-03-isometric",
    "kind": "video",
    "title": "Isometric 2.5D",
@@ -992,6 +955,19 @@
    "byline": "HeyGen HyperFrames",
    "badge": "Video prompt",
    "meta": "Video prompt · open-design",
+   "group": "Video prompts"
+  },
+  {
+   "id": "video:kit-24-one-time-bundle",
+   "kind": "video",
+   "title": "One-time bundle promo",
+   "summary": "A short promo film for a buy-once bundle, made by an AI writing the video as code.",
+   "href": "https://github.com/lumian2015/opus-5-5-video-templates",
+   "image": "/video-prompts/kit/24-one-time-bundle.webp",
+   "video": "/video-prompts/kit/24-one-time-bundle.mp4",
+   "byline": "Opus 5.5 Video Templates",
+   "badge": "Video prompt",
+   "meta": "Video prompt · Opus 5.5 Video Templates",
    "group": "Video prompts"
   },
   {
