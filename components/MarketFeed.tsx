@@ -588,6 +588,7 @@ function AccountButton({ path }: { path: string }) {
 
 const SITE_LINKS = [
   { href: "/sell", label: "Sell your tool" },
+  { href: "/grok-bots/submit", label: "Add your Grok Bot" },
   { href: "/about", label: "About" },
   { href: "/docs", label: "Docs" },
   { href: "/how-to-run", label: "How to run a tool" },

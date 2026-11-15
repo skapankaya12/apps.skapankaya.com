@@ -107,6 +107,7 @@ function heroes(): Partial<Record<"all" | FeedKind, Hero>> {
         </>
       ),
       sub: `${GROK_BOTS.length} bots for work and life. Copy a link, open it on x.ai and add it to your Grok Bot.`,
+      actions: [{ href: "/grok-bots/submit", label: "Add your Grok Bot" }],
     },
     agent: {
       title: (

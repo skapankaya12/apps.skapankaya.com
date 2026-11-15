@@ -124,6 +124,11 @@ export default function AdminPage() {
         <ButtonLink href="/admin/free" variant="secondary" size="sm">
           Free tools
         </ButtonLink>
+        {/* Makers' own Grok Bots, reviewed the same way: is the link real, is
+            the summary honest, does it belong. The only link to this queue. */}
+        <ButtonLink href="/admin/bots" variant="secondary" size="sm">
+          Grok Bots
+        </ButtonLink>
         <ButtonLink href="/admin/categories" variant="secondary" size="sm">
           Browse filters
         </ButtonLink>

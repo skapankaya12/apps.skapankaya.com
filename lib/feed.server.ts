@@ -6,6 +6,7 @@ import { getApprovedFreeTools } from "./freeTools.server";
 import { getApprovedListings, hasPublishableSlug, formatPriceServer } from "./listings.server";
 import { categoryLabel } from "./types";
 import { EXTRA_ITEMS, type FeedItem } from "./feed";
+import { getApprovedBotItems } from "./botSubmissions.server";
 
 /**
  * Everything on the site that is not a Grok Bot, as feed cards: approved
@@ -81,7 +82,11 @@ export const getFeedItems = cache(async (): Promise<FeedItem[]> => {
     issue: sorted.length - i, // newest first in the list, so the newest has the highest number
   }));
 
-  return [...tools, ...free, ...posts, ...(await withLiveStandings(EXTRA_ITEMS))];
+  // Grok Bots their makers added and the admin approved. They sit ahead of the
+  // curated bots in the mix, so the newest additions are the first bots shown.
+  const makerBots = await getApprovedBotItems();
+
+  return [...tools, ...free, ...posts, ...makerBots, ...(await withLiveStandings(EXTRA_ITEMS))];
 });
 
 /**
