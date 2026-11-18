@@ -28,8 +28,7 @@ const STEP = 24;
  */
 const PER_PAGE = 100;
 
-/** The guide opens by itself this long after the page loads, once per visit. */
-const GUIDE_DELAY_MS = 5000;
+/** Remembers that the guide was closed this visit. It only opens from "Help me choose". */
 const GUIDE_SEEN_KEY = "feed-guide-seen";
 
 type KindFilter = "all" | FeedKind;
@@ -162,20 +161,9 @@ export function MarketFeed({
     return () => ro.disconnect();
   }, []);
 
-  // Open the guide five seconds in, unless this visit has already seen it or
-  // the visitor is already searching on their own. sessionStorage can throw
-  // (private mode, blocked storage); then it simply opens every visit.
-  useEffect(() => {
-    let seen = false;
-    try {
-      seen = sessionStorage.getItem(GUIDE_SEEN_KEY) === "1";
-    } catch {}
-    if (seen) return;
-    const t = setTimeout(() => {
-      if (!typed.current) setGuideOpen(true);
-    }, GUIDE_DELAY_MS);
-    return () => clearTimeout(t);
-  }, []);
+  // The guide used to open by itself five seconds in. The Vybe audit
+  // (18 Nov 2026) found it covered the catalogue before visitors chose a
+  // tool, so it now opens only from "Help me choose".
 
   // "/" jumps to the search box, the way most directories do it.
   useEffect(() => {
@@ -429,6 +417,14 @@ export function MarketFeed({
             )}
           </div>
         </div>
+
+        {/* Selling had no link above the footer. */}
+        <Link
+          href="/sell"
+          className="hidden h-11 shrink-0 items-center rounded-full bg-[var(--background)] px-4 text-sm font-medium shadow-[0_2px_12px_rgba(16,16,20,0.10),0_0_0_1px_rgba(16,16,20,0.05)] hover:bg-[var(--surface-muted)] md:flex"
+        >
+          Sell your tool
+        </Link>
 
         {/* On Marketplace the corner asks for the tool that is missing instead:
             it opens the contact form set to "Request a tool". */}

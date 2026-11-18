@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { copy } from "@/lib/brand";
+import type { ReactNode } from "react";
+import { brand, copy } from "@/lib/brand";
 import { GROK_BOTS } from "@/lib/grokBots";
 import type { FeedKind } from "@/lib/feed";
+import Link from "next/link";
 import { ButtonLink, buttonClass } from "./ui";
+import { WaitlistForm } from "./WaitlistForm";
 
 /**
  * The opening above the feed changes with the filter: each kind gets its own
  * headline and one line, so the page says what you are looking at.
  *
- * Two of them are not ours to reword:
- * - Everything is Sevval's welcome from the staging desktop (WELCOME in the
- *   desktop branch's lib/desktop.ts), lowercase as she wrote it, with "in the
- *   folders" set aside for now: its second line reads "building in progress"
- *   while the feed fills.
+ * - Everything (the homepage) says what the site is and what is open today,
+ *   then puts the launch signup beside the free path. Rewritten from the
+ *   Vybe website audit (18 Nov 2026): "building in progress" did not tell
+ *   visitors that buying is closed or what joining gets them.
  * - Marketplace is the site's pitch, word for word from lib/brand.ts.
  * The rest are written for this page and can change freely.
  *
@@ -24,24 +25,22 @@ import { ButtonLink, buttonClass } from "./ui";
  */
 const accent = "bg-gradient-to-r from-[#8b1a1a] to-[#b54444] bg-clip-text text-transparent";
 
-/** The word after "solo" turns through these, so every kind of solo builder sees themselves named. */
-const ROLES = ["founder", "builder", "vibecoder", "maker", "indie hacker", "developer", "designer", "creator"];
-
 type Action = { href?: string; onClick?: () => void; label: string; primary?: boolean };
-type Hero = { title: ReactNode; sub: ReactNode; aside?: ReactNode; actions?: Action[] };
+type Hero = { title: ReactNode; sub: ReactNode; aside?: ReactNode; actions?: Action[]; launch?: boolean };
 
 function heroes(): Partial<Record<"all" | FeedKind, Hero>> {
   return {
     all: {
       title: (
         <>
-          find everything you need{" "}
+          Tools and resources{" "}
           <span className="block">
-            as a solo <RollingWord words={ROLES} />
+            for solo <span className={accent}>builders.</span>
           </span>
         </>
       ),
-      sub: "building in progress",
+      sub: "Discover free tools, bots and guides today. Paid downloads open at launch.",
+      launch: true,
     },
     tool: {
       // Two deliberate rows: `block` pins the break before the byline instead
@@ -184,41 +183,29 @@ export function FeedHero({ kind, extra }: { kind: "all" | FeedKind; extra?: Reac
           )}
         </div>
       )}
+      {hero.launch && <LaunchCta />}
       {extra}
     </div>
   );
 }
 
 /**
- * One word at a time from a list, swapped every couple of seconds with a short
- * fade. Holds on the first word for visitors who ask for reduced motion. The
- * server and the first client render both show the first word, so nothing
- * shifts on hydration.
+ * The homepage's next steps: the launch signup (the same /api/waitlist form
+ * as the pre-launch card), the free path beside it, and one line for makers.
  */
-function RollingWord({ words }: { words: string[] }) {
-  const [i, setI] = useState(0);
-  const [shown, setShown] = useState(true);
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let swap: ReturnType<typeof setTimeout>;
-    const t = setInterval(() => {
-      setShown(false);
-      swap = setTimeout(() => {
-        setI((n) => (n + 1) % words.length);
-        setShown(true);
-      }, 250);
-    }, 2200);
-    return () => {
-      clearInterval(t);
-      clearTimeout(swap);
-    };
-  }, [words.length]);
+function LaunchCta() {
   return (
-    <span
-      className={`inline-block transition-all duration-200 ${accent} ${shown ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"}`}
-      aria-live="off"
-    >
-      {words[i]}
-    </span>
+    <>
+      <WaitlistForm inline label="Get one email when buying opens" buttonLabel="Notify me when buying opens" />
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+        <Link href="/free" className="font-medium underline decoration-[var(--border-strong)] underline-offset-4 hover:decoration-[var(--foreground)]">
+          Browse free tools
+        </Link>
+        <span className="h-4 w-px bg-[var(--border)]" aria-hidden />
+        <Link href="/sell" className="text-[var(--muted)] hover:text-[var(--foreground)]">
+          Built a useful tool? <span className="font-medium text-[var(--foreground)]">List it free. Keep {Math.round((1 - brand.commissionRate) * 100)}%.</span>
+        </Link>
+      </div>
+    </>
   );
 }

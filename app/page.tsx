@@ -6,8 +6,17 @@ import { ButtonLink } from "@/components/ui";
 
 export const revalidate = 300;
 
+const HOME_TITLE = "Tools for Solo Builders: Free Tools & Bots | The Solo Market";
+// Update the launch sentence when buying opens.
+const HOME_DESCRIPTION =
+  "Find free tools, ready-to-add bots and practical guides for solo builders. Explore indie software listings and get notified when buying opens.";
+
 export const metadata: Metadata = {
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
   alternates: { canonical: "/" },
+  openGraph: { type: "website", url: brand.url, siteName: brand.name, title: HOME_TITLE, description: HOME_DESCRIPTION },
+  twitter: { card: "summary_large_image", title: HOME_TITLE, description: HOME_DESCRIPTION },
 };
 
 /**

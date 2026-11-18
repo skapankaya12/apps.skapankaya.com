@@ -44,6 +44,9 @@ const QUIET_PATHS = [
   "/dashboard",
   "/account",
   "/library",
+  // The seller path and registration: a "new this week" dialog there
+  // interrupts someone who is about to list a tool.
+  "/sell",
 ];
 
 /** Long enough for the page to be read first, short enough to still be the same visit. */
